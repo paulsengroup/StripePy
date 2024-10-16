@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 
 import matplotlib.pyplot as plt
@@ -22,18 +23,17 @@ class ANSI:
     ENDC = "\033[0m"
 
 
-def list_folders_for_plots(path):
-
+def list_folders_for_plots(path: str) -> list:
+    path = pathlib.Path(path)
     # Folders:
-    folders4plots = [f"{path}/"]
+    folders4plots = [path]
     folders4plots += [
-        folders4plots[0] + "/1_preprocessing",
-        folders4plots[0] + "/2_TDA",
-        folders4plots[0] + "/3_shape_analysis",
-        folders4plots[0] + "/4_biological_analysis",
-        folders4plots[0] + "/3_shape_analysis/local_pseudodistributions",
+        folders4plots[0] / "1_preprocessing",
+        folders4plots[0] / "2_TDA",
+        folders4plots[0] / "3_shape_analysis",
+        folders4plots[0] / "4_biological_analysis",
+        folders4plots[0] / "3_shape_analysis" / "local_pseudodistributions",
     ]
-
     return folders4plots
 
 
@@ -47,11 +47,9 @@ def remove_and_create_folder(path):
         confirm = "y"
 
         if confirm.lower() == "y":
-
             # Remove the folder and its contents
             shutil.rmtree(path)
             print("Output folder and its contents have been deleted.")
-
         else:
             print("Deletion of output folder canceled.")
             exit(0)
