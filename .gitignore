@@ -167,3 +167,4 @@ output/
 *.log
 *.log*
 *.bak*
+.vscode
