@@ -81,8 +81,13 @@ jobs:
       - name: Install package
         run: pip install --verbose '.[test]'
 
-      - name: Test
+      - name: Run unit tests
         run: python -m pytest test -v
+
+      - name: Run CLI tests
+        run: |
+          stripepy --help
+          stripepy --version
 
   ci-status-check:
     name: Status Check (CI)
