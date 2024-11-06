@@ -1,4 +1,5 @@
 import argparse
+import math
 import pathlib
 from importlib.metadata import version
 from typing import Any, Dict, Tuple
@@ -30,6 +31,13 @@ def _probability(arg) -> float:
         return n
 
     raise ValueError("Not a valid probability")
+
+
+def _non_zero_positive_float(arg) -> float:
+    if (n := float(arg)) > 0:
+        return n
+
+    raise ValueError("Not a non-zero, positive float")
 
 
 def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
@@ -137,6 +145,61 @@ def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
     return sc
 
 
+def _make_stripepy_download_subcommand(main_parser) -> argparse.ArgumentParser:
+    sc: argparse.ArgumentParser = main_parser.add_parser(
+        "download",
+        help="Helper command to simplify downloading datasets that can be used to test StripePy.",
+    )
+
+    def get_avail_ref_genomes():
+        from .download import _get_datasets
+
+        return {record["assembly"] for record in _get_datasets(math.inf).values() if "assembly" in record}
+
+    grp = sc.add_mutually_exclusive_group(required=False)
+    grp.add_argument(
+        "--assembly",
+        type=str,
+        choices=get_avail_ref_genomes(),
+        help="Restrict downloads to the given reference genome assembly.",
+    )
+    grp.add_argument(
+        "--name",
+        type=str,
+        help="Name of the dataset to be downloaded.\n"
+        "When not provided, randomly select and download a dataset based on the provided CLI options (if any).",
+    )
+    grp.add_argument(
+        "--list-only",
+        action="store_true",
+        default=False,
+        help="Print the list of available datasets and return.",
+    )
+
+    sc.add_argument(
+        "--max-size",
+        type=_non_zero_positive_float,
+        default=512.0,
+        help="Upper bound for the size of the files to be considered when --name is not provided.",
+    )
+    sc.add_argument(
+        "-o",
+        "--output",
+        type=pathlib.Path,
+        dest="output_path",
+        help="Path where to store the downloaded file.",
+    )
+    sc.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="Overwrite existing file(s).",
+    )
+
+    return sc
+
+
 def _make_cli() -> argparse.ArgumentParser:
     cli = argparse.ArgumentParser(
         description="stripepy is designed to recognize linear patterns in contact maps (.hic, .mcool, .cool) "
@@ -149,6 +212,7 @@ def _make_cli() -> argparse.ArgumentParser:
     )
 
     _make_stripepy_call_subcommand(sub_parser)
+    _make_stripepy_download_subcommand(sub_parser)
 
     cli.add_argument(
         "-v",
@@ -207,5 +271,7 @@ def parse_args() -> Tuple[str, Any]:
     subcommand = args.pop("subcommand")
     if subcommand == "call":
         return subcommand, *_process_stripepy_call_args(args)
+    if subcommand == "download":
+        return subcommand, args
 
     raise NotImplementedError
