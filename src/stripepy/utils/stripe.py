@@ -4,6 +4,13 @@ import numpy as np
 class Stripe:
 
     def __init__(self, seed=None, left_bw=None, right_bw=None, upp_bw=None, low_bw=None, top_pers=None, where=None):
+
+        # TODO: robomics
+        # -) make left_bw, right_bw, upp_bw, and low_bw positional and mandatory
+        # -) where should be optional keyword: if not specified, it can be determined by the four mandatory values
+        # -) top_pers is in [0, +inf]
+        # -) where is "lower_triangular", "upper_triangular", or None (if not set)
+
         self.seed = seed
         self.persistence = top_pers
         self.L_bound = left_bw
@@ -17,6 +24,9 @@ class Stripe:
         self.RoI = None
 
     def compute_biodescriptors(self, I):
+
+        # TODO: robomics
+        # Check coordinates
 
         if self.where == "lower_triangular":
             convex_comb = int(round(0.99 * self.U_bound + 0.01 * self.D_bound))
@@ -101,10 +111,11 @@ class Stripe:
                     * 100
                 )
                 if self.outer_descriptors["mean"] != 0
-                else -1.0
+                else -1.0  # TODO rea1991: check if nan is more suitable
             )
 
         else:
+            # TODO rea1991 Check if still a problem, otherwise remove!
             self.inner_descriptors["five-number"] = [-1, -1, -1, -1, -1]
             self.inner_descriptors["mean"] = -1
             self.inner_descriptors["std"] = -1

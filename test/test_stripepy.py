@@ -1,21 +1,21 @@
 import numpy as np
 import scipy.sparse as ss
 
-from stripepy.stripepy import log_transform
+from stripepy.stripepy import _log_transform
 
 
 class TestLogTransform:
 
     def test_empty(self):
         I = ss.csr_matrix((0, 0), dtype=float)
-        Iproc = log_transform(I)
+        Iproc = _log_transform(I)
 
         assert Iproc.shape == (0, 0)
         assert np.issubdtype(I.dtype, np.floating)
 
     def test_all_finite(self):
         I = ss.rand(100, 100, density=0.5, format="csr")
-        Iproc = log_transform(I)
+        Iproc = _log_transform(I)
 
         assert I.size == Iproc.size
         assert I.shape == Iproc.shape
@@ -28,7 +28,7 @@ class TestLogTransform:
         num_nan_values = (I.data >= mean_I).sum()
         I.data[I.data >= mean_I] = np.nan
 
-        Iproc = log_transform(I)
+        Iproc = _log_transform(I)
 
         assert np.isfinite(Iproc.data).all()
         assert Iproc.size == size_I - num_nan_values
