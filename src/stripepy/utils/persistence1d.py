@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 from .unionfind import UnionFind
@@ -11,182 +10,112 @@ from .unionfind import UnionFind
 # For more details, consult: https://en.wikipedia.org/wiki/Maximum_and_minimum
 
 
-def RunPersistence(InputData, levelsets="lower"):
+def run_persistence(data, level_sets="lower"):
     """
-    This function share its name to Weinkauf's implementation, but can here work on upper level sets.
-
-    Finds extrema and their persistence in one-dimensional data w.r.t. lower (default, levelsets="lower")
-    or upper (levelsets="upper") level sets.
+    This function finds local extrema and their persistence in one-dimensional data w.r.t. lower (default,
+    level_sets="lower") or upper (level_sets="upper") level sets.
 
     Local minima and local maxima are extracted, paired, and returned together with their persistence.
-    For levelsets="lower", the global minimum is extracted as well.
-    For levelsets="upper", the global maximum is extracted as well.
+    For level_sets="lower", the global minimum is extracted as well.
+    For level_sets="upper", the global maximum is extracted as well.
 
     We assume a connected one-dimensional domain.
 
-    Short explanation for the case of levelsets=="lower" (the case of levelsets="upper") is analogous.
-    Think of "data on a line", or a function f(x) over some domain xmin <= x <= xmax. We are only concerned with the
-    data values f(x) and do not care to know the x positions of these values, since this would not change which
-    point is a minimum or maximum.
+    Short explanation for the case of level_sets=="lower" (the case of level_sets="upper" is analogous).
 
     This function returns a list of extrema together with their persistence. The list is NOT sorted, but the paired
     extrema can be identified, i.e., which minimum and maximum were removed together at a particular persistence
     level. As follows:
-    (*)  The odd entries are minima, the even entries are maxima.
+    (*)  Odd entries are minima, even entries are maxima.
     (*)  The minimum at 2*i is paired with the maximum at 2*i+1.
-    (*)  The last entry of the list is the global minimum (resp. maximum) when levelsets="lower" (resp.
-        levelsets="upper"). It is not paired with a maximum (resp. minimum).
+    (*)  The last entry of the list is the global minimum (resp. maximum) when level_sets="lower" (resp.
+         level_sets="upper"). It is not paired with a maximum (resp. minimum).
     Hence, the list has an odd number of entries.
 
     Authors: Tino Weinkauf (original implementation) and Andrea Raffo (modified implementation)
     """
 
-    # ~ How many items do we have?
-    NumElements = len(InputData)
+    # Number of data to break ties (leftmost index comes first):
+    num_elements = len(data)
+    sorted_idx = np.argsort(data, kind="stable")[::-1] if level_sets == "upper" else np.argsort(data, kind="stable")
 
-    # ~ Sort data in a stable manner to break ties (leftmost index comes first)
-    if levelsets == "lower":
-        SortedIdx = np.argsort(InputData, kind="stable")
-    elif levelsets == "upper":
-        SortedIdx = np.argsort(InputData, kind="stable")[::-1]
+    # Get a union find data structure:
+    uf = UnionFind(num_elements)
 
-    # ~ Get a union find data structure
-    UF = UnionFind(NumElements)
+    # Extrema paired with topological persistence:
+    extremum_points_and_persistence = []
 
-    # ~ Paired extrema
-    ExtremumPointsAndPersistence = []
+    # Watershed:
+    for idx in sorted_idx:
 
-    # ~ Watershed
-    for idx in SortedIdx:
+        # Get neighborhood indices:
+        left_idx = max(idx - 1, 0)
+        right_idx = min(idx + 1, num_elements - 1)
 
-        # ~ Get neighborhood indices
-        LeftIdx = max(idx - 1, 0)
-        RightIdx = min(idx + 1, NumElements - 1)
+        # Count number of components in neighborhood:
+        neighbor_components = [
+            uf.Find(neighbor) for neighbor in [left_idx, right_idx] if uf.Find(neighbor) != UnionFind.NOSET
+        ]
+        num_neighbor_components = len(neighbor_components)
 
-        # ~ Count number of components in neighborhhood
-        NeighborComponents = []
-        LeftNeighborComponent = UF.Find(LeftIdx)
-        RightNeighborComponent = UF.Find(RightIdx)
-        if LeftNeighborComponent != UnionFind.NOSET:
-            NeighborComponents.append(LeftNeighborComponent)
-        if RightNeighborComponent != UnionFind.NOSET:
-            NeighborComponents.append(RightNeighborComponent)
-
-        # ~ Left and Right cannot be the same set in a 1D domain
-        NumNeighborComponents = len(NeighborComponents)
-
-        if NumNeighborComponents == 0:
-            # ~ Create a new component
-            UF.MakeSet(idx)
-        elif NumNeighborComponents == 1:
-            # ~ Extend the one and only component in the neighborhood ~ Note that NeighborComponents[0] holds the
-            # root of a component, since we called Find() earlier to retrieve it
-            UF.ExtendSetByID(NeighborComponents[0], idx)
+        if num_neighbor_components == 0:
+            # Create a new component:
+            uf.MakeSet(idx)
+        elif num_neighbor_components == 1:
+            # Extend the one and only component in the neighborhood
+            # Note that NeighborComponents[0] holds the root of a component, since we called Find() earlier to retrieve
+            # it!
+            uf.ExtendSetByID(neighbor_components[0], idx)
         else:
-            if levelsets == "lower":
 
-                # ~ Merge the two components on either side of the current point
-                idxLowestNeighborComp = np.argmin(InputData[NeighborComponents])
-                idxLowestMinimum = NeighborComponents[idxLowestNeighborComp]
-                idxHighestMinimum = NeighborComponents[(idxLowestNeighborComp + 1) % 2]
-                UF.ExtendSetByID(idxLowestMinimum, idx)
-                UF.Union(idxHighestMinimum, idxLowestMinimum)
+            if level_sets == "lower":
+                # Merge the two components on either side of the current point:
+                idx_lowest_minimum = neighbor_components[np.argmin(data[neighbor_components])]
+                idx_highest_minimum = [comp for comp in neighbor_components if comp != idx_lowest_minimum][0]
+                uf.ExtendSetByID(idx_lowest_minimum, idx)
+                uf.Union(idx_highest_minimum, idx_lowest_minimum)
 
-                # ~ Record the two paired extrema: index of minimum, index of maximum, persistence value
-                Persistence = InputData[idx] - InputData[idxHighestMinimum]
-                ExtremumPointsAndPersistence.append((idxHighestMinimum, Persistence))
-                ExtremumPointsAndPersistence.append((idx, Persistence))
+                # Record the two paired extrema: index of minimum, index of maximum, persistence value:
+                persistence = data[idx] - data[idx_highest_minimum]
+                extremum_points_and_persistence.append((idx_highest_minimum, persistence))
+                extremum_points_and_persistence.append((idx, persistence))
 
-            elif levelsets == "upper":
+            elif level_sets == "upper":
 
-                # ~ Merge the two components on either side of the current point
-                idxHighestNeighborComp = np.argmax(InputData[NeighborComponents])
-                idxHighestMaximum = NeighborComponents[idxHighestNeighborComp]
-                idxLowestMaximum = NeighborComponents[(idxHighestNeighborComp + 1) % 2]
-                UF.ExtendSetByID(idxHighestMaximum, idx)
-                UF.Union(idxLowestMaximum, idxHighestMaximum)
+                # Merge the two components on either side of the current point:
+                idx_highest_maximum = neighbor_components[np.argmax(data[neighbor_components])]
+                idx_lowest_maximum = [comp for comp in neighbor_components if comp != idx_highest_maximum][0]
+                uf.ExtendSetByID(idx_highest_maximum, idx)
+                uf.Union(idx_lowest_maximum, idx_highest_maximum)
 
-                # ~ Record the two paired extrema: index of minimum, index of maximum, persistence value
-                Persistence = InputData[idxLowestMaximum] - InputData[idx]
-                ExtremumPointsAndPersistence.append((idx, Persistence))
-                ExtremumPointsAndPersistence.append((idxLowestMaximum, Persistence))
+                # Record the two paired extrema: index of minimum, index of maximum, persistence value:
+                persistence = data[idx_lowest_maximum] - data[idx]
+                extremum_points_and_persistence.append((idx, persistence))
+                extremum_points_and_persistence.append((idx_lowest_maximum, persistence))
 
-    # ~ Global minimum (or maximum)
-    if levelsets == "lower":
-        idxGlobalMinimum = UF.Find(0)
-        ExtremumPointsAndPersistence.append((idxGlobalMinimum, np.inf))
-    elif levelsets == "upper":
-        idxGlobalMaximum = UF.Find(0)
-        ExtremumPointsAndPersistence.append((idxGlobalMaximum, np.inf))
+    # Global minimum (or maximum):
+    if level_sets == "lower":
+        extremum_points_and_persistence.append((uf.Find(0), np.inf))
+    elif level_sets == "upper":
+        extremum_points_and_persistence.append((uf.Find(0), np.inf))
 
-    return ExtremumPointsAndPersistence
+    return extremum_points_and_persistence
 
 
-def DiversifyExtremumPointsAndPersistence(ExtremumPointsAndPersistence, level_set):
-    MinimumPointsAndPersistence = [t for t in ExtremumPointsAndPersistence[::2]]
-    MaximumPointsAndPersistence = [t for t in ExtremumPointsAndPersistence[1::2]]
+def diversify_extremum_points_and_persistence(extremum_points_and_persistence, level_set):
+    min_points_and_persistence = [t for t in extremum_points_and_persistence[::2]]
+    max_points_and_persistence = [t for t in extremum_points_and_persistence[1::2]]
 
     if level_set == "upper":
-        MaximumPointsAndPersistence = MaximumPointsAndPersistence + [MinimumPointsAndPersistence[-1]]
-        MinimumPointsAndPersistence = MinimumPointsAndPersistence[:-1]
+        max_points_and_persistence = max_points_and_persistence + [min_points_and_persistence[-1]]
+        min_points_and_persistence = min_points_and_persistence[:-1]
 
-    return MinimumPointsAndPersistence, MaximumPointsAndPersistence
-
-
-def FilterExtremumPointsByPersistence(ExtremumPointsAndPersistence, Threshold):
-
-    FilteredExtremumPointsAndPersistence = [t for t in ExtremumPointsAndPersistence if t[1] > Threshold]
-    return FilteredExtremumPointsAndPersistence
+    return min_points_and_persistence, max_points_and_persistence
 
 
-def plot_persistence(
-    birth_levels,
-    death_levels,
-    thresh_birth_levels,
-    thresh_death_levels,
-    output_folder=None,
-    file_name=None,
-    title=None,
-    display=False,
-):
-    """
-    Plot persistence pairs, i.e., (birth_level, death_level) pair of each maximum.
-    :param birth_levels:
-    :param death_levels:
-    :param thresh_birth_levels:
-    :param thresh_death_levels:
-    :param output_folder:
-    :param file_name:
-    :param title:
-    :param display:
-    :return: -
-    """
+def filter_extremum_points_by_persistence(extremum_points_and_persistence, threshold):
 
-    # Setup figure
-    fig, ax = plt.subplots(1, 1)
-
-    # Plot the persistence
-    plt.scatter(birth_levels, death_levels, marker=".", linewidths=1, color="red", label="discarded")
-    plt.scatter(thresh_birth_levels, thresh_death_levels, marker=".", linewidths=1, color="blue", label="selected")
-
-    X = np.c_[birth_levels, death_levels]
-    ax.plot([0, 1], [0, 1], "-", c="grey")
-    ax.set_xlabel("Birth level")
-    ax.set_ylabel("Death level")
-    ax.set_xlim((0, 1))
-    ax.set_ylim((0, 1))
-    ax.grid(True)
-    ax.legend(loc="upper left")
-    plt.axis("scaled")
-
-    if title is not None:
-        fig.suptitle(title)
-    fig.tight_layout()
-
-    if output_folder is not None and file_name is not None:
-        plt.savefig(output_folder + "/" + file_name)
-
-    if display is True:
-        plt.show()
-    else:
-        plt.close()
+    filtered_extremum_points_and_persistence = [
+        (point, persistence) for point, persistence in extremum_points_and_persistence if persistence > threshold
+    ]
+    return filtered_extremum_points_and_persistence

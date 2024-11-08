@@ -1,61 +1,48 @@
 import numpy as np
 
 from .persistence1d import (
-    DiversifyExtremumPointsAndPersistence,
-    FilterExtremumPointsByPersistence,
-    RunPersistence,
+    diversify_extremum_points_and_persistence,
+    filter_extremum_points_by_persistence,
+    run_persistence,
 )
 
 
-def TDA(marginal_pd, min_persistence=None):
-    # Compute the extremum points (i.e., minimum and maximum points) of the marginal pseudo-distribution AND their
-    # persistence:
-    ExtremumPointsAndPersistence = RunPersistence(marginal_pd, levelsets="upper")
+def TDA(marginal_pd, min_persistence=0):
 
-    # Keep only those extremum points with persistence above a given value:
-    ThreshExtremumPointsAndPersistence = FilterExtremumPointsByPersistence(
-        ExtremumPointsAndPersistence, Threshold=min_persistence
+    # Compute the extremum points (i.e., minimum and maximum points) and their persistence:
+    extremum_points_and_persistence = run_persistence(marginal_pd, level_sets="upper")
+
+    # Filter extremum points by persistence threshold:
+    filtered_extremum_points_and_persistence = filter_extremum_points_by_persistence(
+        extremum_points_and_persistence, threshold=min_persistence
     )
 
     # Split extremum points into minimum and maximum points:
-    (MinimumPointsAndPersistence, MaximumPointsAndPersistence) = DiversifyExtremumPointsAndPersistence(
-        ExtremumPointsAndPersistence, level_set="upper"
-    )
-    (ThreshMinimumPointsAndPersistence, ThreshMaximumPointsAndPersistence) = DiversifyExtremumPointsAndPersistence(
-        ThreshExtremumPointsAndPersistence, level_set="upper"
+    (filtered_min_points_and_persistence, filtered_max_points_and_persistence) = (
+        diversify_extremum_points_and_persistence(filtered_extremum_points_and_persistence, level_set="upper")
     )
 
     # Sorting maximum points (and, as a consequence, the corresponding minimum points) w.r.t. persistence:
-    argsorting = np.argsort(list(zip(*MaximumPointsAndPersistence))[1]).tolist()
-    argsorting_thresh = np.argsort(list(zip(*ThreshMaximumPointsAndPersistence))[1]).tolist()
+    argsorting = np.argsort(list(zip(*filtered_max_points_and_persistence))[1]).tolist()
 
-    if len(ThreshMinimumPointsAndPersistence) == 0:
-        ThreshMinimumPoints = []
-        pers_of_ThreshMinimumPoints = []
+    if len(filtered_min_points_and_persistence) == 0:
+        filtered_min_points = []
+        persistence_of_filtered_min_points = []
     else:
-        ThreshMinimumPoints = np.array(list(zip(*ThreshMinimumPointsAndPersistence))[0])[
-            argsorting_thresh[:-1]
-        ].tolist()
-        pers_of_ThreshMinimumPoints = np.array(list(zip(*ThreshMinimumPointsAndPersistence))[1])[
-            argsorting_thresh[:-1]
+        filtered_min_points = np.array(list(zip(*filtered_min_points_and_persistence))[0])[argsorting[:-1]].tolist()
+        persistence_of_filtered_min_points = np.array(list(zip(*filtered_min_points_and_persistence))[1])[
+            argsorting[:-1]
         ].tolist()
 
     # Indices of maximum points and their persistence:
-    ThreshMaximumPoints = np.array(list(zip(*ThreshMaximumPointsAndPersistence))[0])[argsorting_thresh].tolist()
-    pers_of_ThreshMaximumPoints = np.array(list(zip(*ThreshMaximumPointsAndPersistence))[1])[argsorting_thresh].tolist()
+    filtered_max_points = np.array(list(zip(*filtered_max_points_and_persistence))[0])[argsorting].tolist()
+    persistence_of_filtered_max_points = np.array(list(zip(*filtered_max_points_and_persistence))[1])[
+        argsorting
+    ].tolist()
 
-    if len(MinimumPointsAndPersistence) > 0:
-        # Indices of minimum points and their persistence:
-        MinimumPoints = np.array(list(zip(*MinimumPointsAndPersistence))[0])[argsorting[:-1]].tolist()
-        # pers_of_MinimumPoints = np.array(list(zip(*MinimumPointsAndPersistence))[1])[argsorting[:-1]].tolist()
-        MaximumPoints = np.array(list(zip(*MaximumPointsAndPersistence))[0])[argsorting].tolist()
-        # pers_of_MaximumPoints = np.array(list(zip(*MaximumPointsAndPersistence))[1])[argsorting].tolist()
-
-        # # Plot persistence diagram (NB: global maximum is NOT included)
-        # if output_folder is not None:
-        #     plot_persistence(
-        #         marginal_pd[MaximumPoints[:-1]], marginal_pd[MinimumPoints],
-        #         marginal_pd[ThreshMaximumPoints[:-1]], marginal_pd[ThreshMinimumPoints],
-        #         output_folder=output_folder, file_name=file_name, title=title, display=display)
-
-    return ThreshMinimumPoints, pers_of_ThreshMinimumPoints, ThreshMaximumPoints, pers_of_ThreshMaximumPoints
+    return (
+        filtered_min_points,
+        persistence_of_filtered_min_points,
+        filtered_max_points,
+        persistence_of_filtered_max_points,
+    )

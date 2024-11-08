@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from . import TDA
-from .regressions import compute_wQISA_predictions
+from .regressions import _compute_wQISA_predictions
 
 
 def find_horizontal_domain(pd, coarse_h_domain, max_width=1e9):
@@ -51,7 +51,7 @@ def find_lower_v_domain(I, VIoIs2plot, threshold_cut, max_height, min_persistenc
 
     # Lower boundary:
     X_tr = np.array(range(seed_site, seed_site + len(Y)))
-    Y_hat = compute_wQISA_predictions(Y, 5)  # Basically: average of a 2-"pixel" neighborhood
+    Y_hat = _compute_wQISA_predictions(Y, 5)  # Basically: average of a 2-"pixel" neighborhood
 
     # Peaks:
     if min_persistence is None:
@@ -124,7 +124,7 @@ def find_upper_v_domain(I, VIoIs2plot, threshold_cut, max_height, min_persistenc
     # Upper boundary:
     X_tr = np.array(range(seed_site, seed_site + len(Y)))
     # Y_hat = compute_predictions(X, Y, 10.)
-    Y_hat = compute_wQISA_predictions(Y, 5)
+    Y_hat = _compute_wQISA_predictions(Y, 5)
 
     # Peaks:
     if min_persistence is None:

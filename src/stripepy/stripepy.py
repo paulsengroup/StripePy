@@ -1,10 +1,13 @@
 import time
+from typing import List, Tuple
 
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.sparse as ss
 import seaborn as sns
+from numpy.typing import NDArray
 
 from . import IO
 from .configs import be_verbose
@@ -16,6 +19,69 @@ def log_transform(I: ss.csr_matrix) -> ss.csr_matrix:
     I.eliminate_zeros()
     Iproc = I.log1p()
     return Iproc
+
+
+def _compute_global_pseudodistribution(T: ss.csr_matrix) -> NDArray[np.float64]:
+    # This function takes as input a matrix marginalize it, scales it so that maximum is 1, and then smooth it
+    pd = np.squeeze(np.asarray(np.sum(T, axis=0)))  # marginalization
+    pd /= np.max(pd)  # scaling
+    pd = np.maximum(regressions._compute_wQISA_predictions(pd, 11), pd)  # smoothing
+    return pd
+
+
+def _sort_extrema_by_coordinate(ps_ePs: List[int], pers_of_ps_ePs: List[float]) -> Tuple[List[int], List[float]]:
+
+    # This function takes:
+    # -) a list containing the location of the local maximum points, and
+    # -) a list containing the corresponding values of topological persistence (so, they have same length).
+    # The input maximum points (and the topological persistences) are sorted w.r.t. their topological persistence.
+    # The aim of the function is to permute these lists so that local maximum points are now sorted w.r.t.
+    # their coordinates (from smallest to highest)
+    # Some notation:
+    # ps = persistence-sorted
+    # ePs = extremum points
+    # pers = topological persistence
+
+    permutation_ps2cs_ePs = np.argsort(ps_ePs)
+
+    # Maximum and minimum points sorted w.r.t. coordinates: actual application of permutations
+    cs_ePs = np.array(ps_ePs)[permutation_ps2cs_ePs].tolist()
+    cs_pers_of_ePs = np.array(pers_of_ps_ePs)[permutation_ps2cs_ePs].tolist()
+
+    return cs_ePs, cs_pers_of_ePs
+
+
+def _find_seeds_in_RoI(
+    seeds: List[int], left_bound_RoI: int, right_bound_RoI: int
+) -> Tuple[NDArray[np.int64], List[int]]:
+
+    # This function takes as input a list of seeds, the left and right boundaries of the region of interest (RoI) in
+    # matricial coordinates, and returns.
+    # an nd.array that contains the indices of those seeds within the boundaries
+    # a list of int, which are the actual coordinates of the seeds within the boundaries
+
+    # Find sites within the range of interest -- lower-triangular:
+    ids_seeds_in_RoI = np.where((left_bound_RoI <= np.array(seeds)) & (np.array(seeds) <= right_bound_RoI))[0]
+    seeds_in_RoI = np.array(seeds)[ids_seeds_in_RoI].tolist()
+
+    return ids_seeds_in_RoI, seeds_in_RoI
+
+
+def _store_results(
+    hf: h5py._hl.group.Group,
+    pd: NDArray[np.float64],
+    min_points: List[int],
+    pers_of_min_points: List[float],
+    max_points: List[int],
+    pers_of_max_points: List[float],
+    thresh_pers_type: str,
+    min_persistence: float,
+):
+    hf.create_dataset("pseudo-distribution", data=np.array(pd))
+    hf.create_dataset("minima_pts_and_persistence", data=np.array([min_points, pers_of_min_points]))
+    hf.create_dataset("maxima_pts_and_persistence", data=np.array([max_points, pers_of_max_points]))
+    hf.parent.attrs["thresholding_type"] = thresh_pers_type
+    hf.parent.attrs["min_persistence_used"] = min_persistence
 
 
 def step_1(I, genomic_belt, resolution, RoI=None, output_folder=None):
@@ -71,72 +137,45 @@ def step_1(I, genomic_belt, resolution, RoI=None, output_folder=None):
 def step_2(L, U, resolution, thresh_pers_type, thresh_pers_value, hf, Iproc_RoI=None, RoI=None, output_folder=None):
 
     print("2.1) Global 1D pseudo-distributions...")
-
-    # Pseudo-distributions:
-    LT_pd = np.squeeze(np.asarray(np.sum(L, axis=0)))
-    UT_pd = np.squeeze(np.asarray(np.sum(U, axis=0)))
-
-    # Scaling:
-    LT_pd /= np.max(LT_pd)
-    UT_pd /= np.max(UT_pd)
-
-    # Smoothing:
-    LT_pd = np.maximum(regressions.compute_wQISA_predictions(LT_pd, 11), LT_pd)
-    UT_pd = np.maximum(regressions.compute_wQISA_predictions(UT_pd, 11), UT_pd)
-
-    # Keep track of all maxima and persistence values:
-    hf["LT/"].create_dataset("pseudo-distribution", data=np.array(LT_pd))
-    hf["UT/"].create_dataset("pseudo-distribution", data=np.array(UT_pd))
+    LT_pd = _compute_global_pseudodistribution(L)
+    UT_pd = _compute_global_pseudodistribution(U)
 
     print("2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...")
 
     print("2.2.0) All maxima and their persistence")
     # NOTATION: mPs = minimum points, MPs = maximum Points, ps = persistence-sorted
     # NB: MPs are the actual sites of interest, i.e., the sites hosting linear patterns
-    LT_ps_mPs, pers_of_LT_ps_mPs, LT_ps_MPs, pers_of_LT_ps_MPs = TDA.TDA(LT_pd, min_persistence=0)
-    UT_ps_mPs, pers_of_UT_ps_mPs, UT_ps_MPs, pers_of_UT_ps_MPs = TDA.TDA(UT_pd, min_persistence=0)
 
-    # Store results:
-    hf["LT/"].create_dataset("minima_pts_and_persistence", data=np.array([LT_ps_mPs, pers_of_LT_ps_mPs]))
-    hf["LT/"].create_dataset("maxima_pts_and_persistence", data=np.array([LT_ps_MPs, pers_of_LT_ps_MPs]))
-    hf["UT/"].create_dataset("minima_pts_and_persistence", data=np.array([UT_ps_mPs, pers_of_UT_ps_mPs]))
-    hf["UT/"].create_dataset("maxima_pts_and_persistence", data=np.array([UT_ps_MPs, pers_of_UT_ps_MPs]))
+    # All local minimum and maximum points:
+    all_LT_ps_mPs, all_pers_of_LT_ps_mPs, all_LT_ps_MPs, all_pers_of_LT_ps_MPs = TDA.TDA(LT_pd, min_persistence=0)
+    all_UT_ps_mPs, all_pers_of_UT_ps_mPs, all_UT_ps_MPs, all_pers_of_UT_ps_MPs = TDA.TDA(UT_pd, min_persistence=0)
 
+    # TODO: rea1991 this flag is always used as constant in experiments, check if still necessary/useful
     if thresh_pers_type == "constant":
         min_persistence = thresh_pers_value
     else:
         # min_persistence = (np.quantile(LT_pers_of_MPs, 0.75) +
         #                    1.5 * (np.quantile(LT_pers_of_MPs, 0.75) - np.quantile(LT_pers_of_MPs, 0.25)))
-        min_persistence_LT = np.quantile(pers_of_LT_ps_MPs, thresh_pers_value)
-        min_persistence_UT = np.quantile(pers_of_UT_ps_MPs, thresh_pers_value)
+        min_persistence_LT = np.quantile(all_pers_of_LT_ps_MPs, thresh_pers_value)
+        min_persistence_UT = np.quantile(all_pers_of_UT_ps_MPs, thresh_pers_value)
         min_persistence = np.max(min_persistence_LT, min_persistence_UT)
         print(f"This quantile is used: {thresh_pers_value}")
-    hf.attrs["thresholding_type"] = thresh_pers_type
-    hf.attrs["min_persistence_used"] = min_persistence
 
     print("2.2.1) Lower triangular part")
     LT_ps_mPs, pers_of_LT_ps_mPs, LT_ps_MPs, pers_of_LT_ps_MPs = TDA.TDA(LT_pd, min_persistence=min_persistence)
 
     print("2.2.2) Upper triangular part")
+    # Here, LT_ps_mPs means that the lower-triangular minimum points are sorted w.r.t. persistence
+    # (NOTATION: ps = persistence-sorted)
     UT_ps_mPs, pers_of_UT_ps_mPs, UT_ps_MPs, pers_of_UT_ps_MPs = TDA.TDA(UT_pd, min_persistence=min_persistence)
-
     # NB: Maxima are sorted w.r.t. their persistence... and this sorting is applied to minima too,
-    # so that each maximum is still paired to its minimum!
+    # so that each maximum is still paired to its minimum.
 
-    # Maximum and minimum points sorted w.r.t. coordinates: permutations and inverse permutations
-    # NOTATION: cs = coordinate-sorted
-    LT_permutation_ps2cs_mPs = np.argsort(LT_ps_mPs)
-    LT_permutation_ps2cs_MPs = np.argsort(LT_ps_MPs)
-    UT_permutation_ps2cs_mPs = np.argsort(UT_ps_mPs)
-    UT_permutation_ps2cs_MPs = np.argsort(UT_ps_MPs)
-
-    # Maximum and minimum points sorted w.r.t. coordinates: actual application of permutations
-    LT_mPs = np.array(LT_ps_mPs)[LT_permutation_ps2cs_mPs].tolist()
-    LT_MPs = np.array(LT_ps_MPs)[LT_permutation_ps2cs_MPs].tolist()
-    UT_mPs = np.array(UT_ps_mPs)[UT_permutation_ps2cs_mPs].tolist()
-    UT_MPs = np.array(UT_ps_MPs)[UT_permutation_ps2cs_MPs].tolist()
-    LT_pers_of_MPs = np.array(pers_of_LT_ps_MPs)[LT_permutation_ps2cs_MPs].tolist()
-    UT_pers_of_MPs = np.array(pers_of_UT_ps_MPs)[UT_permutation_ps2cs_MPs].tolist()
+    # Maximum and minimum points sorted w.r.t. coordinates (NOTATION: cs = coordinate-sorted):
+    LT_mPs, _ = _sort_extrema_by_coordinate(LT_ps_mPs, pers_of_LT_ps_mPs)
+    LT_MPs, LT_pers_of_MPs = _sort_extrema_by_coordinate(LT_ps_MPs, pers_of_LT_ps_MPs)
+    UT_mPs, _ = _sort_extrema_by_coordinate(UT_ps_mPs, pers_of_UT_ps_mPs)
+    UT_MPs, UT_pers_of_MPs = _sort_extrema_by_coordinate(UT_ps_MPs, pers_of_UT_ps_MPs)
 
     print("2.3) Storing into a list of Stripe objects...")
     candidate_stripes = dict()
@@ -150,28 +189,48 @@ def step_2(L, U, resolution, thresh_pers_type, thresh_pers_value, hf, Iproc_RoI=
     ]
 
     # Dictionary containing everything that should be returned
-    pseudo_distributions = dict()
-    pseudo_distributions["lower"] = dict()
-    pseudo_distributions["upper"] = dict()
-    pseudo_distributions["lower"]["pseudo-distribution"] = LT_pd
-    pseudo_distributions["upper"]["pseudo-distribution"] = UT_pd
-    pseudo_distributions["lower"]["persistent_minimum_points"] = LT_mPs
-    pseudo_distributions["upper"]["persistent_minimum_points"] = UT_mPs
-    pseudo_distributions["lower"]["persistent_maximum_points"] = LT_MPs
-    pseudo_distributions["upper"]["persistent_maximum_points"] = UT_MPs
-    pseudo_distributions["lower"]["persistence_of_maximum_points"] = LT_pers_of_MPs
-    pseudo_distributions["upper"]["persistence_of_maximum_points"] = UT_pers_of_MPs
+    pseudo_distributions = {
+        "lower": {
+            "pseudo-distribution": LT_pd,
+            "persistent_minimum_points": LT_mPs,
+            "persistent_maximum_points": LT_MPs,
+            "persistence_of_maximum_points": LT_pers_of_MPs,
+        },
+        "upper": {
+            "pseudo-distribution": UT_pd,
+            "persistent_minimum_points": UT_mPs,
+            "persistent_maximum_points": UT_MPs,
+            "persistence_of_maximum_points": UT_pers_of_MPs,
+        },
+    }
+
+    # Store results:
+    _store_results(
+        hf["LT/"],
+        LT_pd,
+        all_LT_ps_mPs,
+        all_pers_of_LT_ps_mPs,
+        all_LT_ps_MPs,
+        all_pers_of_LT_ps_MPs,
+        thresh_pers_type,
+        min_persistence,
+    )
+    _store_results(
+        hf["UT/"],
+        UT_pd,
+        all_UT_ps_mPs,
+        all_pers_of_UT_ps_mPs,
+        all_UT_ps_MPs,
+        all_pers_of_UT_ps_MPs,
+        thresh_pers_type,
+        min_persistence,
+    )
 
     if RoI is not None:
 
         print("2.4) Finding sites inside the region selected above...")
-        # Find sites within the range of interest -- lower-triangular:
-        ids_LT_MPs_in_RoI = np.where((RoI["matrix"][0] <= np.array(LT_MPs)) & (np.array(LT_MPs) <= RoI["matrix"][1]))[0]
-        LT_MPs_in_RoI = np.array(LT_MPs)[ids_LT_MPs_in_RoI].tolist()
-
-        # Find sites within the range of interest -- upper-triangular:
-        ids_UT_MPs_in_RoI = np.where((RoI["matrix"][2] <= np.array(UT_MPs)) & (np.array(UT_MPs) <= RoI["matrix"][3]))[0]
-        UT_MPs_in_RoI = np.array(UT_MPs)[ids_UT_MPs_in_RoI].tolist()
+        ids_LT_MPs_in_RoI, LT_MPs_in_RoI = _find_seeds_in_RoI(LT_MPs, RoI["matrix"][0], RoI["matrix"][1])
+        ids_UT_MPs_in_RoI, UT_MPs_in_RoI = _find_seeds_in_RoI(UT_MPs, RoI["matrix"][0], RoI["matrix"][1])
 
         # Store indices of persistence maxima points inside the RoI:
         pseudo_distributions["lower"]["indices_persistent_maximum_points_in_RoI"] = ids_LT_MPs_in_RoI
