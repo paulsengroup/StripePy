@@ -139,15 +139,16 @@ def step_2(L, U, resolution, thresh_pers_type, thresh_pers_value, hf, Iproc_RoI=
     UT_pers_of_MPs = np.array(pers_of_UT_ps_MPs)[UT_permutation_ps2cs_MPs].tolist()
 
     print("2.3) Storing into a list of Stripe objects...")
-    candidate_stripes = dict()
-    candidate_stripes["lower"] = [
-        stripe.Stripe(seed=LT_MP, top_pers=LT_pers_of_MP, where="lower_triangular")
-        for LT_MP, LT_pers_of_MP in zip(LT_MPs, LT_pers_of_MPs)
-    ]
-    candidate_stripes["upper"] = [
-        stripe.Stripe(seed=UT_MP, top_pers=UT_pers_of_MP, where="upper_triangular")
-        for UT_MP, UT_pers_of_MP in zip(UT_MPs, UT_pers_of_MPs)
-    ]
+    candidate_stripes = {
+        "lower": [
+            stripe.Stripe(seed=LT_MP, top_pers=LT_pers_of_MP, where="lower_triangular")
+            for LT_MP, LT_pers_of_MP in zip(LT_MPs, LT_pers_of_MPs)
+        ],
+        "upper": [
+            stripe.Stripe(seed=UT_MP, top_pers=UT_pers_of_MP, where="upper_triangular")
+            for UT_MP, UT_pers_of_MP in zip(UT_MPs, UT_pers_of_MPs)
+        ],
+    }
 
     # Dictionary containing everything that should be returned
     pseudo_distributions = dict()
@@ -301,11 +302,9 @@ def step_3(
 
     print("3.1.2) Updating list of Stripe objects with HIoIs...")
     for num_cand_stripe, (LT_L_bound, LT_R_bound) in enumerate(zip(LT_L_bounds, LT_R_bounds)):
-        candidate_stripes["lower"][num_cand_stripe].L_bound = LT_L_bound
-        candidate_stripes["lower"][num_cand_stripe].R_bound = LT_R_bound
+        candidate_stripes["lower"][num_cand_stripe].set_horizontal_bounds(LT_L_bound, LT_R_bound)
     for num_cand_stripe, (UT_L_bound, UT_R_bound) in enumerate(zip(UT_L_bounds, UT_R_bounds)):
-        candidate_stripes["upper"][num_cand_stripe].L_bound = UT_L_bound
-        candidate_stripes["upper"][num_cand_stripe].R_bound = UT_R_bound
+        candidate_stripes["upper"][num_cand_stripe].set_horizontal_bounds(UT_L_bound, UT_R_bound)
 
     if all([param is not None for param in [RoI, output_folder]]):
 
@@ -481,11 +480,9 @@ def step_3(
 
     print("3.2.2) Updating list of Stripe objects with VIoIs...")
     for num_cand_stripe, (LT_U_bound, LT_D_bound) in enumerate(zip(LT_U_bounds, LT_D_bounds)):
-        candidate_stripes["lower"][num_cand_stripe].U_bound = LT_U_bound
-        candidate_stripes["lower"][num_cand_stripe].D_bound = LT_D_bound
+        candidate_stripes["lower"][num_cand_stripe].set_vertical_bounds(LT_U_bound, LT_D_bound)
     for num_cand_stripe, (UT_U_bound, UT_D_bound) in enumerate(zip(UT_U_bounds, UT_D_bounds)):
-        candidate_stripes["upper"][num_cand_stripe].U_bound = UT_U_bound
-        candidate_stripes["upper"][num_cand_stripe].D_bound = UT_D_bound
+        candidate_stripes["upper"][num_cand_stripe].set_vertical_bounds(UT_U_bound, UT_D_bound)
 
     print(f"Execution time: {time.time() - start_time} seconds ---")
 
@@ -729,19 +726,19 @@ def step_4(
 
     LT_biological_descriptors = pd.DataFrame(
         {
-            "inner mean": [c_s.inner_descriptors["mean"] for c_s in candidate_stripes["lower"]],
-            "outer mean": [c_s.outer_descriptors["mean"] for c_s in candidate_stripes["lower"]],
+            "inner mean": [c_s.inner_mean for c_s in candidate_stripes["lower"]],
+            "outer mean": [c_s.outer_mean for c_s in candidate_stripes["lower"]],
             "relative change": [c_s.rel_change for c_s in candidate_stripes["lower"]],
-            "standard deviation": [c_s.inner_descriptors["std"] for c_s in candidate_stripes["lower"]],
+            "standard deviation": [c_s.inner_std for c_s in candidate_stripes["lower"]],
         }
     )
 
     UT_biological_descriptors = pd.DataFrame(
         {
-            "inner mean": [c_s.inner_descriptors["mean"] for c_s in candidate_stripes["upper"]],
-            "outer mean": [c_s.outer_descriptors["mean"] for c_s in candidate_stripes["upper"]],
+            "inner mean": [c_s.inner_mean for c_s in candidate_stripes["upper"]],
+            "outer mean": [c_s.outer_mean for c_s in candidate_stripes["upper"]],
             "relative change": [c_s.rel_change for c_s in candidate_stripes["upper"]],
-            "standard deviation": [c_s.inner_descriptors["std"] for c_s in candidate_stripes["upper"]],
+            "standard deviation": [c_s.inner_std for c_s in candidate_stripes["upper"]],
         }
     )
 
@@ -758,10 +755,10 @@ def step_4(
         # Retrieve data:
         LT_MPs = [c_s.seed for c_s in candidate_stripes["lower"]]
         UT_MPs = [c_s.seed for c_s in candidate_stripes["upper"]]
-        LT_HIoIs = [[c_s.L_bound, c_s.R_bound] for c_s in candidate_stripes["lower"]]
-        LT_VIoIs = [[c_s.U_bound, c_s.D_bound] for c_s in candidate_stripes["lower"]]
-        UT_HIoIs = [[c_s.L_bound, c_s.R_bound] for c_s in candidate_stripes["upper"]]
-        UT_VIoIs = [[c_s.U_bound, c_s.D_bound] for c_s in candidate_stripes["upper"]]
+        LT_HIoIs = [[c_s.left_bound, c_s.right_bound] for c_s in candidate_stripes["lower"]]
+        LT_VIoIs = [[c_s.top_bound, c_s.bottom_bound] for c_s in candidate_stripes["lower"]]
+        UT_HIoIs = [[c_s.left_bound, c_s.right_bound] for c_s in candidate_stripes["upper"]]
+        UT_VIoIs = [[c_s.top_bound, c_s.bottom_bound] for c_s in candidate_stripes["upper"]]
 
         for threshold in thresholds_relative_change:
 
