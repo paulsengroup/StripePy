@@ -158,6 +158,14 @@ def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
     )
 
     sc.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="Set verbosity of output to the console.",
+    )
+
+    sc.add_argument(
         "-p",
         "--nproc",
         type=_num_cpus,
@@ -219,6 +227,13 @@ def _make_stripepy_download_subcommand(main_parser) -> argparse.ArgumentParser:
         default=False,
         help="Overwrite existing file(s).",
     )
+    sc.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="Set verbosity of output to the console.",
+    )
 
     return sc
 
@@ -251,6 +266,13 @@ def _make_stripepy_view_subcommand(main_parser) -> argparse.ArgumentParser:
         choices=["transpose_to_ut", "transpose_to_lt", None],
         default=None,
         help="Control if and how stripe coordinates should be transformed.",
+    )
+    sc.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="Set verbosity of output to the console.",
     )
 
     return sc
@@ -295,8 +317,11 @@ def _process_stripepy_call_args(args: Dict[str, Any]) -> Dict[str, Any]:
             "max_width",
         ]
     }
-    configs_output = {key: args[key] for key in ["output_folder", "force"]}
+    configs_output = {key: args[key] for key in ["output_folder", "force", "verbosity"]}
 
+    configs_output["output_folder"] = (
+        configs_output["output_folder"] / configs_input["contact-map"].stem / str(configs_input["resolution"])
+    )
     configs_other = {"nproc": args["nproc"]}
 
     # Print the used parameters (chosen or default-ones):
@@ -323,16 +348,16 @@ def _process_stripepy_call_args(args: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def parse_args() -> Tuple[str, Any]:
+def parse_args() -> Tuple[str, Any, str]:
     # Parse the input parameters:
     args = vars(_make_cli().parse_args())
 
     subcommand = args.pop("subcommand")
     if subcommand == "call":
-        return subcommand, _process_stripepy_call_args(args)
+        return subcommand, _process_stripepy_call_args(args), args["verbosity"]
     if subcommand == "download":
-        return subcommand, args
+        return subcommand, args, args["verbosity"]
     if subcommand == "view":
-        return subcommand, args
+        return subcommand, args, args["verbosity"]
 
     raise NotImplementedError
