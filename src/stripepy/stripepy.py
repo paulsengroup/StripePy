@@ -174,7 +174,7 @@ def _plot_RoIs(
     return Iproc_RoI
 
 
-def _compute_global_pseudodistribution(T: ss.csr_matrix) -> NDArray[np.float64]:
+def _compute_global_pseudodistribution(T: ss.csr_matrix, smooth: bool = True) -> NDArray[np.float64]:
     """
     Given a sparse matrix T, marginalize it, scale the marginal so that maximum is 1, and then smooth it.
 
@@ -182,6 +182,8 @@ def _compute_global_pseudodistribution(T: ss.csr_matrix) -> NDArray[np.float64]:
     ----------
     T: ss.csr_matrix
         the sparse matrix to be processed
+    smooth: bool
+        if set to True, smoothing is applied to the pseudo-distribution (default value is True)
 
     Returns
     -------
@@ -191,7 +193,8 @@ def _compute_global_pseudodistribution(T: ss.csr_matrix) -> NDArray[np.float64]:
 
     pseudo_dist = np.squeeze(np.asarray(np.sum(T, axis=0)))  # marginalization
     pseudo_dist /= np.max(pseudo_dist)  # scaling
-    pseudo_dist = np.maximum(regressions._compute_wQISA_predictions(pseudo_dist, 11), pseudo_dist)  # smoothing
+    if smooth:
+        pseudo_dist = np.maximum(regressions._compute_wQISA_predictions(pseudo_dist, 11), pseudo_dist)  # smoothing
     return pseudo_dist
 
 
@@ -289,7 +292,7 @@ def _store_results(
 
 
 def _check_neighborhood(
-    values: NDArray[np.float64], min_value: float = 0.1, neighborhood_size: int = 20, threshold_percentage: float = 0.7
+    values: NDArray[np.float64], min_value: float = 0.1, neighborhood_size: int = 10, threshold_percentage: float = 0.85
 ) -> List[int]:
     # TODO rea1991 Change neighborhood size from "matrix" to "genomic" (eg, default of 1 Mb)
     assert 0 <= min_value
@@ -300,9 +303,9 @@ def _check_neighborhood(
     for i in range(neighborhood_size, len(values) - neighborhood_size):
         neighborhood = values[i - neighborhood_size : i + neighborhood_size + 1]
         ratio_above_min_value = sum(1 for value in neighborhood if value >= min_value) / len(neighborhood)
+
         if ratio_above_min_value >= threshold_percentage:
             mask[i] = 1
-
     return mask
 
 
@@ -346,8 +349,8 @@ def step_1(I, genomic_belt, resolution, RoI=None, output_folder=None):
 
 def step_2(L, U, resolution, min_persistence, hf, Iproc_RoI=None, RoI=None, output_folder=None):
     print("2.1) Global 1D pseudo-distributions...")
-    LT_pd = _compute_global_pseudodistribution(L)
-    UT_pd = _compute_global_pseudodistribution(U)
+    LT_pd = _compute_global_pseudodistribution(L, smooth=True)
+    UT_pd = _compute_global_pseudodistribution(U, smooth=True)
 
     print("2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...")
 
@@ -376,8 +379,8 @@ def step_2(L, U, resolution, min_persistence, hf, Iproc_RoI=None, RoI=None, outp
     UT_MPs, UT_pers_of_MPs = _sort_extrema_by_coordinate(UT_ps_MPs, pers_of_UT_ps_MPs)
 
     print("2.2.3) Filter out seeds in sparse regions")
-    LT_mask = _check_neighborhood(LT_pd)
-    UT_mask = _check_neighborhood(UT_pd)
+    LT_mask = _check_neighborhood(_compute_global_pseudodistribution(L, smooth=False))
+    UT_mask = _check_neighborhood(_compute_global_pseudodistribution(U, smooth=False))
     x = _filter_extrema_by_sparseness(LT_mPs, LT_pers_of_mPs, LT_MPs, LT_pers_of_MPs, LT_mask)
     LT_mPs, LT_pers_of_mPs, LT_MPs, LT_pers_of_MPs = x
     x = _filter_extrema_by_sparseness(UT_mPs, UT_pers_of_mPs, UT_MPs, UT_pers_of_MPs, UT_mask)
