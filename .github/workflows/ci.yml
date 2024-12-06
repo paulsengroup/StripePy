@@ -99,7 +99,7 @@ jobs:
             -m unit
 
       - name: Upload unit test coverage report to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           flags: "tests | unit | python-${{ matrix.python_version }}"
           disable_search: true
@@ -156,7 +156,7 @@ jobs:
             -m end2end
 
       - name: Upload end2end test coverage report to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           flags: "tests | integration | python-${{ matrix.python_version }}"
           disable_search: true
