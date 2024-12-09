@@ -5,7 +5,6 @@
 import functools
 import hashlib
 import json
-import logging
 import math
 import pathlib
 import random
@@ -14,6 +13,8 @@ import tempfile
 import time
 import urllib.request
 from typing import Any, Dict, Tuple, Union
+
+import structlog
 
 
 @functools.cache
@@ -104,7 +105,8 @@ def _lookup_dataset(name: Union[str, None], assembly: Union[str, None], max_size
 
 
 def _hash_file(path: pathlib.Path, chunk_size=16 << 20) -> str:
-    logging.info('computing MD5 digest for file "%s"...', path)
+    logger = structlog.get_logger()
+    logger.info('computing MD5 digest for file "%s"...', path)
     with path.open("rb") as f:
         hasher = hashlib.md5()
         while True:
@@ -118,7 +120,8 @@ def _download_progress_reporter(chunk_no, max_chunk_size, download_size):
     if download_size == -1:
         if not _download_progress_reporter.skip_progress_report:
             _download_progress_reporter.skip_progress_report = True
-            logging.warning("unable to report download progress: remote file size is not known!")
+            logger = structlog.get_logger()
+            logger.warning("unable to report download progress: remote file size is not known!")
         return
 
     timepoint = _download_progress_reporter.timepoint
@@ -127,7 +130,8 @@ def _download_progress_reporter(chunk_no, max_chunk_size, download_size):
         mb_downloaded = (chunk_no * max_chunk_size) / (1024 << 10)
         download_size_mb = download_size / (1024 << 10)
         progress_pct = (mb_downloaded / download_size_mb) * 100
-        logging.info("downloaded %.2f/%.2f MB (%.2f%%)", mb_downloaded, download_size_mb, progress_pct)
+        logger = structlog.get_logger()
+        logger.info("downloaded %.2f/%.2f MB (%.2f%%)", mb_downloaded, download_size_mb, progress_pct)
         _download_progress_reporter.timepoint = time.time()
 
 
@@ -138,6 +142,7 @@ _download_progress_reporter.timepoint = 0.0
 
 def _download_and_checksum(name: str, dset: Dict[str, Any], dest: pathlib.Path):
     with tempfile.NamedTemporaryFile(dir=dest.parent, prefix=f"{dest.stem}.") as tmpfile:
+        logger = structlog.get_logger()
         tmpfile.close()
         tmpfile = pathlib.Path(tmpfile.name)
 
@@ -145,15 +150,15 @@ def _download_and_checksum(name: str, dset: Dict[str, Any], dest: pathlib.Path):
         md5sum = dset["md5"]
         assembly = dset.get("assembly", "unknown")
 
-        logging.info('downloading dataset "%s" (assembly=%s)...', name, assembly)
+        logger.info('downloading dataset "%s" (assembly=%s)...', name, assembly)
         t0 = time.time()
         urllib.request.urlretrieve(url, tmpfile, reporthook=_download_progress_reporter)
         t1 = time.time()
-        logging.info('DONE! Downloading dataset "%s" took %.2fs.', name, t1 - t0)
+        logger.info('DONE! Downloading dataset "%s" took %.2fs.', name, t1 - t0)
 
         digest = _hash_file(tmpfile)
         if digest == md5sum:
-            logging.info("MD5 checksum match!")
+            logger.info("MD5 checksum match!")
             return tmpfile.rename(dest)
 
         raise RuntimeError(
@@ -191,5 +196,6 @@ def run(
     dest = _download_and_checksum(dset_name, config, output_path)
     t1 = time.time()
 
-    logging.info('successfully downloaded dataset "%s" to file "%s"', config["url"], dest)
-    logging.info(f"file size: %.2fMB. Elapsed time: %.2fs", dest.stat().st_size / (1024 << 10), t1 - t0)
+    logger = structlog.get_logger()
+    logger.info('successfully downloaded dataset "%s" to file "%s"', config["url"], dest)
+    logger.info(f"file size: %.2fMB. Elapsed time: %.2fs", dest.stat().st_size / (1024 << 10), t1 - t0)

@@ -14,6 +14,7 @@ from typing import Any, Dict
 import h5py
 import hictkpy
 import numpy as np
+import structlog
 
 from stripepy import IO, others, stripepy
 
@@ -44,6 +45,29 @@ def print_all_attributes(obj, parent=""):
     elif isinstance(obj, h5py.Dataset):
         for key, val in obj.attrs.items():
             print(f"{parent}/{key}: {val}")
+
+
+def write_param_summary(
+    configs_input: Dict[str, Any],
+    configs_thresholds: Dict[str, Any],
+    configs_output: Dict[str, Any],
+    configs_other: Dict[str, Any],
+):
+    logger = structlog.get_logger()
+    logger.info("Arguments:")
+    logger.info(f"--contact-map: {configs_input['contact-map']}")
+    logger.info(f"--resolution: {configs_input['resolution']}")
+    logger.info(f"--normalization: {configs_input['normalization']}")
+    logger.info(f"--genomic-belt: {configs_input['genomic_belt']}")
+    logger.info(f"--roi: {configs_input['roi']}")
+    logger.info(f"--max-width: {configs_thresholds['max_width']}")
+    logger.info(f"--glob-pers-min: {configs_thresholds['glob_pers_min']}")
+    logger.info(f"--constrain-heights: {configs_thresholds['constrain_heights']}")
+    logger.info(f"--loc-pers-min: {configs_thresholds['loc_pers_min']}")
+    logger.info(f"--loc-trend-min: {configs_thresholds['loc_trend_min']}")
+    logger.info(f"--output-folder: {configs_output['output_folder']}")
+    logger.info(f"--force: {configs_output['force']}")
+    logger.info(f"--nproc: {configs_other['nproc']}")
 
 
 def _init_h5_file(
@@ -108,6 +132,8 @@ def run(
     # How long does stripepy take to analyze the whole Hi-C matrix?
     start_global_time = time.time()
 
+    write_param_summary(configs_input, configs_thresholds, configs_output, configs_other)
+
     # Data loading:
     f, chr_starts, chr_ends, bp_lengths = others.cmap_loading(configs_input["contact-map"], configs_input["resolution"])
 
@@ -115,9 +141,7 @@ def run(
     # configs_output["output_folder"] = (
     #     f"{configs_output['output_folder']}/{configs_input['contact-map'].stem}/{configs_input['resolution']}"
     # )
-    configs_output["output_folder"] = (
-        configs_output["output_folder"] / configs_input["contact-map"].stem / str(configs_input["resolution"])
-    )
+
     IO.remove_and_create_folder(configs_output["output_folder"], configs_output["force"])
 
     # Extract a list of tuples where each tuple is (index, chr), e.g. (2,'chr3'):
