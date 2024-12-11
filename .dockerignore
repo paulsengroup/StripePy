@@ -8,6 +8,7 @@
 # Allowed directories
 !src/**/*.py
 !test/**/*.py
+!test/data/results_4DNFI9GMP2J8_v1.hdf5
 
 
 # Allowed files

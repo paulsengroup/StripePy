@@ -174,7 +174,7 @@ def _plot_RoIs(
     return Iproc_RoI
 
 
-def _compute_global_pseudodistribution(T: ss.csr_matrix, smooth: bool = True) -> NDArray[np.float64]:
+def _compute_global_pseudodistribution(T: ss.csr_matrix, smooth: bool = True) -> NDArray[float]:
     """
     Given a sparse matrix T, marginalize it, scale the marginal so that maximum is 1, and then smooth it.
 
@@ -347,10 +347,18 @@ def step_1(I, genomic_belt, resolution, RoI=None, output_folder=None):
     return LT_Iproc, UT_Iproc, Iproc_RoI
 
 
-def step_2(L, U, resolution, min_persistence, hf, Iproc_RoI=None, RoI=None, output_folder=None):
+def step_2(chrom: str, L, U, resolution, min_persistence, Iproc_RoI=None, RoI=None, output_folder=None) -> IO.Result:
     print("2.1) Global 1D pseudo-distributions...")
     LT_pd = _compute_global_pseudodistribution(L, smooth=True)
     UT_pd = _compute_global_pseudodistribution(U, smooth=True)
+
+    result = IO.Result(chrom)
+    if RoI is not None:
+        result.set_roi(RoI)
+    result.set_min_persistence(min_persistence)
+
+    result.set("pseudodistribution", LT_pd, "LT")
+    result.set("pseudodistribution", UT_pd, "UT")
 
     print("2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...")
 
@@ -361,6 +369,15 @@ def step_2(L, U, resolution, min_persistence, hf, Iproc_RoI=None, RoI=None, outp
     # All local minimum and maximum points:
     all_LT_ps_mPs, all_pers_of_LT_ps_mPs, all_LT_ps_MPs, all_pers_of_LT_ps_MPs = TDA.TDA(LT_pd, min_persistence=0)
     all_UT_ps_mPs, all_pers_of_UT_ps_mPs, all_UT_ps_MPs, all_pers_of_UT_ps_MPs = TDA.TDA(UT_pd, min_persistence=0)
+
+    result.set("all_minimum_points", all_LT_ps_mPs, "LT")
+    result.set("all_maximum_points", all_LT_ps_MPs, "LT")
+    result.set("persistence_of_all_minimum_points", all_pers_of_LT_ps_mPs, "LT")
+    result.set("persistence_of_all_maximum_points", all_pers_of_LT_ps_MPs, "LT")
+    result.set("all_minimum_points", all_UT_ps_mPs, "UT")
+    result.set("all_maximum_points", all_UT_ps_MPs, "UT")
+    result.set("persistence_of_all_minimum_points", all_pers_of_UT_ps_mPs, "UT")
+    result.set("persistence_of_all_maximum_points", all_pers_of_UT_ps_MPs, "UT")
 
     print("2.2.1) Lower triangular part")
     LT_ps_mPs, pers_of_LT_ps_mPs, LT_ps_MPs, pers_of_LT_ps_MPs = TDA.TDA(LT_pd, min_persistence=min_persistence)
@@ -392,67 +409,37 @@ def step_2(L, U, resolution, min_persistence, hf, Iproc_RoI=None, RoI=None, outp
     if len(LT_MPs) == len(LT_ps_MPs) and len(UT_MPs) == len(UT_ps_MPs):
         print("No change in number of seed sites")
 
-    print("2.3) Storing into a list of Stripe objects...")
-    candidate_stripes = {
-        "lower": [
-            stripe.Stripe(seed=LT_MP, top_pers=LT_pers_of_MP, where="lower_triangular")
-            for LT_MP, LT_pers_of_MP in zip(LT_MPs, LT_pers_of_MPs)
-        ],
-        "upper": [
-            stripe.Stripe(seed=UT_MP, top_pers=UT_pers_of_MP, where="upper_triangular")
-            for UT_MP, UT_pers_of_MP in zip(UT_MPs, UT_pers_of_MPs)
-        ],
-    }
+    result.set("persistent_minimum_points", LT_mPs, "LT")
+    result.set("persistent_maximum_points", LT_MPs, "LT")
+    result.set("persistence_of_minimum_points", LT_pers_of_mPs, "LT")
+    result.set("persistence_of_maximum_points", LT_pers_of_MPs, "LT")
 
-    # Dictionary containing everything that should be returned
-    pseudo_distributions = {
-        "lower": {
-            "pseudo-distribution": LT_pd,
-            "persistent_minimum_points": LT_mPs,
-            "persistent_maximum_points": LT_MPs,
-            "persistence_of_maximum_points": LT_pers_of_MPs,
-        },
-        "upper": {
-            "pseudo-distribution": UT_pd,
-            "persistent_minimum_points": UT_mPs,
-            "persistent_maximum_points": UT_MPs,
-            "persistence_of_maximum_points": UT_pers_of_MPs,
-        },
-    }
-
-    # Store results:
-    _store_results(
-        hf["LT/"],
-        LT_pd,
-        all_LT_ps_mPs,
-        all_pers_of_LT_ps_mPs,
-        all_LT_ps_MPs,
-        all_pers_of_LT_ps_MPs,
-        min_persistence,
-    )
-    _store_results(
-        hf["UT/"],
-        UT_pd,
-        all_UT_ps_mPs,
-        all_pers_of_UT_ps_mPs,
-        all_UT_ps_MPs,
-        all_pers_of_UT_ps_MPs,
-        min_persistence,
-    )
+    result.set("persistent_minimum_points", UT_mPs, "UT")
+    result.set("persistent_maximum_points", UT_MPs, "UT")
+    result.set("persistence_of_minimum_points", UT_pers_of_mPs, "UT")
+    result.set("persistence_of_maximum_points", UT_pers_of_MPs, "UT")
 
     # If no candidates are found in the lower- or upper-triangular maps, exit:
     if len(LT_MPs) == 0 or len(UT_MPs) == 0:
-        return pseudo_distributions, None
+        return result
 
-    if RoI is not None:
+    print("2.3) Storing into a list of Stripe objects...")
+    stripes = [
+        stripe.Stripe(seed=LT_MP, top_pers=LT_pers_of_MP, where="lower_triangular")
+        for LT_MP, LT_pers_of_MP in zip(LT_MPs, LT_pers_of_MPs)
+    ]
+    result.set("stripes", stripes, "LT")
 
+    stripes = [
+        stripe.Stripe(seed=UT_MP, top_pers=UT_pers_of_MP, where="upper_triangular")
+        for UT_MP, UT_pers_of_MP in zip(UT_MPs, UT_pers_of_MPs)
+    ]
+    result.set("stripes", stripes, "UT")
+
+    if result.roi is not None:
         print("2.4) Finding sites inside the region selected above...")
-        ids_LT_MPs_in_RoI, LT_MPs_in_RoI = _find_seeds_in_RoI(LT_MPs, RoI["matrix"][0], RoI["matrix"][1])
-        ids_UT_MPs_in_RoI, UT_MPs_in_RoI = _find_seeds_in_RoI(UT_MPs, RoI["matrix"][0], RoI["matrix"][1])
-
-        # Store indices of persistence maxima points inside the RoI:
-        pseudo_distributions["lower"]["indices_persistent_maximum_points_in_RoI"] = ids_LT_MPs_in_RoI
-        pseudo_distributions["upper"]["indices_persistent_maximum_points_in_RoI"] = ids_UT_MPs_in_RoI
+        ids_LT_MPs_in_RoI, LT_MPs_in_RoI = _find_seeds_in_RoI(LT_MPs, result.roi["matrix"][0], result.roi["matrix"][1])
+        ids_UT_MPs_in_RoI, UT_MPs_in_RoI = _find_seeds_in_RoI(UT_MPs, result.roi["matrix"][0], result.roi["matrix"][1])
 
         print("2.5) Plotting pseudo-distributions and sites for the region selected above...")
         if output_folder is not None:
@@ -516,10 +503,11 @@ def step_2(L, U, resolution, min_persistence, hf, Iproc_RoI=None, RoI=None, outp
                     title=None,
                 )
 
-    return pseudo_distributions, candidate_stripes
+    return result
 
 
 def step_3(
+    result: IO.Result,
     L,
     U,
     resolution,
@@ -528,21 +516,22 @@ def step_3(
     constrain_height,
     loc_pers_min,
     loc_trend_min,
-    pseudo_distributions,
-    candidate_stripes,
-    hf,
     Iproc_RoI=None,
     RoI=None,
     output_folder=None,
     map=map,
-):
+) -> IO.Result:
+    if result.empty:
+        print("3) No candidates found by step 2. Returning immediately!")
+        return result
+
     # Retrieve data:
-    LT_mPs = pseudo_distributions["lower"]["persistent_minimum_points"]
-    UT_mPs = pseudo_distributions["upper"]["persistent_minimum_points"]
-    LT_MPs = pseudo_distributions["lower"]["persistent_maximum_points"]
-    UT_MPs = pseudo_distributions["upper"]["persistent_maximum_points"]
-    LT_pseudo_distrib = pseudo_distributions["lower"]["pseudo-distribution"]
-    UT_pseudo_distrib = pseudo_distributions["upper"]["pseudo-distribution"]
+    LT_mPs = result.get("persistent_minimum_points", "LT")
+    UT_mPs = result.get("persistent_minimum_points", "UT")
+    LT_MPs = result.get("persistent_maximum_points", "LT")
+    UT_MPs = result.get("persistent_maximum_points", "UT")
+    LT_pseudo_distrib = result.get("pseudodistribution", "LT")
+    UT_pseudo_distrib = result.get("pseudodistribution", "UT")
 
     start_time = time.time()
 
@@ -562,8 +551,8 @@ def step_3(
     UT_L_mP = np.argmin(UT_pseudo_distrib[UT_L_nb]) if len(UT_L_nb) > 0 else -1
     UT_R_mP = UT_MPs[-1] + np.argmin(UT_pseudo_distrib[UT_R_nb]) if len(UT_R_nb) > 0 else -1
 
-    LT_bounded_mPs = [max(LT_L_mP, 0)] + LT_mPs + [max(LT_R_mP, L.shape[0])]
-    UT_bounded_mPs = [max(UT_L_mP, 0)] + UT_mPs + [max(UT_R_mP, U.shape[0])]
+    LT_bounded_mPs = np.concatenate(([max(LT_L_mP, 0)], LT_mPs, [max(LT_R_mP, L.shape[0])]))
+    UT_bounded_mPs = np.concatenate(([max(UT_L_mP, 0)], UT_mPs, [max(UT_R_mP, U.shape[0])]))
 
     # List of pairs (pair = left and right boundaries):
     # Choose the variable criterion between max_ascent and max_perc_descent
@@ -581,19 +570,21 @@ def step_3(
     UT_L_bounds, UT_R_bounds = map(list, zip(*UT_HIoIs))
 
     print("3.1.2) Updating list of Stripe objects with HIoIs...")
+    stripes = result.get("stripes", "LT")
     for num_cand_stripe, (LT_L_bound, LT_R_bound) in enumerate(zip(LT_L_bounds, LT_R_bounds)):
-        candidate_stripes["lower"][num_cand_stripe].set_horizontal_bounds(LT_L_bound, LT_R_bound)
+        stripes[num_cand_stripe].set_horizontal_bounds(LT_L_bound, LT_R_bound)
+
+    stripes = result.get("stripes", "UT")
     for num_cand_stripe, (UT_L_bound, UT_R_bound) in enumerate(zip(UT_L_bounds, UT_R_bounds)):
-        candidate_stripes["upper"][num_cand_stripe].set_horizontal_bounds(UT_L_bound, UT_R_bound)
+        stripes[num_cand_stripe].set_horizontal_bounds(UT_L_bound, UT_R_bound)
 
     if all([param is not None for param in [RoI, output_folder]]):
 
         print("3.1.3) Plots")
         # 3.1.3.1 "Finding HIoIs inside the region (RoI) selected above..."
 
-        # Recover indices of persistent maximum points in RoI:
-        ids_LT_MPs_in_RoI = pseudo_distributions["lower"]["indices_persistent_maximum_points_in_RoI"]
-        ids_UT_MPs_in_RoI = pseudo_distributions["upper"]["indices_persistent_maximum_points_in_RoI"]
+        ids_LT_MPs_in_RoI, LT_MPs_in_RoI = _find_seeds_in_RoI(LT_MPs, result.roi["matrix"][0], result.roi["matrix"][1])
+        ids_UT_MPs_in_RoI, UT_MPs_in_RoI = _find_seeds_in_RoI(UT_MPs, result.roi["matrix"][0], result.roi["matrix"][1])
 
         # Left and right boundaries in RoI:
         LT_L_bounds_in_RoI = np.array(LT_L_bounds)[ids_LT_MPs_in_RoI].tolist()
@@ -763,10 +754,12 @@ def step_3(
     UT_U_bounds, UT_D_bounds = map(list, zip(*UT_VIoIs))
 
     print("3.2.2) Updating list of Stripe objects with VIoIs...")
+    lt_stripes = result.get("stripes", "LT")
     for num_cand_stripe, (LT_U_bound, LT_D_bound) in enumerate(zip(LT_U_bounds, LT_D_bounds)):
-        candidate_stripes["lower"][num_cand_stripe].set_vertical_bounds(LT_U_bound, LT_D_bound)
+        lt_stripes[num_cand_stripe].set_vertical_bounds(LT_U_bound, LT_D_bound)
+    ut_stripes = result.get("stripes", "UT")
     for num_cand_stripe, (UT_U_bound, UT_D_bound) in enumerate(zip(UT_U_bounds, UT_D_bounds)):
-        candidate_stripes["upper"][num_cand_stripe].set_vertical_bounds(UT_U_bound, UT_D_bound)
+        ut_stripes[num_cand_stripe].set_vertical_bounds(UT_U_bound, UT_D_bound)
 
     print(f"Execution time: {time.time() - start_time} seconds ---")
 
@@ -889,39 +882,6 @@ def step_3(
                 display=False,
             )
 
-    print("3.5) Saving geometric descriptors...")
-    LT_shape_descriptors = pd.DataFrame(
-        {
-            "seed": LT_MPs,
-            "seed persistence": pseudo_distributions["lower"]["persistence_of_maximum_points"],
-            "L-boundary": [HIoI[0] for HIoI in LT_HIoIs],
-            "R-boundary": [HIoI[1] for HIoI in LT_HIoIs],
-            "U-boundary": [VIoI[0] for VIoI in LT_VIoIs],
-            "D-boundary": [VIoI[1] for VIoI in LT_VIoIs],
-        }
-    )
-
-    UT_shape_descriptors = pd.DataFrame(
-        {
-            "seed": UT_MPs,
-            "seed persistence": pseudo_distributions["upper"]["persistence_of_maximum_points"],
-            "L-boundary": [HIoI[0] for HIoI in UT_HIoIs],
-            "R-boundary": [HIoI[1] for HIoI in UT_HIoIs],
-            "U-boundary": [VIoI[0] for VIoI in UT_VIoIs],
-            "D-boundary": [VIoI[1] for VIoI in UT_VIoIs],
-        }
-    )
-
-    col_names = ["seed", "seed persistence", "L-boundary", "R_boundary", "U-boundary", "D-boundary"]
-    hf["LT/"].create_dataset(
-        "geo-descriptors", data=LT_shape_descriptors.values, compression="gzip", compression_opts=4, shuffle=True
-    )
-    hf["LT/geo-descriptors"].attrs["col_names"] = col_names
-    hf["UT/"].create_dataset(
-        "geo-descriptors", data=UT_shape_descriptors.values, compression="gzip", compression_opts=4, shuffle=True
-    )
-    hf["UT/geo-descriptors"].attrs["col_names"] = col_names
-
     print("3.6) Bar plots of widths and heights...")
     LT_widths = [HIoI[1] - HIoI[0] for HIoI in LT_HIoIs]
     LT_heights = [VIoI[1] - VIoI[0] for VIoI in LT_VIoIs]
@@ -989,75 +949,52 @@ def step_3(
         plt.savefig(f"{output_folder}/UT_histogram_heights.jpg", bbox_inches="tight")
         plt.close()
 
+    return result
+
 
 def step_4(
+    result: IO.Result,
     L,
     U,
-    candidate_stripes,
-    hf,
     resolution=None,
     thresholds_relative_change=None,
     Iproc_RoI=None,
     RoI=None,
     output_folder=None,
 ):
+    if result.empty:
+        print("4) No candidates found by step 2. Returning immediately!")
+        return result
+
     print("4.1) Computing and saving biological descriptors")
-    for LT_candidate_stripe in candidate_stripes["lower"]:
+    for LT_candidate_stripe in result.get("stripes", "LT"):
         LT_candidate_stripe.compute_biodescriptors(L)
-    for UT_candidate_stripe in candidate_stripes["upper"]:
+    for UT_candidate_stripe in result.get("stripes", "UT"):
         UT_candidate_stripe.compute_biodescriptors(U)
-
-    LT_biological_descriptors = pd.DataFrame(
-        {
-            "inner mean": [c_s.inner_mean for c_s in candidate_stripes["lower"]],
-            "outer mean": [c_s.outer_mean for c_s in candidate_stripes["lower"]],
-            "relative change": [c_s.rel_change for c_s in candidate_stripes["lower"]],
-            "standard deviation": [c_s.inner_std for c_s in candidate_stripes["lower"]],
-        }
-    )
-
-    UT_biological_descriptors = pd.DataFrame(
-        {
-            "inner mean": [c_s.inner_mean for c_s in candidate_stripes["upper"]],
-            "outer mean": [c_s.outer_mean for c_s in candidate_stripes["upper"]],
-            "relative change": [c_s.rel_change for c_s in candidate_stripes["upper"]],
-            "standard deviation": [c_s.inner_std for c_s in candidate_stripes["upper"]],
-        }
-    )
-
-    col_names = ["inner mean", "outer mean", "relative change", "standard deviation"]
-    hf["LT/"].create_dataset(
-        "bio-descriptors", data=LT_biological_descriptors.values, compression="gzip", compression_opts=4, shuffle=True
-    )
-    hf["LT/bio-descriptors"].attrs["col_names"] = col_names
-    hf["UT/"].create_dataset(
-        "bio-descriptors", data=UT_biological_descriptors.values, compression="gzip", compression_opts=4, shuffle=True
-    )
-    hf["UT/bio-descriptors"].attrs["col_names"] = col_names
 
     if all(param is not None for param in [resolution, thresholds_relative_change, Iproc_RoI, RoI, output_folder]):
 
         print("4.2) Thresholding...")
 
         # Retrieve data:
-        LT_MPs = [c_s.seed for c_s in candidate_stripes["lower"]]
-        UT_MPs = [c_s.seed for c_s in candidate_stripes["upper"]]
-        LT_HIoIs = [[c_s.left_bound, c_s.right_bound] for c_s in candidate_stripes["lower"]]
-        LT_VIoIs = [[c_s.top_bound, c_s.bottom_bound] for c_s in candidate_stripes["lower"]]
-        UT_HIoIs = [[c_s.left_bound, c_s.right_bound] for c_s in candidate_stripes["upper"]]
-        UT_VIoIs = [[c_s.top_bound, c_s.bottom_bound] for c_s in candidate_stripes["upper"]]
+        LT_MPs = [c_s.seed for c_s in result.get("stripes", "LT")]
+        UT_MPs = [c_s.seed for c_s in result.get("stripes", "UT")]
+        LT_HIoIs = [[c_s.left_bound, c_s.right_bound] for c_s in result.get("stripes", "LT")]
+        LT_VIoIs = [[c_s.top_bound, c_s.bottom_bound] for c_s in result.get("stripes", "LT")]
+        UT_HIoIs = [[c_s.left_bound, c_s.right_bound] for c_s in result.get("stripes", "UT")]
+        UT_VIoIs = [[c_s.top_bound, c_s.bottom_bound] for c_s in result.get("stripes", "UT")]
 
         for threshold in thresholds_relative_change:
 
             # Filtration:
             LT_candidates2keep = [
                 index
-                for index, rel_change in enumerate(LT_biological_descriptors["relative change"])
+                for index, rel_change in enumerate(s.rel_change for s in result.get("stripes", "LT"))
                 if rel_change >= threshold
             ]
             UT_candidates2keep = [
                 index
-                for index, rel_change in enumerate(UT_biological_descriptors["relative change"])
+                for index, rel_change in enumerate(s.rel_change for s in result.get("stripes", "UT"))
                 if rel_change >= threshold
             ]
 
@@ -1068,14 +1005,6 @@ def step_4(
             UT_filt_MPs = [UT_MPs[num_cand] for num_cand in UT_candidates2keep]
             UT_filt_HIoIs = [UT_HIoIs[num_cand] for num_cand in UT_candidates2keep]
             UT_filt_VIoIs = [UT_VIoIs[num_cand] for num_cand in UT_candidates2keep]
-
-            # # Save to bedpe
-            # IO.save_candidates_bedpe(LT_filt_HIoIs, LT_filt_VIoIs, resolution, chr2test,
-            #                          output_folder=f"{output_folder}",
-            #                          file_name=f"LT_{threshold:.2f}.bedpe")
-            # IO.save_candidates_bedpe(UT_filt_HIoIs, UT_filt_VIoIs, resolution, chr2test,
-            #                          output_folder=f"{output_folder}",
-            #                          file_name=f"UT_{threshold:.2f}.bedpe")
 
             # Plotting stripes in range:
             if RoI is not None:
@@ -1137,5 +1066,4 @@ def step_4(
                     display=False,
                 )
 
-
-# print(f"Of the {len(LT_MPs) + len(UT_MPs)} original candidates, {len(LT_filt_MPs) + len(UT_filt_MPs)} survived")
+    return result

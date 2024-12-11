@@ -197,6 +197,7 @@ def find_HIoIs(pd, seed_sites, seed_site_bounds, max_width, map=map):
     :return:
     HIoIs                       list of lists, where each sublist is a pair consisting of the left and right boundaries
     """
+    assert len(seed_site_bounds) == len(seed_sites) + 1
 
     iterable_input = [
         (seed_site, seed_site_bounds[num_MP], seed_site_bounds[num_MP + 1])

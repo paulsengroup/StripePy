@@ -45,6 +45,9 @@ env:
   TEST_DATASET_ID: 4DNFI9GMP2J8
   TEST_DATASET_URL: "https://zenodo.org/records/14283922/files/4DNFI9GMP2J8.stripepy.mcool?download=1"
   TEST_DATASET_MD5: "a17d08460c03cf6c926e2ca5743e4888"
+  TEST_RESULT_FILE_V1_ID: results_4DNFI9GMP2J8_v1.hdf5
+  TEST_RESULT_FILE_V1_URL: "https://zenodo.org/records/14283922/files/results_4DNFI9GMP2J8_v1.hdf5?download=1"
+  TEST_RESULT_FILE_V1_MD5: "632b2a7a6e5c1a24dc3635710ed68a80"
 
 jobs:
   build-dockerfile:
@@ -76,22 +79,28 @@ jobs:
         id: cache-dset
         uses: actions/cache/restore@v4
         with:
-          key: ${{ env.TEST_DATASET_ID }}
+          key: test-dataset
           path: ${{ env.TEST_DATASET_ID }}.mcool
 
       - name: Download test dataset
         if: steps.cache-dset.outputs.cache-hit != 'true'
         run: |
-          curl -L '${{ env.TEST_DATASET_URL }}' -o '${{ env.TEST_DATASET_ID }}.mcool'
-          echo "${{ env.TEST_DATASET_MD5 }}  ${{ env.TEST_DATASET_ID }}.mcool" > checksum.md5
+          mkdir -p test/data/
+          curl -L '${{ env.TEST_DATASET_URL }}' -o 'test/data/${{ env.TEST_DATASET_ID }}.mcool'
+          curl -L '${{ env.TEST_RESULT_FILE_V1_URL }}' -o 'test/data/${{ env.TEST_RESULT_FILE_V1_ID }}'
+
+          echo "${{ env.TEST_DATASET_MD5 }}  test/data/${{ env.TEST_DATASET_ID }}.mcool" > checksum.md5
+          echo "${{ env.TEST_RESULT_FILE_V1_MD5 }}  test/data/${{ env.TEST_RESULT_FILE_V1_ID }}" >> checksum.md5
           md5sum -c checksum.md5
 
       - name: Save test dataset
         if: steps.cache-dset.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          key: ${{ env.TEST_DATASET_ID }}
-          path: ${{ env.TEST_DATASET_ID }}.mcool
+          key: test-dataset
+          path: |
+            test/data/${{env.TEST_DATASET_ID }}.mcool
+            test/data/results*.hdf5
 
       - name: Generate build args
         id: build-args
