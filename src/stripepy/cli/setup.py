@@ -158,6 +158,14 @@ def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
     )
 
     sc.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="Set verbosity of output to the console.",
+    )
+
+    sc.add_argument(
         "-p",
         "--nproc",
         type=_num_cpus,
@@ -226,6 +234,13 @@ def _make_stripepy_download_subcommand(main_parser) -> argparse.ArgumentParser:
         default=False,
         help="Overwrite existing file(s).",
     )
+    sc.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="Set verbosity of output to the console.",
+    )
 
     return sc
 
@@ -258,6 +273,13 @@ def _make_stripepy_view_subcommand(main_parser) -> argparse.ArgumentParser:
         choices=["transpose_to_ut", "transpose_to_lt", None],
         default=None,
         help="Control if and how stripe coordinates should be transformed.",
+    )
+    sc.add_argument(
+        "--verbosity",
+        type=str,
+        choices=["debug", "info", "warning", "error", "critical"],
+        default="info",
+        help="Set verbosity of output to the console.",
     )
 
     return sc
@@ -305,24 +327,10 @@ def _process_stripepy_call_args(args: Dict[str, Any]) -> Dict[str, Any]:
     }
     configs_output = {key: args[key] for key in ["output_folder", "force"]}
 
+    configs_output["output_folder"] = (
+        configs_output["output_folder"] / configs_input["contact-map"].stem / str(configs_input["resolution"])
+    )
     configs_other = {"nproc": args["nproc"]}
-
-    # Print the used parameters (chosen or default-ones):
-    print("\nArguments:")
-    print(f"--contact-map: {configs_input['contact-map']}")
-    print(f"--resolution: {configs_input['resolution']}")
-    print(f"--normalization: {configs_input['normalization']}")
-    print(f"--genomic-belt: {configs_input['genomic_belt']}")
-    print(f"--roi: {configs_input['roi']}")
-    print(f"--max-width: {configs_thresholds['max_width']}")
-    print(f"--glob-pers-min: {configs_thresholds['glob_pers_min']}")
-    print(f"--constrain-heights: {configs_thresholds['constrain_heights']}")
-    print(f"--loc-pers-min: {configs_thresholds['loc_pers_min']}")
-    print(f"--loc-trend-min: {configs_thresholds['loc_trend_min']}")
-    print(f"--min-chrom-size: {configs_thresholds['min_chrom_size']}")
-    print(f"--output-folder: {configs_output['output_folder']}")
-    print(f"--nproc: {configs_other['nproc']}")
-    print(f"--force: {configs_output['force']}")
 
     return {
         "configs_input": configs_input,
@@ -332,16 +340,17 @@ def _process_stripepy_call_args(args: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def parse_args(cli_args: List[str]) -> Tuple[str, Any]:
+def parse_args(cli_args: List[str]) -> Tuple[str, Any, str]:
     # Parse the input parameters:
     args = vars(_make_cli().parse_args(cli_args))
 
     subcommand = args.pop("subcommand")
+    verbosity = args.pop("verbosity")
     if subcommand == "call":
-        return subcommand, _process_stripepy_call_args(args)
+        return subcommand, _process_stripepy_call_args(args), verbosity
     if subcommand == "download":
-        return subcommand, args
+        return subcommand, args, verbosity
     if subcommand == "view":
-        return subcommand, args
+        return subcommand, args, verbosity
 
     raise NotImplementedError
