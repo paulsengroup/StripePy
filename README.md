@@ -1107,7 +1107,7 @@ Now you are ready to run all cells.
 
 Running the last cell will display a HiGlass window embedded in the Jupyter notebook (note that the interface may take a while to load).
 
-![HiGlass window](docs/assets/4DNFI9GMP2J8_chr2_156mbp_higlass_view.png)
+![HiGlass window](https://github.com/paulsengroup/StripePy/blob/main/docs/assets/4DNFI9GMP2J8_chr2_156mbp_higlass_view.png?raw=true)
 
 ## Generating plots
 
