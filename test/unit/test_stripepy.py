@@ -6,8 +6,7 @@ import numpy as np
 import pytest
 import scipy.sparse as ss
 
-from stripepy.stripepy import _log_transform
-from stripepy.stripepy import _band_extraction
+from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc
 
 
 @pytest.mark.unit
@@ -73,7 +72,6 @@ class TestBandExtraction:
 
         assert LT_I.size == 4
 
-
     def test_is_correct_triangle(self):
         data = [[*range(1,5)], [*range(4, 0, -1)]]
         offsets = [-1, 1]
@@ -83,5 +81,23 @@ class TestBandExtraction:
         assert (LT_I.diagonal(0) == np.array([0, 0, 0, 0, 0])).all()
         assert (LT_I.diagonal(-1) == np.array([1, 2, 3, 4])).all()
         assert (UT_I.diagonal(1) == np.array([3, 2, 1, 0])).all()
-        pass
 
+@pytest.mark.unit
+class TestScaleIProc:
+    def test_divide_by_one(self):
+        indices = [0, 1, 2, 3]
+        data = [1]*len(indices)
+        I = ss.csr_matrix((data, (indices, indices)))
+        LT_I, UT_I = _band_extraction(I, 1, 5)
+        I, LT_I, UT_I = _scale_Iproc(I, LT_I, UT_I)
+
+        assert (I.diagonal(0) == np.array([1, 1, 1, 1])).all()
+    
+    def test_halve(self):
+        indices = [0, 1, 2, 3]
+        data = [1, 2, 1, 1]
+        I = ss.csr_matrix((data, (indices, indices)))
+        LT_I, UT_I = _band_extraction(I, 1, 5)
+        I, LT_I, UT_I = _scale_Iproc(I, LT_I, UT_I)
+        assert (I.diagonal(0) == np.array([0.5, 1, 0.5, 0.5])).all()
+        pass
