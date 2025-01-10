@@ -157,12 +157,12 @@ def find_HIoIs(
     if logger is None:
         logger = structlog.get_logger()
 
-    iterable_input = (
+    params = (
         (seed_site, seed_site_bounds[num_MP], seed_site_bounds[num_MP + 1])
         for num_MP, seed_site in enumerate(seed_sites)
     )
 
-    tasks = map_(partial(find_horizontal_domain, pseudodistribution, max_width=max_width), iterable_input)
+    tasks = map_(partial(find_horizontal_domain, pseudodistribution, max_width=max_width), params)
     # This efficiently constructs a 2D numpy with shape (N, 2) from a list of 2-element tuples, where N is the number of seed sites.
     # The first and second columns contains the left and right boundaries of the horizontal domains, respectively.
     HIoIs = np.fromiter(itertools.chain.from_iterable(tasks), count=2 * len(seed_sites), dtype=int).reshape(-1, 2)

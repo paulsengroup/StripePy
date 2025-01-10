@@ -5,13 +5,12 @@
 import pathlib
 import warnings
 
-import h5py
 import hictkpy
 import pytest
 
 from stripepy import main
 
-from .common import matplotlib_avail
+from .common import compare_result_files, matplotlib_avail
 
 testdir = pathlib.Path(__file__).resolve().parent.parent
 
@@ -33,6 +32,7 @@ class TestStripePyCall:
     @staticmethod
     def test_stripepy_call(tmpdir):
         testfile = testdir / "data" / "4DNFI9GMP2J8.mcool"
+        result_file = testdir / "data" / "results_4DNFI9GMP2J8_v2.hdf5"
         resolution = 10_000
 
         chrom_sizes = hictkpy.MultiResFile(testfile).chromosomes()
@@ -42,12 +42,6 @@ class TestStripePyCall:
             "call",
             str(testfile),
             str(resolution),
-            "--glob-pers-min",
-            "0.10",
-            "--loc-pers-min",
-            "0.33",
-            "--loc-trend-min",
-            "0.25",
             "--output-folder",
             str(tmpdir),
             "--min-chrom-size",
@@ -58,25 +52,23 @@ class TestStripePyCall:
         outfile = pathlib.Path(tmpdir) / testfile.stem / str(resolution) / "results.hdf5"
 
         assert outfile.is_file()
-        assert h5py.File(outfile).attrs.get("format", "unknown") == "HDF5::StripePy"
+        compare_result_files(
+            result_file, outfile, [chrom for chrom, size in chrom_sizes.items() if size >= chrom_size_cutoff]
+        )
 
     @staticmethod
     def test_stripepy_call_with_roi(tmpdir):
         testfile = testdir / "data" / "4DNFI9GMP2J8.mcool"
+        result_file = testdir / "data" / "results_4DNFI9GMP2J8_v2.hdf5"
         resolution = 10_000
 
-        chrom_size_cutoff = max(hictkpy.MultiResFile(testfile).chromosomes().values()) - 1
+        chrom_sizes = hictkpy.MultiResFile(testfile).chromosomes()
+        chrom_size_cutoff = max(chrom_sizes.values()) - 1
 
         args = [
             "call",
             str(testfile),
             str(resolution),
-            "--glob-pers-min",
-            "0.10",
-            "--loc-pers-min",
-            "0.33",
-            "--loc-trend-min",
-            "0.25",
             "--output-folder",
             str(tmpdir),
             "--min-chrom-size",
@@ -96,4 +88,4 @@ class TestStripePyCall:
         outfile = pathlib.Path(tmpdir) / testfile.stem / str(resolution) / "results.hdf5"
 
         assert outfile.is_file()
-        assert h5py.File(outfile).attrs.get("format", "unknown") == "HDF5::StripePy"
+        compare_result_files(result_file, outfile, [tuple(chrom_sizes.keys())[0]])
