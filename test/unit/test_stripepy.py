@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import scipy.sparse as ss
 
-from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc, _extract_RoIs
+from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc, _extract_RoIs, _compute_global_pseudodistribution
 
 
 @pytest.mark.unit
@@ -114,3 +114,39 @@ class TestExtractRoIs:
         I_RoI = _extract_RoIs(I, {"matrix": [2,5]})
 
         assert (I_RoI.size ** 0.5).is_integer()
+
+@pytest.mark.unit
+class TestComputeGlobalPseudodistribution:
+    @pytest.mark.skip(reason="Outgoing matrix is not necessarily sparse")
+    def test_is_sparse(self):
+        I = ss.rand(10, 10, density=0.5, format="csr")
+        I_RoI = _compute_global_pseudodistribution(I, {"matrix": [2,5]})
+
+        assert ss.issparse(I_RoI)
+
+    def test_is_marginalized(self):
+        row = np.array([0, 1, 2])
+        col = np.array([0, 1, 1])
+        data = np.array([9.0, 2.0, 4.0])
+        I = ss.csr_matrix((data, (row, col)), shape=(3, 3))
+        I_RoI = _compute_global_pseudodistribution(I, {"matrix": [3,3]})
+
+        assert I_RoI.shape == (3,)
+
+    def test_is_scaled(self):
+        row = np.array([0, 1, 2])
+        col = np.array([0, 1, 1])
+        data = np.array([9.0, 2.0, 4.0])
+        I = ss.csr_matrix((data, (row, col)), shape=(3, 3))
+        I_RoI = _compute_global_pseudodistribution(I, {"matrix": [3,3]})
+
+        assert I_RoI.max() >= 0.9
+
+    def test_is_smoothed(self):
+        row = np.array([0, 1, 2])
+        col = np.array([0, 1, 1])
+        data = np.array([9.0, 2.0, 4.0])
+        I = ss.csr_matrix((data, (row, col)), shape=(3, 3))
+        I_RoI = _compute_global_pseudodistribution(I, {"matrix": [3,3]})
+
+        assert I_RoI.max() <= 1.0
