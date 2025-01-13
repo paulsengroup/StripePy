@@ -35,7 +35,7 @@ class TestStripePyDownload:
     def test_download_by_name(tmpdir):
         dest = pathlib.Path(tmpdir) / "out"
 
-        args = ["download", "--name", "__results_v1", "--output", str(dest)]
+        args = ["download", "--name", "__results_v1", "--output", str(dest), "--include-private"]
         main(args)
 
         assert dest.is_file()
@@ -46,7 +46,7 @@ class TestStripePyDownload:
     def test_download_random(tmpdir):
         dest = pathlib.Path(tmpdir) / "out"
 
-        args = ["download", "--max-size", "2", "--output", str(dest)]
+        args = ["download", "--max-size", "2", "--output", str(dest), "--include-private"]
         main(args)
 
         assert dest.is_file()

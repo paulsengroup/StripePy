@@ -12,7 +12,7 @@ import sys
 import tempfile
 import time
 import urllib.request
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 import structlog
 
@@ -21,7 +21,7 @@ from stripepy.utils.progress_bar import initialize_progress_bar
 
 
 @functools.cache
-def _get_datasets(max_size: float) -> Dict[str, Dict[str, str]]:
+def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str, str]]:
     assert not math.isnan(max_size)
 
     record_id = "14616548"
@@ -55,6 +55,9 @@ def _get_datasets(max_size: float) -> Dict[str, Dict[str, str]]:
             "format": "hic",
             "size_mb": 185.29,
         },
+    }
+
+    private_datasets = {
         "__results_v1": {
             "url": f"https://zenodo.org/records/{record_id}/files/results_4DNFI9GMP2J8_v1.hdf5?download=1",
             "md5": "172872e8de9f35909f87ff33c185a07b",
@@ -81,6 +84,9 @@ def _get_datasets(max_size: float) -> Dict[str, Dict[str, str]]:
         },
     }
 
+    if include_private:
+        datasets |= private_datasets
+
     valid_dsets = {k: v for k, v in datasets.items() if v.get("size_mb", math.inf) < max_size}
 
     if len(valid_dsets) > 0:
@@ -90,24 +96,25 @@ def _get_datasets(max_size: float) -> Dict[str, Dict[str, str]]:
 
 
 def _list_datasets():
-    dsets = {k: v for k, v in _get_datasets(math.inf).items() if not k.startswith("__")}
-    json.dump(dsets, fp=sys.stdout, indent=2)
+    json.dump(_get_datasets(math.inf, include_private=False), fp=sys.stdout, indent=2)
     sys.stdout.write("\n")
 
 
-def _get_random_dataset(max_size: float) -> Tuple[str, Dict[str, str]]:
-    dsets = _get_datasets(max_size)
+def _get_random_dataset(max_size: float, include_private: bool) -> Tuple[str, Dict[str, str]]:
+    dsets = _get_datasets(max_size, include_private)
     assert len(dsets) > 0
 
     key = random.sample(list(dsets.keys()), 1)[0]
     return key, dsets[key]
 
 
-def _lookup_dataset(name: Union[str, None], assembly: Union[str, None], max_size: float) -> Tuple[str, Dict[str, str]]:
+def _lookup_dataset(
+    name: Optional[str], assembly: Optional[str], max_size: float, include_private: bool
+) -> Tuple[str, Dict[str, str]]:
     if name is not None:
         max_size = math.inf
         try:
-            return name, _get_datasets(max_size)[name]
+            return name, _get_datasets(max_size, include_private)[name]
         except KeyError as e:
             raise RuntimeError(
                 f'unable to find dataset "{name}". Please make sure the provided dataset is present in the list produced by stripepy download --list-only.'
@@ -116,7 +123,7 @@ def _lookup_dataset(name: Union[str, None], assembly: Union[str, None], max_size
     assert assembly is not None
     assert max_size >= 0
 
-    dsets = {k: v for k, v in _get_datasets(max_size).items() if v["assembly"] == assembly}
+    dsets = {k: v for k, v in _get_datasets(max_size, include_private).items() if v["assembly"] == assembly}
     if len(dsets) == 0:
         raise RuntimeError(
             f'unable to find a dataset using "{assembly}" as reference genome. Please make sure such dataset exists in the list produced by stripepy download --list-only.'
@@ -257,13 +264,14 @@ def _download_data_for_end2end_tests():
 
 
 def run(
-    name: Union[str, None],
-    output_path: Union[pathlib.Path, None],
-    assembly: Union[str, None],
+    name: Optional[str],
+    output_path: Optional[pathlib.Path],
+    assembly: Optional[str],
     max_size: float,
     list_only: bool,
     unit_test: bool,
     end2end_test: bool,
+    include_private: bool,
     force: bool,
 ) -> int:
     t0 = time.time()
@@ -282,9 +290,9 @@ def run(
     do_random_sample = name is None and assembly is None
 
     if do_random_sample:
-        dset_name, config = _get_random_dataset(max_size)
+        dset_name, config = _get_random_dataset(max_size, include_private)
     else:
-        dset_name, config = _lookup_dataset(name, assembly, max_size)
+        dset_name, config = _lookup_dataset(name, assembly, max_size, include_private)
 
     if output_path is None:
         if "filename" in config:

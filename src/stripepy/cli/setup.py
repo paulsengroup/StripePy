@@ -200,7 +200,11 @@ def _make_stripepy_download_subcommand(main_parser) -> argparse.ArgumentParser:
     def get_avail_ref_genomes():
         from .download import _get_datasets
 
-        return {record["assembly"] for record in _get_datasets(math.inf).values() if "assembly" in record}
+        return {
+            record["assembly"]
+            for record in _get_datasets(math.inf, include_private=False).values()
+            if "assembly" in record
+        }
 
     grp = sc.add_mutually_exclusive_group(required=False)
     grp.add_argument(
@@ -240,6 +244,12 @@ def _make_stripepy_download_subcommand(main_parser) -> argparse.ArgumentParser:
         "Files will be stored under folder test/data/\n"
         "When specified, all other options are ignored.\n"
         "Existing files will be overwritten.",
+    )
+    sc.add_argument(
+        "--include-private",
+        action="store_true",
+        default=False,
+        help="Include datasets used for internal testing.",
     )
     sc.add_argument(
         "--max-size",
