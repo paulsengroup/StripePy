@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import scipy.sparse as ss
 
-from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc
+from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc, _extract_RoIs
 
 
 @pytest.mark.unit
@@ -100,4 +100,17 @@ class TestScaleIProc:
         LT_I, UT_I = _band_extraction(I, 1, 5)
         I, LT_I, UT_I = _scale_Iproc(I, LT_I, UT_I)
         assert (I.diagonal(0) == np.array([0.5, 1, 0.5, 0.5])).all()
-        pass
+        
+@pytest.mark.unit
+class TestExtractRoIs:
+    def test_is_NDarray(self):
+        I = ss.rand(10, 10, density=0.5, format="csr")
+        I_RoI = _extract_RoIs(I, {"matrix": [2,5]})
+
+        assert isinstance(I_RoI, np.ndarray)
+    
+    def test_is_square(self):
+        I = ss.rand(10, 10, density=0.5, format="csr")
+        I_RoI = _extract_RoIs(I, {"matrix": [2,5]})
+
+        assert (I_RoI.size ** 0.5).is_integer()
