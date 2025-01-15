@@ -6,7 +6,6 @@ import datetime
 import functools
 import json
 import pathlib
-import shutil
 from importlib.metadata import version
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -15,7 +14,6 @@ import hictkpy
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import structlog
 
 from stripepy.utils.stripe import Stripe
 
@@ -572,7 +570,7 @@ class ResultFile(object):
             if field.startswith("persistence"):
                 data = data[1, :]
             elif field.endswith("points"):
-                data = data[0, :]
+                data = data[0, :].astype(int)
             return pd.DataFrame({field: data})
 
         df = pd.DataFrame(data=self._h5[path], columns=self._h5[path].attrs["col_names"])
@@ -1015,59 +1013,3 @@ class ResultFile(object):
                 location,
             )
             self._append_stripes(result.get("stripes", location), location)
-
-
-class ANSI:
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    YELLOW = "\033[33m"
-    BLUE = "\033[34m"
-    MAGENTA = "\033[35m"
-    CYAN = "\033[36m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-    ENDC = "\033[0m"
-
-
-def remove_and_create_folder(path: pathlib.Path, force: bool, logger=None):
-    path = pathlib.Path(path)
-    if logger is None:
-        logger = structlog.get_logger()
-    logger.debug('about to create folder "%s"...', path)
-
-    # Deleting folders:
-    if path.exists():
-        if not force:
-            raise RuntimeError(f"output folder {path} already exists. Pass --force to overwrite it.")
-        else:
-            shutil.rmtree(path)
-
-    # Create the folder:
-    path.mkdir(parents=True)
-    logger.debug('successfully created folder "%s"!', path)
-
-
-def create_folders_for_plots(path: pathlib.Path, logger=None):
-    path = pathlib.Path(path)
-
-    if logger is None:
-        logger = structlog.get_logger()
-
-    logger.debug('about to create plot folders under prefix "%s"...', path)
-
-    folders4plots = [
-        path,
-        path / "1_preprocessing",
-        path / "2_TDA",
-        path / "3_shape_analysis",
-        path / "4_biological_analysis",
-        path / "3_shape_analysis" / "local_pseudodistributions",
-    ]
-
-    # Creating folders:
-    for folder2create in folders4plots:
-        folder2create.mkdir(parents=True)
-
-    logger.debug('successfully created folder "%s"!', path)
-
-    return folders4plots

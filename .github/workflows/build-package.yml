@@ -39,6 +39,10 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  attestations: write
+  contents: read
+
 jobs:
   build-package:
     name: Build package distribution
@@ -89,7 +93,7 @@ jobs:
           name: dist
 
       - name: Upload wheels to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70 # release/1.12.3
         with:
           attestations: true
           print-hash: true

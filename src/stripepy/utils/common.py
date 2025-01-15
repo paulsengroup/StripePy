@@ -2,16 +2,19 @@
 #
 # SPDX-License-Identifier: MIT
 
+import decimal
 import time
 from typing import Optional, Sequence, Tuple
 
 import numpy as np
+import pandas as pd
 from numpy.typing import NDArray
 
 
-def sort_based_on_arg0(*vectors: Sequence) -> Tuple[NDArray]:
+def sort_values(*vectors: Sequence) -> Tuple[NDArray]:
     """
-    Sort two or more sequences of objects based on the first sequence of objects.
+    Sort two or more sequences of objects as if each sequence was a column in a
+    table and the table was being sorted row-by-row based on values from all columns.
 
     Parameters
     ----------
@@ -31,9 +34,10 @@ def sort_based_on_arg0(*vectors: Sequence) -> Tuple[NDArray]:
     if len(vectors[0]) == 0:
         return tuple((np.array(v) for v in vectors))  # noqa
 
-    permutation = np.argsort(vectors[0])
+    df = pd.DataFrame({i: v for i, v in enumerate(vectors)})
+    df.sort_values(by=df.columns.tolist(), inplace=True, kind="stable")
 
-    return tuple((np.array(v)[permutation] for v in vectors))  # noqa
+    return tuple(df[col].to_numpy() for col in df.columns)  # noqa
 
 
 def pretty_format_elapsed_time(t0: float, t1: Optional[float] = None) -> str:
@@ -69,6 +73,34 @@ def pretty_format_elapsed_time(t0: float, t1: Optional[float] = None) -> str:
     minutes = (delta - (hours * 3600)) // 60
     seconds = delta - (hours * 3600) - (minutes * 60)
     return f"{hours:.0f}h:{minutes:.0f}m:{seconds:.3f}s"
+
+
+def truncate_np(v: NDArray[float], places: int) -> NDArray[float]:
+    """
+    Truncate a numpy array to the given number of decimal places.
+    Implementation based on https://stackoverflow.com/a/28323804
+
+    Parameters
+    ----------
+    v: NDArray[float]
+        the numpy array to be truncated
+    places: int
+        the number of decimal places to truncate to
+
+    Returns
+    -------
+    NDArray[float]
+        numpy array with truncated values
+    """
+    assert places >= 0
+
+    if places == 0:
+        return v.round(0)
+
+    with decimal.localcontext() as context:
+        context.rounding = decimal.ROUND_DOWN
+        exponent = decimal.Decimal(str(10**-places))
+        return np.array([float(decimal.Decimal(str(n)).quantize(exponent)) for n in v], dtype=float)
 
 
 def _import_matplotlib():

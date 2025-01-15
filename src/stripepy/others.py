@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 import os
-from typing import Dict, Optional
+from typing import Optional
 
-import h5py
 import hictkpy
 import structlog
 
@@ -70,21 +69,3 @@ def define_RoI(location: Optional[str], chrom_size: int, resolution: int, window
 
     bounds = [e1, min(chrom_size, e2)]
     return {"genomic": bounds, "matrix": [x // resolution for x in bounds]}
-
-
-# Define a function to visit groups and save terminal group names in a list
-def save_terminal_groups(name, obj):
-    group_names = []
-    if isinstance(obj, h5py.Group):
-        has_subgroups = any(isinstance(child_obj, h5py.Group) for _, child_obj in obj.items())
-        if not has_subgroups:
-            group_names.append(name)
-    return group_names
-
-
-# Define a function to visit datasets and save their names in a list
-def save_all_datasets(name, obj):
-    dataset_names = []
-    if isinstance(obj, h5py.Dataset):  # check if obj is a group or dataset
-        dataset_names.append(name)
-    return dataset_names
