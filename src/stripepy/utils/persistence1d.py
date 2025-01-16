@@ -41,7 +41,7 @@ def run_persistence(data, level_sets="lower"):
 
     # Number of data to break ties (leftmost index comes first):
     num_elements = len(data)
-    sorted_idx = np.argsort(data, kind="stable")[::-1] if level_sets == "upper" else np.argsort(data, kind="stable")
+    sorted_idx = np.argsort(data, stable=True)[::-1] if level_sets == "upper" else np.argsort(data, stable=True)
 
     # Get a union find data structure:
     uf = UnionFind(num_elements)

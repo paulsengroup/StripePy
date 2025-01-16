@@ -6,7 +6,9 @@ import pytest
 import numpy as np
 import scipy.sparse as ss
 
+
 from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc, _extract_RoIs, _compute_global_pseudodistribution, _check_neighborhood
+
 
 
 @pytest.mark.unit
@@ -100,6 +102,7 @@ class TestScaleIProc:
         LT_I, UT_I = _band_extraction(I, 1, 5)
         I, LT_I, UT_I = _scale_Iproc(I, LT_I, UT_I)
         assert (I.diagonal(0) == np.array([0.5, 1, 0.5, 0.5])).all()
+
         
 @pytest.mark.unit
 class TestExtractRoIs:
@@ -276,6 +279,7 @@ class TestCheckNeighborhood:
         correct_mask[21] = 0
 
         assert mask == correct_mask
+
 
 class TestFilterExtremaBySparseness:
     pass

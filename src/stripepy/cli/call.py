@@ -6,9 +6,10 @@ import contextlib
 import json
 import multiprocessing as mp
 import pathlib
+import shutil
 import sys
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -19,15 +20,23 @@ from stripepy.utils.common import _import_matplotlib, pretty_format_elapsed_time
 from stripepy.utils.progress_bar import initialize_progress_bar
 
 
-def _generate_metadata_attribute(configs_input: Dict[str, Any], configs_thresholds: Dict[str, Any]) -> Dict[str, Any]:
+def _generate_metadata_attribute(
+    constrain_heights: bool,
+    genomic_belt: int,
+    glob_pers_min: float,
+    loc_pers_min: float,
+    loc_trend_min: float,
+    max_width: int,
+    min_chrom_size: int,
+) -> Dict[str, Any]:
     return {
-        "constrain-heights": configs_thresholds["constrain_heights"],
-        "genomic-belt": configs_input["genomic_belt"],
-        "global-persistence-minimum": configs_thresholds["glob_pers_min"],
-        "local-persistence-minimum": configs_thresholds["loc_pers_min"],
-        "local-trend-minimum": configs_thresholds["loc_trend_min"],
-        "max-width": configs_thresholds["max_width"],
-        "min-chromosome-size": configs_thresholds["min_chrom_size"],
+        "constrain-heights": constrain_heights,
+        "genomic-belt": genomic_belt,
+        "global-persistence-minimum": glob_pers_min,
+        "local-persistence-minimum": loc_pers_min,
+        "local-trend-minimum": loc_trend_min,
+        "max-width": max_width,
+        "min-chromosome-size": min_chrom_size,
     }
 
 
@@ -80,11 +89,7 @@ class _JSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def _write_param_summary(*configs: Dict[str, Any]):
-    config = {}
-    for c in configs:
-        config.update(c)
-
+def _write_param_summary(config: Dict[str, Any]):
     config_str = json.dumps(config, indent=2, sort_keys=True, cls=_JSONEncoder)
     structlog.get_logger().info(f"CONFIG:\n{config_str}")
 
@@ -135,47 +140,88 @@ def _init_mpl_backend(skip: bool):
         pass
 
 
+def _remove_existing_output_files(
+    output_file: pathlib.Path, plot_dir: Optional[pathlib.Path], chromosomes: Dict[str, int]
+):
+    logger = structlog.get_logger()
+    logger.debug("removing %s...", output_file)
+    output_file.unlink(missing_ok=True)
+    if plot_dir is not None:
+        for path in plot_dir.glob("*"):
+            if path.stem in chromosomes:
+                logger.debug("removing %s...", path)
+                if path.is_dir():
+                    shutil.rmtree(path)
+                else:
+                    path.unlink()
+
+
 def run(
-    configs_input: Dict[str, Any],
-    configs_thresholds: Dict[str, Any],
-    configs_output: Dict[str, Any],
-    configs_other: Dict[str, Any],
+    contact_map: pathlib.Path,
+    resolution: int,
+    output_file: pathlib.Path,
+    genomic_belt: int,
+    max_width: int,
+    glob_pers_min: float,
+    constrain_heights: bool,
+    loc_pers_min: float,
+    loc_trend_min: float,
+    force: bool,
+    nproc: int,
+    min_chrom_size: int,
+    roi: Optional[str] = None,
+    log_file: Optional[pathlib.Path] = None,
+    plot_dir: Optional[pathlib.Path] = None,
+    normalization: Optional[str] = None,
 ) -> int:
+    args = locals()
     # How long does stripepy take to analyze the whole Hi-C matrix?
     start_global_time = time.time()
 
-    _write_param_summary(configs_input, configs_thresholds, configs_output, configs_other)
+    _write_param_summary(args)
 
-    if configs_input["roi"] is not None:
+    if roi is not None:
         # Raise an error immediately if --roi was passed and matplotlib is not available
         _import_matplotlib()
 
     # Data loading:
-    f = others.open_matrix_file_checked(configs_input["contact_map"], configs_input["resolution"])
+    f = others.open_matrix_file_checked(contact_map, resolution)
 
-    # Remove existing folders:
-    # configs_output["output_folder"] = (
-    #     f"{configs_output['output_folder']}/{configs_input['contact_map'].stem}/{configs_input['resolution']}"
-    # )
-    IO.remove_and_create_folder(configs_output["output_folder"], configs_output["force"])
+    if force:
+        _remove_existing_output_files(output_file, plot_dir, f.chromosomes())
 
     with contextlib.ExitStack() as ctx:
         main_logger = structlog.get_logger()
 
         # Create HDF5 file to store candidate stripes:
-        main_logger.info('initializing result file "%s"...', configs_output["output_folder"] / "results.hdf5")
-        h5 = ctx.enter_context(IO.ResultFile(configs_output["output_folder"] / "results.hdf5", "w"))
+        main_logger.info('initializing result file "%s"...', output_file)
+        h5 = ctx.enter_context(IO.ResultFile(output_file, "w"))
 
-        h5.init_file(f, configs_input["normalization"], _generate_metadata_attribute(configs_input, configs_thresholds))
+        h5.init_file(
+            f,
+            normalization,
+            _generate_metadata_attribute(
+                constrain_heights=constrain_heights,
+                genomic_belt=genomic_belt,
+                glob_pers_min=glob_pers_min,
+                loc_pers_min=loc_pers_min,
+                loc_trend_min=loc_trend_min,
+                max_width=max_width,
+                min_chrom_size=min_chrom_size,
+            ),
+        )
+
+        if normalization is None:
+            normalization = "NONE"
 
         # Set up the process pool when appropriate
-        if configs_other["nproc"] > 1:
-            main_logger.debug("initializing a pool of %d processes...", configs_other["nproc"])
+        if nproc > 1:
+            main_logger.debug("initializing a pool of %d processes...", nproc)
             pool = ctx.enter_context(
                 mp.Pool(
-                    processes=configs_other["nproc"],
+                    processes=nproc,
                     initializer=_init_mpl_backend,
-                    initargs=(configs_input["roi"] is None,),
+                    initargs=(roi is None,),
                 )
             )
         else:
@@ -183,7 +229,7 @@ def run(
 
         disable_bar = not sys.stderr.isatty()
         progress_weights_df = _compute_progress_bar_weights(
-            f.chromosomes(), include_plotting=configs_input["roi"] is not None, nproc=configs_other["nproc"]
+            f.chromosomes(), include_plotting=roi is not None, nproc=nproc
         )
         progress_bar = ctx.enter_context(
             initialize_progress_bar(
@@ -201,14 +247,12 @@ def run(
         )
 
         # Lopping over all chromosomes:
-        for chrom_name, chrom_size, skip in _plan(
-            f.chromosomes(include_ALL=False), configs_thresholds["min_chrom_size"]
-        ):
+        for chrom_name, chrom_size, skip in _plan(f.chromosomes(include_ALL=False), min_chrom_size):
             progress_weights = progress_weights_df.loc[chrom_name, :].to_dict()
 
             if skip:
                 logger.warning("writing an empty entry for chromosome %s...", chrom_name)
-                result = _generate_empty_result(chrom_name, chrom_size, configs_input["resolution"])
+                result = _generate_empty_result(chrom_name, chrom_size, resolution)
                 h5.write_descriptors(result)
                 progress_bar(max(progress_weights.values()))
                 continue
@@ -217,17 +261,12 @@ def run(
             logger.info("begin processing...")
             start_local_time = time.time()
 
-            # Removing and creating folders to store output files:
-            # configs_input['roi'] = None
-            if configs_input["roi"] is not None:
-                IO.create_folders_for_plots(configs_output["output_folder"] / "plots" / chrom_name)
-
-            logger.debug("fetching interactions using normalization=%s", configs_input["normalization"])
-            I = f.fetch(chrom_name, normalization=configs_input["normalization"]).to_csr("full")
+            logger.debug("fetching interactions using normalization=%s", normalization)
+            I = f.fetch(chrom_name, normalization=normalization).to_csr("full")
             progress_bar(progress_weights["input"])
 
             # RoI:
-            RoI = others.define_RoI(configs_input["roi"], chrom_size, configs_input["resolution"])
+            RoI = others.define_RoI(roi, chrom_size, resolution)
             if RoI is not None:
                 logger.info("region of interest to be used for plotting: %s:%d-%d", chrom_name, *RoI["genomic"])
 
@@ -236,21 +275,13 @@ def run(
             start_time = time.time()
             LT_Iproc, UT_Iproc, Iproc_RoI = stripepy.step_1(
                 I,
-                configs_input["genomic_belt"],
-                configs_input["resolution"],
+                genomic_belt,
+                resolution,
                 RoI=RoI,
                 logger=logger,
             )
             progress_bar(progress_weights["step_1"])
             logger.info("preprocessing took %s", pretty_format_elapsed_time(start_time))
-
-            # Find the indices where the sum is zero
-            # TODO: DO SOMETHING
-            # zero_indices = np.where(np.sum(Iproc_RoI, axis=0) == 0)[0]
-            # print(np.min(np.sum(LT_Iproc + UT_Iproc, axis=0)))
-            # print(np.max(np.sum(LT_Iproc + UT_Iproc, axis=0)))
-            # np.savetxt("trend.txt", np.sum(LT_Iproc + UT_Iproc, axis=0))
-            # exit()
 
             logger = logger.bind(step=(2,))
             logger.info("topological data analysis")
@@ -260,7 +291,7 @@ def run(
                 f.chromosomes().get(chrom_name),
                 LT_Iproc,
                 UT_Iproc,
-                configs_thresholds["glob_pers_min"],
+                glob_pers_min,
                 logger=logger,
             )
             progress_bar(progress_weights["step_2"])
@@ -276,11 +307,11 @@ def run(
                 result,
                 LT_Iproc,
                 UT_Iproc,
-                configs_input["resolution"],
-                configs_input["genomic_belt"],
-                configs_thresholds["max_width"],
-                configs_thresholds["loc_pers_min"],
-                configs_thresholds["loc_trend_min"],
+                resolution,
+                genomic_belt,
+                max_width,
+                loc_pers_min,
+                loc_trend_min,
                 map=pool.map if pool is not None else map,
                 logger=logger,
             )
@@ -312,20 +343,18 @@ def run(
                 start_time = time.time()
                 logger = logger.bind(step=(5,))
                 logger.info("generating plots")
+                query = f"{chrom_name}:{result.roi['genomic'][0]}-{result.roi['genomic'][1]}"
                 stripepy.step_5(
                     result,
-                    configs_input["resolution"],
+                    resolution,
                     LT_Iproc,
                     UT_Iproc,
-                    f.fetch(
-                        f"{chrom_name}:{result.roi['genomic'][0]}-{result.roi['genomic'][1]}",
-                        normalization=configs_input["normalization"],
-                    ).to_numpy("full"),
+                    f.fetch(query, normalization=normalization).to_numpy("full"),
                     Iproc_RoI,
-                    configs_input["genomic_belt"],
-                    configs_thresholds["loc_pers_min"],
-                    configs_thresholds["loc_trend_min"],
-                    configs_output["output_folder"] / "plots",
+                    genomic_belt,
+                    loc_pers_min,
+                    loc_trend_min,
+                    plot_dir,
                     map=pool.map if pool is not None else map,
                     logger=logger,
                 )
