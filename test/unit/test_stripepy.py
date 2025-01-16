@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-import numpy as np
 import pytest
+import numpy as np
 import scipy.sparse as ss
 
 
@@ -280,3 +280,6 @@ class TestCheckNeighborhood:
 
         assert mask == correct_mask
 
+
+class TestFilterExtremaBySparseness:
+    pass
