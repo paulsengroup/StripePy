@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-import numpy as np
 import pytest
+import numpy as np
 import scipy.sparse as ss
 
 from stripepy.stripepy import _log_transform, _band_extraction, _scale_Iproc, _extract_RoIs, _compute_global_pseudodistribution, _check_neighborhood
@@ -276,3 +276,6 @@ class TestCheckNeighborhood:
         correct_mask[21] = 0
 
         assert mask == correct_mask
+
+class TestFilterExtremaBySparseness:
+    pass
