@@ -8,18 +8,20 @@ def U_stripe():
         seed=5, 
         top_pers=5.0, 
         horizontal_bounds=(4,6), 
-        vertical_bounds=(0, 4), 
-        where="upper_triangular")
+        vertical_bounds=(0,4), 
+        where="upper_triangular"
+        )
     yield stripe
 
 @pytest.fixture(scope="function")
 def L_stripe():
     stripe = Stripe(
         seed = 5,
-        top_pers=5.0
-        horizontal_bounds=(4,6)
-        vertical_bounds=(4,10)
-        where="lower_triangular")
+        top_pers=5.0,
+        horizontal_bounds=(4,6),
+        vertical_bounds=(4,10),
+        where="lower_triangular"
+        )
     yield stripe
 
 @pytest.mark.unit
