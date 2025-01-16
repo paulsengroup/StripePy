@@ -104,15 +104,12 @@ Feel free to use your own interaction matrix (make sure the matrix is in `.cool`
 # This may take a while on slow internet connections
 user@dev:/tmp$ stripepy download --name 4DNFI9GMP2J8
 
-[2024-12-11 15:25:56,101] INFO: downloading dataset "4DNFI9GMP2J8" (assembly=hg38)...
-[2024-12-11 15:25:56,296] INFO: downloaded 0.00/106.84 MB (0.00%)
-[2024-12-11 15:26:11,309] INFO: downloaded 57.53/106.84 MB (53.85%)
-[2024-12-11 15:26:26,312] INFO: downloaded 86.59/106.84 MB (81.05%)
-[2024-12-11 15:26:35,156] INFO: DONE! Downloading dataset "4DNFI9GMP2J8" took 39.06s.
-[2024-12-11 15:26:35,156] INFO: computing MD5 digest for file "/tmp/4DNFI9GMP2J8.zf9qbdmi"...
-[2024-12-11 15:26:35,304] INFO: MD5 checksum match!
-[2024-12-11 15:26:35,304] INFO: successfully downloaded dataset "https://zenodo.org/records/14283922/files/4DNFI9GMP2J8.stripepy.mcool?download=1" to file "4DNFI9GMP2J8.mcool"
-[2024-12-11 15:26:35,305] INFO: file size: 106.84MB. Elapsed time: 39.20s
+2025-01-14 12:46:01.304277 [info     ] downloading dataset "4DNFI9GMP2J8" (assembly=hg38)...
+2025-01-14 12:46:23.900411 [info     ] DONE! Downloading dataset "4DNFI9GMP2J8" took 22.596s.
+2025-01-14 12:46:23.901141 [info     ] computing MD5 digest for file "/tmp/4DNFI9GMP2J8.dvizz7v1"...
+2025-01-14 12:46:24.050566 [info     ] MD5 checksum match!
+2025-01-14 12:46:24.050695 [info     ] successfully downloaded dataset "https://zenodo.org/records/14643417/files/4DNFI9GMP2J8.stripepy.mcool?download=1" to file "4DNFI9GMP2J8.mcool"
+2025-01-14 12:46:24.050752 [info     ] file size: 106.84MB. Elapsed time: 22.979s
 ```
 
 #### 2) Detect architectural stripes
@@ -120,935 +117,969 @@ user@dev:/tmp$ stripepy download --name 4DNFI9GMP2J8
 This is the core of the analysis and may take several minutes when processing large files.
 
 ```console
-user@dev:/tmp$ stripepy call 4DNFI9GMP2J8.mcool 10000 -o stripepy/
+user@dev:/tmp$ stripepy call 4DNFI9GMP2J8.mcool 10000
 
-
-Arguments:
---contact-map: 4DNFI9GMP2J8.mcool
---resolution: 10000
---normalization: NONE
---genomic-belt: 5000000
---roi: None
---max-width: 100000
---glob-pers-min: 0.05
---constrain-heights: False
---loc-pers-min: 0.33
---loc-trend-min: 0.25
---output-folder: stripepy
---force: False
---nproc: 1
-
-CHROMOSOME chr1
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.446779727935791 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1353 to 1304
-Number of upper-triangular seed sites is reduced from 1217 to 1180
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.3155953884124756 seconds ---
-Step 3: Shape analysis
+2025-01-14 12:48:25.002788 [info     ] CONFIG:
+{
+  "constrain_heights": false,
+  "contact_map": "4DNFI9GMP2J8.mcool",
+  "force": false,
+  "genomic_belt": 5000000,
+  "glob_pers_min": 0.05,
+  "loc_pers_min": 0.33,
+  "loc_trend_min": 0.25,
+  "log_file": null,
+  "max_width": 100000,
+  "min_chrom_size": 2000000,
+  "normalization": null,
+  "nproc": 1,
+  "output_file": "/tmp/4DNFI9GMP2J8.10000.hdf5",
+  "plot_dir": null,
+  "resolution": 10000,
+  "roi": null
+}
+2025-01-14 12:48:25.002898 [info     ] validating file "4DNFI9GMP2J8.mcool" (10000bp)...
+2025-01-14 12:48:25.014988 [info     ] file "4DNFI9GMP2J8.mcool" successfully validated
+2025-01-14 12:48:25.015062 [info     ] initializing result file "/tmp/4DNFI9GMP2J8.10000.hdf5"...
+2025-01-14 12:48:25.037560 [info     ] [chr1 ] begin processing...
+2025-01-14 12:48:25.997439 [info     ] [chr1 ] [step 1    ] data pre-processing
+2025-01-14 12:48:25.997584 [info     ] [chr1 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:48:26.041711 [info     ] [chr1 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:48:26.394097 [info     ] [chr1 ] [step 1.2  ] removed 49.92% of the non-zero entries (6800532/13623789)
+2025-01-14 12:48:26.394249 [info     ] [chr1 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:48:26.470185 [info     ] [chr1 ] [step 1    ] preprocessing took 472.584ms
+2025-01-14 12:48:26.470329 [info     ] [chr1 ] [step 2    ] topological data analysis
+2025-01-14 12:48:26.470387 [info     ] [chr1 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:48:26.525759 [info     ] [chr1 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:48:26.525844 [info     ] [chr1 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:48:26.640500 [info     ] [chr1 ] [step 2.2.1] lower triangular part
+2025-01-14 12:48:26.683243 [info     ] [chr1 ] [step 2.2.2] upper triangular part
+2025-01-14 12:48:26.728946 [info     ] [chr1 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:48:26.858761 [info     ] [chr1 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1353 to 1304
+2025-01-14 12:48:26.858891 [info     ] [chr1 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1217 to 1180
+2025-01-14 12:48:26.858957 [info     ] [chr1 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:26.859452 [info     ] [chr1 ] [step 2.3.1] lower-triangular part: generated 1304 candidate stripes
+2025-01-14 12:48:26.859562 [info     ] [chr1 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:26.860144 [info     ] [chr1 ] [step 2.3.2] upper-triangular part: generated 1180 candidate stripes
+2025-01-14 12:48:26.860964 [info     ] [chr1 ] [step 2    ] topological data analysis took 390.586ms
+2025-01-14 12:48:26.861002 [info     ] [chr1 ] [step 3    ] shape analysis
 ...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 0.3037407398223877 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.059529781341552734 seconds ---
-This chromosome has taken 0.450955867767334 seconds
-
-
-The code has run for 2.022001071770986 minutes
+2025-01-14 12:50:13.141699 [info     ] [chrY ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:13.155257 [info     ] [chrY ] processing took 442.386ms
+2025-01-14 12:50:13.155714 [info     ] DONE!
+2025-01-14 12:50:13.155781 [info     ] processed 24 chromosomes in 1m:48.153s
 ```
 
 <details>
 <summary>Complete log</summary>
 
 ```
-
-Arguments:
---contact-map: 4DNFI9GMP2J8.mcool
---resolution: 10000
---normalization: NONE
---genomic-belt: 5000000
---roi: None
---max-width: 100000
---glob-pers-min: 0.05
---constrain-heights: False
---loc-pers-min: 0.33
---loc-trend-min: 0.25
---output-folder: stripepy
---force: False
---nproc: 1
-
-CHROMOSOME chr1
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.446779727935791 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1353 to 1304
-Number of upper-triangular seed sites is reduced from 1217 to 1180
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.3155953884124756 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 3.5695345401763916 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.528017997741699 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 7.102360963821411 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.9378914833068848 seconds ---
-This chromosome has taken 9.699488639831543 seconds
-
-CHROMOSOME chr2
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.47316646575927734 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1504 to 1473
-Number of upper-triangular seed sites is reduced from 1402 to 1367
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.3005075454711914 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 3.9707601070404053 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.9840147495269775 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 7.959795951843262 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 1.0786504745483398 seconds ---
-This chromosome has taken 10.67337441444397 seconds
-
-CHROMOSOME chr3
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.3940746784210205 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1173 to 1168
-Number of upper-triangular seed sites is reduced from 1305 to 1297
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.2587897777557373 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 2.884906768798828 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.896686553955078 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 6.78642725944519 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 1.012127161026001 seconds ---
-This chromosome has taken 9.16284704208374 seconds
-
-CHROMOSOME chr4
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.3355872631072998 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1152 to 1144
-Number of upper-triangular seed sites is reduced from 993 to 985
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.27007126808166504 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 2.4963622093200684 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.3167238235473633 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 5.8175835609436035 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.8550224304199219 seconds ---
-This chromosome has taken 7.937693357467651 seconds
-
-CHROMOSOME chr5
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.2822716236114502 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 978 to 967
-Number of upper-triangular seed sites is reduced from 1365 to 1353
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.2545452117919922 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 2.7692947387695312 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.6233880519866943 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 6.397336721420288 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.9528613090515137 seconds ---
-This chromosome has taken 8.481026411056519 seconds
-
-CHROMOSOME chr6
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.26506567001342773 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1102 to 1087
-Number of upper-triangular seed sites is reduced from 986 to 975
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.25983405113220215 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 2.29978084564209 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.2286500930786133 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 5.532674789428711 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.8356080055236816 seconds ---
-This chromosome has taken 7.442054748535156 seconds
-
-CHROMOSOME chr7
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.21904230117797852 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 770 to 735
-Number of upper-triangular seed sites is reduced from 1114 to 1083
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.22430944442749023 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.8583557605743408 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.8366761207580566 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 4.698970079421997 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.7353849411010742 seconds ---
-This chromosome has taken 6.372534275054932 seconds
-
-CHROMOSOME chr8
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.19896483421325684 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 950 to 927
-Number of upper-triangular seed sites is reduced from 789 to 770
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.20422124862670898 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.6131336688995361 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.68200421333313 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 4.298713445663452 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.7141485214233398 seconds ---
-This chromosome has taken 5.876908302307129 seconds
-
-CHROMOSOME chr9
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.13652896881103516 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 602 to 587
-Number of upper-triangular seed sites is reduced from 690 to 675
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.18230485916137695 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.1340200901031494 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.0012364387512207 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 3.138490915298462 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.5209352970123291 seconds ---
-This chromosome has taken 4.350054979324341 seconds
-
-CHROMOSOME chr10
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.1949782371520996 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 855 to 830
-Number of upper-triangular seed sites is reduced from 891 to 867
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.18785762786865234 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.5026066303253174 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.675481081008911 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 4.1818461418151855 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.7034149169921875 seconds ---
-This chromosome has taken 5.699317932128906 seconds
-
-CHROMOSOME chr11
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.1772167682647705 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 909 to 897
-Number of upper-triangular seed sites is reduced from 1056 to 1044
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.18897652626037598 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.6935629844665527 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 3.049086093902588 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 4.746764183044434 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.7810971736907959 seconds ---
-This chromosome has taken 6.334598541259766 seconds
-
-CHROMOSOME chr12
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.16396474838256836 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 633 to 629
-Number of upper-triangular seed sites is reduced from 883 to 878
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.2068781852722168 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.2998018264770508 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.355454206466675 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 3.6587283611297607 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.6075148582458496 seconds ---
-This chromosome has taken 5.056737422943115 seconds
-
-CHROMOSOME chr13
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.11529994010925293 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 686 to 675
-Number of upper-triangular seed sites is reduced from 653 to 643
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.15171098709106445 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.9743459224700928 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.0503764152526855 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 3.027937650680542 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.5435254573822021 seconds ---
-This chromosome has taken 4.14011549949646 seconds
-
-CHROMOSOME chr14
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.10641026496887207 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 567 to 561
-Number of upper-triangular seed sites is reduced from 523 to 521
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.14020061492919922 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.7857282161712646 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.7303550243377686 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 2.519143581390381 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.4577367305755615 seconds ---
-This chromosome has taken 3.510401725769043 seconds
-
-CHROMOSOME chr15
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.11155319213867188 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 637 to 602
-Number of upper-triangular seed sites is reduced from 635 to 607
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.12435340881347656 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.7276151180267334 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.8632171154022217 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 2.593841552734375 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.4837307929992676 seconds ---
-This chromosome has taken 3.5654518604278564 seconds
-
-CHROMOSOME chr16
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.08726286888122559 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 330 to 299
-Number of upper-triangular seed sites is reduced from 494 to 454
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.12026333808898926 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.4373819828033447 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.1490724086761475 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 1.5888426303863525 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.3165297508239746 seconds ---
-This chromosome has taken 2.3602585792541504 seconds
-
-CHROMOSOME chr17
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.09188055992126465 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 586 to 561
-Number of upper-triangular seed sites is reduced from 548 to 518
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.11394453048706055 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.5639193058013916 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.671928882598877 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 2.238788366317749 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.4385089874267578 seconds ---
-This chromosome has taken 3.1356685161590576 seconds
-
-CHROMOSOME chr18
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.08964848518371582 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 485 to 480
-Number of upper-triangular seed sites is reduced from 524 to 517
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.11319613456726074 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.535980224609375 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.5569026470184326 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 2.0957298278808594 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.4030795097351074 seconds ---
-This chromosome has taken 2.9409568309783936 seconds
-
-CHROMOSOME chr19
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.0656130313873291 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 547 to 543
-Number of upper-triangular seed sites is reduced from 558 to 555
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.08183503150939941 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.42258787155151367 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.7407689094543457 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 2.166306495666504 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.4351332187652588 seconds ---
-This chromosome has taken 2.9370124340057373 seconds
-
-CHROMOSOME chr20
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.07147622108459473 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 501 to 481
-Number of upper-triangular seed sites is reduced from 411 to 393
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.09188032150268555 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.36221981048583984 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 1.3752944469451904 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 1.7400612831115723 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.3595857620239258 seconds ---
-This chromosome has taken 2.4734344482421875 seconds
-
-CHROMOSOME chr21
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.026866912841796875 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 232 to 210
-Number of upper-triangular seed sites is reduced from 220 to 206
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.06076812744140625 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.12738490104675293 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 0.6408932209014893 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 0.769859790802002 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.167100191116333 seconds ---
-This chromosome has taken 1.1280708312988281 seconds
-
-CHROMOSOME chr22
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.03299999237060547 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 310 to 285
-Number of upper-triangular seed sites is reduced from 286 to 272
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.06340456008911133 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.1843411922454834 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 0.8908343315124512 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 1.0772550106048584 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.23577547073364258 seconds ---
-This chromosome has taken 1.5294694900512695 seconds
-
-CHROMOSOME chrX
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.13507843017578125 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 1183 to 1097
-Number of upper-triangular seed sites is reduced from 1142 to 1054
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.21353983879089355 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 1.9477896690368652 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 2.7261645793914795 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 4.678062200546265 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.6798150539398193 seconds ---
-This chromosome has taken 6.042936563491821 seconds
-
-CHROMOSOME chrY
-RoI is: None
-Step 1: pre-processing step
-1.1) Log-transformation...
-1.2) Focusing on a neighborhood of the main diagonal...
-1.3) Projection onto [0, 1]...
-Execution time of step 1: 0.00628972053527832 seconds ---
-Step 2: Topological Data Analysis
-2.1) Global 1D pseudo-distributions...
-2.2) Detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
-2.2.0) All maxima and their persistence
-2.2.1) Lower triangular part
-2.2.2) Upper triangular part
-2.2.3) Filter out seeds in sparse regions
-Number of lower-triangular seed sites is reduced from 130 to 97
-Number of upper-triangular seed sites is reduced from 148 to 112
-2.3) Storing into a list of Stripe objects...
-Execution time of step 2: 0.05667591094970703 seconds ---
-Step 3: Shape analysis
-3.1) Width estimation
-3.1.1) Estimating widths (equiv. HIoIs, where HIoI stands for Horizontal Interval of Interest)...
-3.1.2) Updating list of Stripe objects with HIoIs...
-Execution time: 0.07381796836853027 seconds ---
-3.2) Height estimation
-3.2.1) Estimating heights (equiv. VIoIs, where VIoI stands for Vertical Interval of Interest)...
-3.2.2) Updating list of Stripe objects with VIoIs...
-Execution time: 0.2287464141845703 seconds ---
-3.5) Saving geometric descriptors...
-3.6) Bar plots of widths and heights...
-Execution time of step 3: 0.3037407398223877 seconds ---
-Step 4: Statistical analysis and post-processing
-4.1) Computing and saving biological descriptors
-Execution time of step 4: 0.059529781341552734 seconds ---
-This chromosome has taken 0.450955867767334 seconds
-
-
-The code has run for 2.022001071770986 minutes
+2025-01-14 12:48:25.002788 [info     ] CONFIG:
+{
+  "constrain_heights": false,
+  "contact_map": "4DNFI9GMP2J8.mcool",
+  "force": false,
+  "genomic_belt": 5000000,
+  "glob_pers_min": 0.05,
+  "loc_pers_min": 0.33,
+  "loc_trend_min": 0.25,
+  "log_file": null,
+  "max_width": 100000,
+  "min_chrom_size": 2000000,
+  "normalization": null,
+  "nproc": 1,
+  "output_file": "/tmp/4DNFI9GMP2J8.10000.hdf5",
+  "plot_dir": null,
+  "resolution": 10000,
+  "roi": null
+}
+2025-01-14 12:48:25.002898 [info     ] validating file "4DNFI9GMP2J8.mcool" (10000bp)...
+2025-01-14 12:48:25.014988 [info     ] file "4DNFI9GMP2J8.mcool" successfully validated
+2025-01-14 12:48:25.015062 [info     ] initializing result file "/tmp/4DNFI9GMP2J8.10000.hdf5"...
+2025-01-14 12:48:25.037560 [info     ] [chr1 ] begin processing...
+2025-01-14 12:48:25.997439 [info     ] [chr1 ] [step 1    ] data pre-processing
+2025-01-14 12:48:25.997584 [info     ] [chr1 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:48:26.041711 [info     ] [chr1 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:48:26.394097 [info     ] [chr1 ] [step 1.2  ] removed 49.92% of the non-zero entries (6800532/13623789)
+2025-01-14 12:48:26.394249 [info     ] [chr1 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:48:26.470185 [info     ] [chr1 ] [step 1    ] preprocessing took 472.584ms
+2025-01-14 12:48:26.470329 [info     ] [chr1 ] [step 2    ] topological data analysis
+2025-01-14 12:48:26.470387 [info     ] [chr1 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:48:26.525759 [info     ] [chr1 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:48:26.525844 [info     ] [chr1 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:48:26.640500 [info     ] [chr1 ] [step 2.2.1] lower triangular part
+2025-01-14 12:48:26.683243 [info     ] [chr1 ] [step 2.2.2] upper triangular part
+2025-01-14 12:48:26.728946 [info     ] [chr1 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:48:26.858761 [info     ] [chr1 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1353 to 1304
+2025-01-14 12:48:26.858891 [info     ] [chr1 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1217 to 1180
+2025-01-14 12:48:26.858957 [info     ] [chr1 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:26.859452 [info     ] [chr1 ] [step 2.3.1] lower-triangular part: generated 1304 candidate stripes
+2025-01-14 12:48:26.859562 [info     ] [chr1 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:26.860144 [info     ] [chr1 ] [step 2.3.2] upper-triangular part: generated 1180 candidate stripes
+2025-01-14 12:48:26.860964 [info     ] [chr1 ] [step 2    ] topological data analysis took 390.586ms
+2025-01-14 12:48:26.861002 [info     ] [chr1 ] [step 3    ] shape analysis
+2025-01-14 12:48:26.861038 [info     ] [chr1 ] [step 3.1  ] width estimation
+2025-01-14 12:48:26.861065 [info     ] [chr1 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:48:30.230277 [info     ] [chr1 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:48:30.230743 [info     ] [chr1 ] [step 3.1  ] width estimation took 3.370s
+2025-01-14 12:48:30.230793 [info     ] [chr1 ] [step 3.2  ] height estimation
+2025-01-14 12:48:30.230826 [info     ] [chr1 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:48:33.838096 [info     ] [chr1 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:48:33.838772 [info     ] [chr1 ] [step 3.2  ] height estimation took 3.608s
+2025-01-14 12:48:33.838969 [info     ] [chr1 ] [step 3    ] shape analysis took 6.978s
+2025-01-14 12:48:33.839010 [info     ] [chr1 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:48:33.839042 [info     ] [chr1 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:48:34.819194 [info     ] [chr1 ] [step 4    ] statistical analysis and post-processing took 980.140ms
+2025-01-14 12:48:34.819317 [info     ] [chr1 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:48:34.871799 [info     ] [chr1 ] processing took 9.834s
+2025-01-14 12:48:34.872016 [info     ] [chr2 ] begin processing...
+2025-01-14 12:48:35.773199 [info     ] [chr2 ] [step 1    ] data pre-processing
+2025-01-14 12:48:35.773344 [info     ] [chr2 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:48:35.817056 [info     ] [chr2 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:48:36.177891 [info     ] [chr2 ] [step 1.2  ] removed 49.92% of the non-zero entries (7159053/14341951)
+2025-01-14 12:48:36.178036 [info     ] [chr2 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:48:36.264186 [info     ] [chr2 ] [step 1    ] preprocessing took 490.826ms
+2025-01-14 12:48:36.264329 [info     ] [chr2 ] [step 2    ] topological data analysis
+2025-01-14 12:48:36.264380 [info     ] [chr2 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:48:36.319916 [info     ] [chr2 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:48:36.320006 [info     ] [chr2 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:48:36.416495 [info     ] [chr2 ] [step 2.2.1] lower triangular part
+2025-01-14 12:48:36.460423 [info     ] [chr2 ] [step 2.2.2] upper triangular part
+2025-01-14 12:48:36.507180 [info     ] [chr2 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:48:36.647683 [info     ] [chr2 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1504 to 1473
+2025-01-14 12:48:36.647747 [info     ] [chr2 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1402 to 1367
+2025-01-14 12:48:36.647802 [info     ] [chr2 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:36.648376 [info     ] [chr2 ] [step 2.3.1] lower-triangular part: generated 1473 candidate stripes
+2025-01-14 12:48:36.648508 [info     ] [chr2 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:36.649197 [info     ] [chr2 ] [step 2.3.2] upper-triangular part: generated 1367 candidate stripes
+2025-01-14 12:48:36.650219 [info     ] [chr2 ] [step 2    ] topological data analysis took 385.850ms
+2025-01-14 12:48:36.650327 [info     ] [chr2 ] [step 3    ] shape analysis
+2025-01-14 12:48:36.650362 [info     ] [chr2 ] [step 3.1  ] width estimation
+2025-01-14 12:48:36.650387 [info     ] [chr2 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:48:40.299274 [info     ] [chr2 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:48:40.300210 [info     ] [chr2 ] [step 3.1  ] width estimation took 3.650s
+2025-01-14 12:48:40.300254 [info     ] [chr2 ] [step 3.2  ] height estimation
+2025-01-14 12:48:40.300283 [info     ] [chr2 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:48:44.301992 [info     ] [chr2 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:48:44.302758 [info     ] [chr2 ] [step 3.2  ] height estimation took 4.002s
+2025-01-14 12:48:44.303001 [info     ] [chr2 ] [step 3    ] shape analysis took 7.653s
+2025-01-14 12:48:44.303044 [info     ] [chr2 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:48:44.303077 [info     ] [chr2 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:48:45.425307 [info     ] [chr2 ] [step 4    ] statistical analysis and post-processing took 1.122s
+2025-01-14 12:48:45.425429 [info     ] [chr2 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:48:45.483981 [info     ] [chr2 ] processing took 10.612s
+2025-01-14 12:48:45.484180 [info     ] [chr3 ] begin processing...
+2025-01-14 12:48:46.206077 [info     ] [chr3 ] [step 1    ] data pre-processing
+2025-01-14 12:48:46.206225 [info     ] [chr3 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:48:46.239501 [info     ] [chr3 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:48:46.516739 [info     ] [chr3 ] [step 1.2  ] removed 49.92% of the non-zero entries (5946460/11912543)
+2025-01-14 12:48:46.516891 [info     ] [chr3 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:48:46.578467 [info     ] [chr3 ] [step 1    ] preprocessing took 372.222ms
+2025-01-14 12:48:46.578615 [info     ] [chr3 ] [step 2    ] topological data analysis
+2025-01-14 12:48:46.578665 [info     ] [chr3 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:48:46.623722 [info     ] [chr3 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:48:46.623815 [info     ] [chr3 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:48:46.703393 [info     ] [chr3 ] [step 2.2.1] lower triangular part
+2025-01-14 12:48:46.739557 [info     ] [chr3 ] [step 2.2.2] upper triangular part
+2025-01-14 12:48:46.778620 [info     ] [chr3 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:48:46.894006 [info     ] [chr3 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1173 to 1168
+2025-01-14 12:48:46.894066 [info     ] [chr3 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1305 to 1297
+2025-01-14 12:48:46.894125 [info     ] [chr3 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:46.894590 [info     ] [chr3 ] [step 2.3.1] lower-triangular part: generated 1168 candidate stripes
+2025-01-14 12:48:46.894701 [info     ] [chr3 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:46.895343 [info     ] [chr3 ] [step 2.3.2] upper-triangular part: generated 1297 candidate stripes
+2025-01-14 12:48:46.896215 [info     ] [chr3 ] [step 2    ] topological data analysis took 317.560ms
+2025-01-14 12:48:46.896330 [info     ] [chr3 ] [step 3    ] shape analysis
+2025-01-14 12:48:46.896362 [info     ] [chr3 ] [step 3.1  ] width estimation
+2025-01-14 12:48:46.896388 [info     ] [chr3 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:48:49.704610 [info     ] [chr3 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:48:49.705369 [info     ] [chr3 ] [step 3.1  ] width estimation took 2.809s
+2025-01-14 12:48:49.705471 [info     ] [chr3 ] [step 3.2  ] height estimation
+2025-01-14 12:48:49.705534 [info     ] [chr3 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:48:53.106184 [info     ] [chr3 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:48:53.106866 [info     ] [chr3 ] [step 3.2  ] height estimation took 3.401s
+2025-01-14 12:48:53.107150 [info     ] [chr3 ] [step 3    ] shape analysis took 6.211s
+2025-01-14 12:48:53.107201 [info     ] [chr3 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:48:53.107236 [info     ] [chr3 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:48:53.995859 [info     ] [chr3 ] [step 4    ] statistical analysis and post-processing took 888.608ms
+2025-01-14 12:48:53.995982 [info     ] [chr3 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:48:54.043330 [info     ] [chr3 ] processing took 8.559s
+2025-01-14 12:48:54.043530 [info     ] [chr4 ] begin processing...
+2025-01-14 12:48:54.615181 [info     ] [chr4 ] [step 1    ] data pre-processing
+2025-01-14 12:48:54.615321 [info     ] [chr4 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:48:54.638890 [info     ] [chr4 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:48:54.902263 [info     ] [chr4 ] [step 1.2  ] removed 49.91% of the non-zero entries (5473149/10965107)
+2025-01-14 12:48:54.902426 [info     ] [chr4 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:48:54.968124 [info     ] [chr4 ] [step 1    ] preprocessing took 352.783ms
+2025-01-14 12:48:54.968275 [info     ] [chr4 ] [step 2    ] topological data analysis
+2025-01-14 12:48:54.968324 [info     ] [chr4 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:48:55.006404 [info     ] [chr4 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:48:55.006532 [info     ] [chr4 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:48:55.101248 [info     ] [chr4 ] [step 2.2.1] lower triangular part
+2025-01-14 12:48:55.132420 [info     ] [chr4 ] [step 2.2.2] upper triangular part
+2025-01-14 12:48:55.165599 [info     ] [chr4 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:48:55.263648 [info     ] [chr4 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1152 to 1144
+2025-01-14 12:48:55.263770 [info     ] [chr4 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 993 to 985
+2025-01-14 12:48:55.263828 [info     ] [chr4 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:55.264248 [info     ] [chr4 ] [step 2.3.1] lower-triangular part: generated 1144 candidate stripes
+2025-01-14 12:48:55.264356 [info     ] [chr4 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:48:55.264845 [info     ] [chr4 ] [step 2.3.2] upper-triangular part: generated 985 candidate stripes
+2025-01-14 12:48:55.265838 [info     ] [chr4 ] [step 2    ] topological data analysis took 297.524ms
+2025-01-14 12:48:55.265962 [info     ] [chr4 ] [step 3    ] shape analysis
+2025-01-14 12:48:55.265994 [info     ] [chr4 ] [step 3.1  ] width estimation
+2025-01-14 12:48:55.266017 [info     ] [chr4 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:48:57.293326 [info     ] [chr4 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:48:57.293895 [info     ] [chr4 ] [step 3.1  ] width estimation took 2.028s
+2025-01-14 12:48:57.293959 [info     ] [chr4 ] [step 3.2  ] height estimation
+2025-01-14 12:48:57.293999 [info     ] [chr4 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:48:59.921469 [info     ] [chr4 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:48:59.922046 [info     ] [chr4 ] [step 3.2  ] height estimation took 2.628s
+2025-01-14 12:48:59.922325 [info     ] [chr4 ] [step 3    ] shape analysis took 4.656s
+2025-01-14 12:48:59.922370 [info     ] [chr4 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:48:59.922397 [info     ] [chr4 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:00.635691 [info     ] [chr4 ] [step 4    ] statistical analysis and post-processing took 713.281ms
+2025-01-14 12:49:00.635819 [info     ] [chr4 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:00.678109 [info     ] [chr4 ] processing took 6.635s
+2025-01-14 12:49:00.678311 [info     ] [chr5 ] begin processing...
+2025-01-14 12:49:01.232136 [info     ] [chr5 ] [step 1    ] data pre-processing
+2025-01-14 12:49:01.232285 [info     ] [chr5 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:01.252853 [info     ] [chr5 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:01.500614 [info     ] [chr5 ] [step 1.2  ] removed 49.92% of the non-zero entries (5281978/10581676)
+2025-01-14 12:49:01.500778 [info     ] [chr5 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:01.560841 [info     ] [chr5 ] [step 1    ] preprocessing took 328.538ms
+2025-01-14 12:49:01.560990 [info     ] [chr5 ] [step 2    ] topological data analysis
+2025-01-14 12:49:01.561041 [info     ] [chr5 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:01.598494 [info     ] [chr5 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:01.598625 [info     ] [chr5 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:01.665965 [info     ] [chr5 ] [step 2.2.1] lower triangular part
+2025-01-14 12:49:01.696991 [info     ] [chr5 ] [step 2.2.2] upper triangular part
+2025-01-14 12:49:01.729874 [info     ] [chr5 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:01.825891 [info     ] [chr5 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 978 to 967
+2025-01-14 12:49:01.825997 [info     ] [chr5 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1365 to 1353
+2025-01-14 12:49:01.826052 [info     ] [chr5 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:01.826428 [info     ] [chr5 ] [step 2.3.1] lower-triangular part: generated 967 candidate stripes
+2025-01-14 12:49:01.826515 [info     ] [chr5 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:01.827155 [info     ] [chr5 ] [step 2.3.2] upper-triangular part: generated 1353 candidate stripes
+2025-01-14 12:49:01.828096 [info     ] [chr5 ] [step 2    ] topological data analysis took 267.065ms
+2025-01-14 12:49:01.828214 [info     ] [chr5 ] [step 3    ] shape analysis
+2025-01-14 12:49:01.828244 [info     ] [chr5 ] [step 3.1  ] width estimation
+2025-01-14 12:49:01.828268 [info     ] [chr5 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:04.094841 [info     ] [chr5 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:04.095354 [info     ] [chr5 ] [step 3.1  ] width estimation took 2.267s
+2025-01-14 12:49:04.095410 [info     ] [chr5 ] [step 3.2  ] height estimation
+2025-01-14 12:49:04.095442 [info     ] [chr5 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:07.020664 [info     ] [chr5 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:07.021280 [info     ] [chr5 ] [step 3.2  ] height estimation took 2.926s
+2025-01-14 12:49:07.021544 [info     ] [chr5 ] [step 3    ] shape analysis took 5.193s
+2025-01-14 12:49:07.021582 [info     ] [chr5 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:07.021610 [info     ] [chr5 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:07.826098 [info     ] [chr5 ] [step 4    ] statistical analysis and post-processing took 804.473ms
+2025-01-14 12:49:07.826219 [info     ] [chr5 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:07.870644 [info     ] [chr5 ] processing took 7.192s
+2025-01-14 12:49:07.870840 [info     ] [chr6 ] begin processing...
+2025-01-14 12:49:08.404902 [info     ] [chr6 ] [step 1    ] data pre-processing
+2025-01-14 12:49:08.405044 [info     ] [chr6 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:08.423929 [info     ] [chr6 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:08.654928 [info     ] [chr6 ] [step 1.2  ] removed 49.92% of the non-zero entries (5062685/10142231)
+2025-01-14 12:49:08.655083 [info     ] [chr6 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:08.708001 [info     ] [chr6 ] [step 1    ] preprocessing took 302.940ms
+2025-01-14 12:49:08.708171 [info     ] [chr6 ] [step 2    ] topological data analysis
+2025-01-14 12:49:08.708230 [info     ] [chr6 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:08.742292 [info     ] [chr6 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:08.742421 [info     ] [chr6 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:08.803504 [info     ] [chr6 ] [step 2.2.1] lower triangular part
+2025-01-14 12:49:08.832908 [info     ] [chr6 ] [step 2.2.2] upper triangular part
+2025-01-14 12:49:08.864552 [info     ] [chr6 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:08.954081 [info     ] [chr6 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1102 to 1087
+2025-01-14 12:49:08.954147 [info     ] [chr6 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 986 to 975
+2025-01-14 12:49:08.954199 [info     ] [chr6 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:08.954594 [info     ] [chr6 ] [step 2.3.1] lower-triangular part: generated 1087 candidate stripes
+2025-01-14 12:49:08.954687 [info     ] [chr6 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:08.955185 [info     ] [chr6 ] [step 2.3.2] upper-triangular part: generated 975 candidate stripes
+2025-01-14 12:49:08.956032 [info     ] [chr6 ] [step 2    ] topological data analysis took 247.812ms
+2025-01-14 12:49:08.956158 [info     ] [chr6 ] [step 3    ] shape analysis
+2025-01-14 12:49:08.956190 [info     ] [chr6 ] [step 3.1  ] width estimation
+2025-01-14 12:49:08.956215 [info     ] [chr6 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:10.707434 [info     ] [chr6 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:10.707903 [info     ] [chr6 ] [step 3.1  ] width estimation took 1.752s
+2025-01-14 12:49:10.707947 [info     ] [chr6 ] [step 3.2  ] height estimation
+2025-01-14 12:49:10.707978 [info     ] [chr6 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:13.324728 [info     ] [chr6 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:13.325328 [info     ] [chr6 ] [step 3.2  ] height estimation took 2.617s
+2025-01-14 12:49:13.325599 [info     ] [chr6 ] [step 3    ] shape analysis took 4.369s
+2025-01-14 12:49:13.325638 [info     ] [chr6 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:13.325670 [info     ] [chr6 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:14.047510 [info     ] [chr6 ] [step 4    ] statistical analysis and post-processing took 721.825ms
+2025-01-14 12:49:14.047652 [info     ] [chr6 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:14.090589 [info     ] [chr6 ] processing took 6.220s
+2025-01-14 12:49:14.090785 [info     ] [chr7 ] begin processing...
+2025-01-14 12:49:14.553816 [info     ] [chr7 ] [step 1    ] data pre-processing
+2025-01-14 12:49:14.553956 [info     ] [chr7 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:14.571432 [info     ] [chr7 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:14.763864 [info     ] [chr7 ] [step 1.2  ] removed 49.91% of the non-zero entries (4510986/9037570)
+2025-01-14 12:49:14.764019 [info     ] [chr7 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:14.806433 [info     ] [chr7 ] [step 1    ] preprocessing took 252.460ms
+2025-01-14 12:49:14.806579 [info     ] [chr7 ] [step 2    ] topological data analysis
+2025-01-14 12:49:14.806628 [info     ] [chr7 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:14.838401 [info     ] [chr7 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:14.838526 [info     ] [chr7 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:14.894711 [info     ] [chr7 ] [step 2.2.1] lower triangular part
+2025-01-14 12:49:14.920210 [info     ] [chr7 ] [step 2.2.2] upper triangular part
+2025-01-14 12:49:14.948121 [info     ] [chr7 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:15.029561 [info     ] [chr7 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 770 to 735
+2025-01-14 12:49:15.029634 [info     ] [chr7 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1114 to 1083
+2025-01-14 12:49:15.029688 [info     ] [chr7 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:15.029990 [info     ] [chr7 ] [step 2.3.1] lower-triangular part: generated 735 candidate stripes
+2025-01-14 12:49:15.030062 [info     ] [chr7 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:15.030454 [info     ] [chr7 ] [step 2.3.2] upper-triangular part: generated 1083 candidate stripes
+2025-01-14 12:49:15.031180 [info     ] [chr7 ] [step 2    ] topological data analysis took 224.563ms
+2025-01-14 12:49:15.031288 [info     ] [chr7 ] [step 3    ] shape analysis
+2025-01-14 12:49:15.031323 [info     ] [chr7 ] [step 3.1  ] width estimation
+2025-01-14 12:49:15.031349 [info     ] [chr7 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:16.547349 [info     ] [chr7 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:16.547689 [info     ] [chr7 ] [step 3.1  ] width estimation took 1.516s
+2025-01-14 12:49:16.547731 [info     ] [chr7 ] [step 3.2  ] height estimation
+2025-01-14 12:49:16.547761 [info     ] [chr7 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:18.851984 [info     ] [chr7 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:18.852521 [info     ] [chr7 ] [step 3.2  ] height estimation took 2.305s
+2025-01-14 12:49:18.852749 [info     ] [chr7 ] [step 3    ] shape analysis took 3.821s
+2025-01-14 12:49:18.852790 [info     ] [chr7 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:18.852820 [info     ] [chr7 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:19.490033 [info     ] [chr7 ] [step 4    ] statistical analysis and post-processing took 637.199ms
+2025-01-14 12:49:19.490164 [info     ] [chr7 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:19.529120 [info     ] [chr7 ] processing took 5.438s
+2025-01-14 12:49:19.529310 [info     ] [chr8 ] begin processing...
+2025-01-14 12:49:19.954370 [info     ] [chr8 ] [step 1    ] data pre-processing
+2025-01-14 12:49:19.954511 [info     ] [chr8 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:19.970042 [info     ] [chr8 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:20.152033 [info     ] [chr8 ] [step 1.2  ] removed 49.92% of the non-zero entries (4272912/8560081)
+2025-01-14 12:49:20.152184 [info     ] [chr8 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:20.191894 [info     ] [chr8 ] [step 1    ] preprocessing took 237.366ms
+2025-01-14 12:49:20.192037 [info     ] [chr8 ] [step 2    ] topological data analysis
+2025-01-14 12:49:20.192094 [info     ] [chr8 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:20.222810 [info     ] [chr8 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:20.222925 [info     ] [chr8 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:20.277482 [info     ] [chr8 ] [step 2.2.1] lower triangular part
+2025-01-14 12:49:20.302332 [info     ] [chr8 ] [step 2.2.2] upper triangular part
+2025-01-14 12:49:20.329843 [info     ] [chr8 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:20.408206 [info     ] [chr8 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 950 to 927
+2025-01-14 12:49:20.408287 [info     ] [chr8 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 789 to 770
+2025-01-14 12:49:20.408338 [info     ] [chr8 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:20.408698 [info     ] [chr8 ] [step 2.3.1] lower-triangular part: generated 927 candidate stripes
+2025-01-14 12:49:20.408783 [info     ] [chr8 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:20.409079 [info     ] [chr8 ] [step 2.3.2] upper-triangular part: generated 770 candidate stripes
+2025-01-14 12:49:20.409758 [info     ] [chr8 ] [step 2    ] topological data analysis took 217.683ms
+2025-01-14 12:49:20.409864 [info     ] [chr8 ] [step 3    ] shape analysis
+2025-01-14 12:49:20.409895 [info     ] [chr8 ] [step 3.1  ] width estimation
+2025-01-14 12:49:20.409918 [info     ] [chr8 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:21.753341 [info     ] [chr8 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:21.753654 [info     ] [chr8 ] [step 3.1  ] width estimation took 1.344s
+2025-01-14 12:49:21.753699 [info     ] [chr8 ] [step 3.2  ] height estimation
+2025-01-14 12:49:21.753728 [info     ] [chr8 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:23.939159 [info     ] [chr8 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:23.939660 [info     ] [chr8 ] [step 3.2  ] height estimation took 2.186s
+2025-01-14 12:49:23.939898 [info     ] [chr8 ] [step 3    ] shape analysis took 3.530s
+2025-01-14 12:49:23.939938 [info     ] [chr8 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:23.939968 [info     ] [chr8 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:24.533027 [info     ] [chr8 ] [step 4    ] statistical analysis and post-processing took 593.046ms
+2025-01-14 12:49:24.533155 [info     ] [chr8 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:24.569016 [info     ] [chr8 ] processing took 5.040s
+2025-01-14 12:49:24.569208 [info     ] [chr9 ] begin processing...
+2025-01-14 12:49:24.920078 [info     ] [chr9 ] [step 1    ] data pre-processing
+2025-01-14 12:49:24.920234 [info     ] [chr9 ] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:24.933661 [info     ] [chr9 ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:25.064319 [info     ] [chr9 ] [step 1.2  ] removed 49.91% of the non-zero entries (3400203/6812131)
+2025-01-14 12:49:25.064474 [info     ] [chr9 ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:25.089706 [info     ] [chr9 ] [step 1    ] preprocessing took 169.460ms
+2025-01-14 12:49:25.089857 [info     ] [chr9 ] [step 2    ] topological data analysis
+2025-01-14 12:49:25.089908 [info     ] [chr9 ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:25.117704 [info     ] [chr9 ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:25.117814 [info     ] [chr9 ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:25.167338 [info     ] [chr9 ] [step 2.2.1] lower triangular part
+2025-01-14 12:49:25.189500 [info     ] [chr9 ] [step 2.2.2] upper triangular part
+2025-01-14 12:49:25.213548 [info     ] [chr9 ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:25.283661 [info     ] [chr9 ] [step 2.2.3] lower triangular part: number of seed sites reduced from 602 to 587
+2025-01-14 12:49:25.283756 [info     ] [chr9 ] [step 2.2.3] upper triangular part: number of seed sites reduced from 690 to 675
+2025-01-14 12:49:25.283811 [info     ] [chr9 ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:25.284065 [info     ] [chr9 ] [step 2.3.1] lower-triangular part: generated 587 candidate stripes
+2025-01-14 12:49:25.284141 [info     ] [chr9 ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:25.284401 [info     ] [chr9 ] [step 2.3.2] upper-triangular part: generated 675 candidate stripes
+2025-01-14 12:49:25.285081 [info     ] [chr9 ] [step 2    ] topological data analysis took 195.178ms
+2025-01-14 12:49:25.285192 [info     ] [chr9 ] [step 3    ] shape analysis
+2025-01-14 12:49:25.285224 [info     ] [chr9 ] [step 3.1  ] width estimation
+2025-01-14 12:49:25.285249 [info     ] [chr9 ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:26.243649 [info     ] [chr9 ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:26.244027 [info     ] [chr9 ] [step 3.1  ] width estimation took 958.796ms
+2025-01-14 12:49:26.244083 [info     ] [chr9 ] [step 3.2  ] height estimation
+2025-01-14 12:49:26.244115 [info     ] [chr9 ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:27.905512 [info     ] [chr9 ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:27.905968 [info     ] [chr9 ] [step 3.2  ] height estimation took 1.662s
+2025-01-14 12:49:27.906195 [info     ] [chr9 ] [step 3    ] shape analysis took 2.621s
+2025-01-14 12:49:27.906237 [info     ] [chr9 ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:27.906266 [info     ] [chr9 ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:28.371493 [info     ] [chr9 ] [step 4    ] statistical analysis and post-processing took 465.213ms
+2025-01-14 12:49:28.371618 [info     ] [chr9 ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:28.402213 [info     ] [chr9 ] processing took 3.833s
+2025-01-14 12:49:28.402398 [info     ] [chr10] begin processing...
+2025-01-14 12:49:28.812231 [info     ] [chr10] [step 1    ] data pre-processing
+2025-01-14 12:49:28.812375 [info     ] [chr10] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:28.827574 [info     ] [chr10] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:28.984694 [info     ] [chr10] [step 1.2  ] removed 49.92% of the non-zero entries (4024072/8061306)
+2025-01-14 12:49:28.984838 [info     ] [chr10] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:29.017076 [info     ] [chr10] [step 1    ] preprocessing took 204.684ms
+2025-01-14 12:49:29.017223 [info     ] [chr10] [step 2    ] topological data analysis
+2025-01-14 12:49:29.017271 [info     ] [chr10] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:29.044196 [info     ] [chr10] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:29.044313 [info     ] [chr10] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:29.091342 [info     ] [chr10] [step 2.2.1] lower triangular part
+2025-01-14 12:49:29.112882 [info     ] [chr10] [step 2.2.2] upper triangular part
+2025-01-14 12:49:29.136692 [info     ] [chr10] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:29.205133 [info     ] [chr10] [step 2.2.3] lower triangular part: number of seed sites reduced from 855 to 830
+2025-01-14 12:49:29.205196 [info     ] [chr10] [step 2.2.3] upper triangular part: number of seed sites reduced from 891 to 867
+2025-01-14 12:49:29.205246 [info     ] [chr10] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:29.205557 [info     ] [chr10] [step 2.3.1] lower-triangular part: generated 830 candidate stripes
+2025-01-14 12:49:29.205636 [info     ] [chr10] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:29.205948 [info     ] [chr10] [step 2.3.2] upper-triangular part: generated 867 candidate stripes
+2025-01-14 12:49:29.206482 [info     ] [chr10] [step 2    ] topological data analysis took 189.221ms
+2025-01-14 12:49:29.206566 [info     ] [chr10] [step 3    ] shape analysis
+2025-01-14 12:49:29.206596 [info     ] [chr10] [step 3.1  ] width estimation
+2025-01-14 12:49:29.206619 [info     ] [chr10] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:30.437109 [info     ] [chr10] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:30.437479 [info     ] [chr10] [step 3.1  ] width estimation took 1.231s
+2025-01-14 12:49:30.437524 [info     ] [chr10] [step 3.2  ] height estimation
+2025-01-14 12:49:30.437556 [info     ] [chr10] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:32.882541 [info     ] [chr10] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:32.883045 [info     ] [chr10] [step 3.2  ] height estimation took 2.445s
+2025-01-14 12:49:32.883249 [info     ] [chr10] [step 3    ] shape analysis took 3.677s
+2025-01-14 12:49:32.883292 [info     ] [chr10] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:32.883323 [info     ] [chr10] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:33.560662 [info     ] [chr10] [step 4    ] statistical analysis and post-processing took 677.325ms
+2025-01-14 12:49:33.560787 [info     ] [chr10] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:33.599771 [info     ] [chr10] processing took 5.197s
+2025-01-14 12:49:33.599965 [info     ] [chr11] begin processing...
+2025-01-14 12:49:34.032197 [info     ] [chr11] [step 1    ] data pre-processing
+2025-01-14 12:49:34.032325 [info     ] [chr11] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:34.047121 [info     ] [chr11] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:34.197151 [info     ] [chr11] [step 1.2  ] removed 49.92% of the non-zero entries (4016918/8046984)
+2025-01-14 12:49:34.197302 [info     ] [chr11] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:34.228773 [info     ] [chr11] [step 1    ] preprocessing took 196.429ms
+2025-01-14 12:49:34.228925 [info     ] [chr11] [step 2    ] topological data analysis
+2025-01-14 12:49:34.228971 [info     ] [chr11] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:34.255824 [info     ] [chr11] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:34.255902 [info     ] [chr11] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:34.305550 [info     ] [chr11] [step 2.2.1] lower triangular part
+2025-01-14 12:49:34.328177 [info     ] [chr11] [step 2.2.2] upper triangular part
+2025-01-14 12:49:34.353140 [info     ] [chr11] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:34.423134 [info     ] [chr11] [step 2.2.3] lower triangular part: number of seed sites reduced from 909 to 897
+2025-01-14 12:49:34.423196 [info     ] [chr11] [step 2.2.3] upper triangular part: number of seed sites reduced from 1056 to 1044
+2025-01-14 12:49:34.423246 [info     ] [chr11] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:34.423851 [info     ] [chr11] [step 2.3.1] lower-triangular part: generated 897 candidate stripes
+2025-01-14 12:49:34.423994 [info     ] [chr11] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:34.424499 [info     ] [chr11] [step 2.3.2] upper-triangular part: generated 1044 candidate stripes
+2025-01-14 12:49:34.425238 [info     ] [chr11] [step 2    ] topological data analysis took 196.276ms
+2025-01-14 12:49:34.425343 [info     ] [chr11] [step 3    ] shape analysis
+2025-01-14 12:49:34.425379 [info     ] [chr11] [step 3.1  ] width estimation
+2025-01-14 12:49:34.425404 [info     ] [chr11] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:35.732201 [info     ] [chr11] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:35.732588 [info     ] [chr11] [step 3.1  ] width estimation took 1.307s
+2025-01-14 12:49:35.732639 [info     ] [chr11] [step 3.2  ] height estimation
+2025-01-14 12:49:35.732669 [info     ] [chr11] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:38.152223 [info     ] [chr11] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:38.152767 [info     ] [chr11] [step 3.2  ] height estimation took 2.420s
+2025-01-14 12:49:38.153063 [info     ] [chr11] [step 3    ] shape analysis took 3.728s
+2025-01-14 12:49:38.153108 [info     ] [chr11] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:38.153137 [info     ] [chr11] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:38.810454 [info     ] [chr11] [step 4    ] statistical analysis and post-processing took 657.304ms
+2025-01-14 12:49:38.810577 [info     ] [chr11] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:38.850110 [info     ] [chr11] processing took 5.250s
+2025-01-14 12:49:38.850313 [info     ] [chr12] begin processing...
+2025-01-14 12:49:39.227504 [info     ] [chr12] [step 1    ] data pre-processing
+2025-01-14 12:49:39.227642 [info     ] [chr12] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:39.242849 [info     ] [chr12] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:39.389986 [info     ] [chr12] [step 1.2  ] removed 49.92% of the non-zero entries (3923466/7860067)
+2025-01-14 12:49:39.390145 [info     ] [chr12] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:39.423179 [info     ] [chr12] [step 1    ] preprocessing took 195.517ms
+2025-01-14 12:49:39.423330 [info     ] [chr12] [step 2    ] topological data analysis
+2025-01-14 12:49:39.423380 [info     ] [chr12] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:39.451041 [info     ] [chr12] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:39.451167 [info     ] [chr12] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:39.500378 [info     ] [chr12] [step 2.2.1] lower triangular part
+2025-01-14 12:49:39.522845 [info     ] [chr12] [step 2.2.2] upper triangular part
+2025-01-14 12:49:39.547803 [info     ] [chr12] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:39.618224 [info     ] [chr12] [step 2.2.3] lower triangular part: number of seed sites reduced from 633 to 629
+2025-01-14 12:49:39.618291 [info     ] [chr12] [step 2.2.3] upper triangular part: number of seed sites reduced from 883 to 878
+2025-01-14 12:49:39.618339 [info     ] [chr12] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:39.618605 [info     ] [chr12] [step 2.3.1] lower-triangular part: generated 629 candidate stripes
+2025-01-14 12:49:39.618672 [info     ] [chr12] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:39.619003 [info     ] [chr12] [step 2.3.2] upper-triangular part: generated 878 candidate stripes
+2025-01-14 12:49:39.619669 [info     ] [chr12] [step 2    ] topological data analysis took 196.301ms
+2025-01-14 12:49:39.619780 [info     ] [chr12] [step 3    ] shape analysis
+2025-01-14 12:49:39.619810 [info     ] [chr12] [step 3.1  ] width estimation
+2025-01-14 12:49:39.619833 [info     ] [chr12] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:40.733611 [info     ] [chr12] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:40.733916 [info     ] [chr12] [step 3.1  ] width estimation took 1.114s
+2025-01-14 12:49:40.733965 [info     ] [chr12] [step 3.2  ] height estimation
+2025-01-14 12:49:40.733995 [info     ] [chr12] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:42.638918 [info     ] [chr12] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:42.639391 [info     ] [chr12] [step 3.2  ] height estimation took 1.905s
+2025-01-14 12:49:42.639642 [info     ] [chr12] [step 3    ] shape analysis took 3.020s
+2025-01-14 12:49:42.639683 [info     ] [chr12] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:42.639712 [info     ] [chr12] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:43.147454 [info     ] [chr12] [step 4    ] statistical analysis and post-processing took 507.727ms
+2025-01-14 12:49:43.147582 [info     ] [chr12] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:43.180693 [info     ] [chr12] processing took 4.330s
+2025-01-14 12:49:43.180900 [info     ] [chr13] begin processing...
+2025-01-14 12:49:43.465271 [info     ] [chr13] [step 1    ] data pre-processing
+2025-01-14 12:49:43.465418 [info     ] [chr13] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:43.476459 [info     ] [chr13] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:43.581261 [info     ] [chr13] [step 1.2  ] removed 49.91% of the non-zero entries (2835198/5680101)
+2025-01-14 12:49:43.581409 [info     ] [chr13] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:43.604671 [info     ] [chr13] [step 1    ] preprocessing took 139.236ms
+2025-01-14 12:49:43.604820 [info     ] [chr13] [step 2    ] topological data analysis
+2025-01-14 12:49:43.604868 [info     ] [chr13] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:43.626394 [info     ] [chr13] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:43.626496 [info     ] [chr13] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:43.686825 [info     ] [chr13] [step 2.2.1] lower triangular part
+2025-01-14 12:49:43.704543 [info     ] [chr13] [step 2.2.2] upper triangular part
+2025-01-14 12:49:43.724168 [info     ] [chr13] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:43.781743 [info     ] [chr13] [step 2.2.3] lower triangular part: number of seed sites reduced from 686 to 675
+2025-01-14 12:49:43.781856 [info     ] [chr13] [step 2.2.3] upper triangular part: number of seed sites reduced from 653 to 643
+2025-01-14 12:49:43.781916 [info     ] [chr13] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:43.782217 [info     ] [chr13] [step 2.3.1] lower-triangular part: generated 675 candidate stripes
+2025-01-14 12:49:43.782291 [info     ] [chr13] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:43.782548 [info     ] [chr13] [step 2.3.2] upper-triangular part: generated 643 candidate stripes
+2025-01-14 12:49:43.783274 [info     ] [chr13] [step 2    ] topological data analysis took 178.417ms
+2025-01-14 12:49:43.783373 [info     ] [chr13] [step 3    ] shape analysis
+2025-01-14 12:49:43.783405 [info     ] [chr13] [step 3.1  ] width estimation
+2025-01-14 12:49:43.783429 [info     ] [chr13] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:44.624260 [info     ] [chr13] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:44.624471 [info     ] [chr13] [step 3.1  ] width estimation took 841.062ms
+2025-01-14 12:49:44.624509 [info     ] [chr13] [step 3.2  ] height estimation
+2025-01-14 12:49:44.624538 [info     ] [chr13] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:46.262463 [info     ] [chr13] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:46.262915 [info     ] [chr13] [step 3.2  ] height estimation took 1.638s
+2025-01-14 12:49:46.263148 [info     ] [chr13] [step 3    ] shape analysis took 2.480s
+2025-01-14 12:49:46.263200 [info     ] [chr13] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:46.263233 [info     ] [chr13] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:46.704847 [info     ] [chr13] [step 4    ] statistical analysis and post-processing took 441.600ms
+2025-01-14 12:49:46.704975 [info     ] [chr13] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:46.736772 [info     ] [chr13] processing took 3.556s
+2025-01-14 12:49:46.736966 [info     ] [chr14] begin processing...
+2025-01-14 12:49:47.004331 [info     ] [chr14] [step 1    ] data pre-processing
+2025-01-14 12:49:47.004466 [info     ] [chr14] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:47.014943 [info     ] [chr14] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:47.113898 [info     ] [chr14] [step 1.2  ] removed 49.92% of the non-zero entries (2640852/5290549)
+2025-01-14 12:49:47.114041 [info     ] [chr14] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:47.135676 [info     ] [chr14] [step 1    ] preprocessing took 131.193ms
+2025-01-14 12:49:47.135823 [info     ] [chr14] [step 2    ] topological data analysis
+2025-01-14 12:49:47.135872 [info     ] [chr14] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:47.155339 [info     ] [chr14] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:47.155431 [info     ] [chr14] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:47.190277 [info     ] [chr14] [step 2.2.1] lower triangular part
+2025-01-14 12:49:47.206234 [info     ] [chr14] [step 2.2.2] upper triangular part
+2025-01-14 12:49:47.224185 [info     ] [chr14] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:47.278803 [info     ] [chr14] [step 2.2.3] lower triangular part: number of seed sites reduced from 567 to 561
+2025-01-14 12:49:47.278863 [info     ] [chr14] [step 2.2.3] upper triangular part: number of seed sites reduced from 523 to 521
+2025-01-14 12:49:47.278913 [info     ] [chr14] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:47.279165 [info     ] [chr14] [step 2.3.1] lower-triangular part: generated 561 candidate stripes
+2025-01-14 12:49:47.279230 [info     ] [chr14] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:47.279438 [info     ] [chr14] [step 2.3.2] upper-triangular part: generated 521 candidate stripes
+2025-01-14 12:49:47.279905 [info     ] [chr14] [step 2    ] topological data analysis took 144.044ms
+2025-01-14 12:49:47.279989 [info     ] [chr14] [step 3    ] shape analysis
+2025-01-14 12:49:47.280019 [info     ] [chr14] [step 3.1  ] width estimation
+2025-01-14 12:49:47.280043 [info     ] [chr14] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:47.929314 [info     ] [chr14] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:47.929537 [info     ] [chr14] [step 3.1  ] width estimation took 649.514ms
+2025-01-14 12:49:47.929583 [info     ] [chr14] [step 3.2  ] height estimation
+2025-01-14 12:49:47.929612 [info     ] [chr14] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:49.314962 [info     ] [chr14] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:49.315342 [info     ] [chr14] [step 3.2  ] height estimation took 1.386s
+2025-01-14 12:49:49.315521 [info     ] [chr14] [step 3    ] shape analysis took 2.036s
+2025-01-14 12:49:49.315565 [info     ] [chr14] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:49.315593 [info     ] [chr14] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:49.688815 [info     ] [chr14] [step 4    ] statistical analysis and post-processing took 373.208ms
+2025-01-14 12:49:49.688943 [info     ] [chr14] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:49.716808 [info     ] [chr14] processing took 2.980s
+2025-01-14 12:49:49.717017 [info     ] [chr15] begin processing...
+2025-01-14 12:49:49.956410 [info     ] [chr15] [step 1    ] data pre-processing
+2025-01-14 12:49:49.956558 [info     ] [chr15] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:49.966169 [info     ] [chr15] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:50.057111 [info     ] [chr15] [step 1.2  ] removed 49.91% of the non-zero entries (2375894/4759909)
+2025-01-14 12:49:50.057269 [info     ] [chr15] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:50.074474 [info     ] [chr15] [step 1    ] preprocessing took 117.900ms
+2025-01-14 12:49:50.074632 [info     ] [chr15] [step 2    ] topological data analysis
+2025-01-14 12:49:50.074683 [info     ] [chr15] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:50.093699 [info     ] [chr15] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:50.093792 [info     ] [chr15] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:50.128269 [info     ] [chr15] [step 2.2.1] lower triangular part
+2025-01-14 12:49:50.144259 [info     ] [chr15] [step 2.2.2] upper triangular part
+2025-01-14 12:49:50.162169 [info     ] [chr15] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:50.212507 [info     ] [chr15] [step 2.2.3] lower triangular part: number of seed sites reduced from 637 to 602
+2025-01-14 12:49:50.212566 [info     ] [chr15] [step 2.2.3] upper triangular part: number of seed sites reduced from 635 to 607
+2025-01-14 12:49:50.212615 [info     ] [chr15] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:50.212883 [info     ] [chr15] [step 2.3.1] lower-triangular part: generated 602 candidate stripes
+2025-01-14 12:49:50.212953 [info     ] [chr15] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:50.213200 [info     ] [chr15] [step 2.3.2] upper-triangular part: generated 607 candidate stripes
+2025-01-14 12:49:50.213617 [info     ] [chr15] [step 2    ] topological data analysis took 138.946ms
+2025-01-14 12:49:50.213695 [info     ] [chr15] [step 3    ] shape analysis
+2025-01-14 12:49:50.213723 [info     ] [chr15] [step 3.1  ] width estimation
+2025-01-14 12:49:50.213745 [info     ] [chr15] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:50.890529 [info     ] [chr15] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:50.890811 [info     ] [chr15] [step 3.1  ] width estimation took 677.083ms
+2025-01-14 12:49:50.890855 [info     ] [chr15] [step 3.2  ] height estimation
+2025-01-14 12:49:50.890886 [info     ] [chr15] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:52.377000 [info     ] [chr15] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:52.377407 [info     ] [chr15] [step 3.2  ] height estimation took 1.487s
+2025-01-14 12:49:52.377609 [info     ] [chr15] [step 3    ] shape analysis took 2.164s
+2025-01-14 12:49:52.377648 [info     ] [chr15] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:52.377679 [info     ] [chr15] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:52.778180 [info     ] [chr15] [step 4    ] statistical analysis and post-processing took 400.486ms
+2025-01-14 12:49:52.778300 [info     ] [chr15] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:52.806234 [info     ] [chr15] processing took 3.089s
+2025-01-14 12:49:52.806421 [info     ] [chr16] begin processing...
+2025-01-14 12:49:53.034117 [info     ] [chr16] [step 1    ] data pre-processing
+2025-01-14 12:49:53.034262 [info     ] [chr16] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:53.043151 [info     ] [chr16] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:53.136870 [info     ] [chr16] [step 1.2  ] removed 49.91% of the non-zero entries (2278054/4563983)
+2025-01-14 12:49:53.137012 [info     ] [chr16] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:53.160891 [info     ] [chr16] [step 1    ] preprocessing took 126.613ms
+2025-01-14 12:49:53.161032 [info     ] [chr16] [step 2    ] topological data analysis
+2025-01-14 12:49:53.161091 [info     ] [chr16] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:53.178670 [info     ] [chr16] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:53.178756 [info     ] [chr16] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:53.208640 [info     ] [chr16] [step 2.2.1] lower triangular part
+2025-01-14 12:49:53.222317 [info     ] [chr16] [step 2.2.2] upper triangular part
+2025-01-14 12:49:53.237804 [info     ] [chr16] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:53.284034 [info     ] [chr16] [step 2.2.3] lower triangular part: number of seed sites reduced from 330 to 299
+2025-01-14 12:49:53.284098 [info     ] [chr16] [step 2.2.3] upper triangular part: number of seed sites reduced from 494 to 454
+2025-01-14 12:49:53.284148 [info     ] [chr16] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:53.284297 [info     ] [chr16] [step 2.3.1] lower-triangular part: generated 299 candidate stripes
+2025-01-14 12:49:53.284355 [info     ] [chr16] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:53.284550 [info     ] [chr16] [step 2.3.2] upper-triangular part: generated 454 candidate stripes
+2025-01-14 12:49:53.285103 [info     ] [chr16] [step 2    ] topological data analysis took 124.032ms
+2025-01-14 12:49:53.285191 [info     ] [chr16] [step 3    ] shape analysis
+2025-01-14 12:49:53.285221 [info     ] [chr16] [step 3.1  ] width estimation
+2025-01-14 12:49:53.285243 [info     ] [chr16] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:53.663697 [info     ] [chr16] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:53.663980 [info     ] [chr16] [step 3.1  ] width estimation took 378.752ms
+2025-01-14 12:49:53.664030 [info     ] [chr16] [step 3.2  ] height estimation
+2025-01-14 12:49:53.664059 [info     ] [chr16] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:54.577776 [info     ] [chr16] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:54.578078 [info     ] [chr16] [step 3.2  ] height estimation took 914.012ms
+2025-01-14 12:49:54.578213 [info     ] [chr16] [step 3    ] shape analysis took 1.293s
+2025-01-14 12:49:54.578249 [info     ] [chr16] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:54.578280 [info     ] [chr16] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:54.834811 [info     ] [chr16] [step 4    ] statistical analysis and post-processing took 256.514ms
+2025-01-14 12:49:54.834933 [info     ] [chr16] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:54.857395 [info     ] [chr16] processing took 2.051s
+2025-01-14 12:49:54.857587 [info     ] [chr17] begin processing...
+2025-01-14 12:49:55.096834 [info     ] [chr17] [step 1    ] data pre-processing
+2025-01-14 12:49:55.096980 [info     ] [chr17] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:55.106197 [info     ] [chr17] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:55.193885 [info     ] [chr17] [step 1.2  ] removed 49.92% of the non-zero entries (2369731/4747405)
+2025-01-14 12:49:55.194040 [info     ] [chr17] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:55.212893 [info     ] [chr17] [step 1    ] preprocessing took 115.896ms
+2025-01-14 12:49:55.213047 [info     ] [chr17] [step 2    ] topological data analysis
+2025-01-14 12:49:55.213097 [info     ] [chr17] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:55.230414 [info     ] [chr17] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:55.230514 [info     ] [chr17] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:55.260166 [info     ] [chr17] [step 2.2.1] lower triangular part
+2025-01-14 12:49:55.273543 [info     ] [chr17] [step 2.2.2] upper triangular part
+2025-01-14 12:49:55.288616 [info     ] [chr17] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:55.330801 [info     ] [chr17] [step 2.2.3] lower triangular part: number of seed sites reduced from 586 to 561
+2025-01-14 12:49:55.330861 [info     ] [chr17] [step 2.2.3] upper triangular part: number of seed sites reduced from 548 to 518
+2025-01-14 12:49:55.330909 [info     ] [chr17] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:55.331138 [info     ] [chr17] [step 2.3.1] lower-triangular part: generated 561 candidate stripes
+2025-01-14 12:49:55.331208 [info     ] [chr17] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:55.331414 [info     ] [chr17] [step 2.3.2] upper-triangular part: generated 518 candidate stripes
+2025-01-14 12:49:55.331756 [info     ] [chr17] [step 2    ] topological data analysis took 118.669ms
+2025-01-14 12:49:55.331820 [info     ] [chr17] [step 3    ] shape analysis
+2025-01-14 12:49:55.331849 [info     ] [chr17] [step 3.1  ] width estimation
+2025-01-14 12:49:55.331872 [info     ] [chr17] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:55.821306 [info     ] [chr17] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:55.821537 [info     ] [chr17] [step 3.1  ] width estimation took 489.683ms
+2025-01-14 12:49:55.821593 [info     ] [chr17] [step 3.2  ] height estimation
+2025-01-14 12:49:55.821633 [info     ] [chr17] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:57.164802 [info     ] [chr17] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:57.165201 [info     ] [chr17] [step 3.2  ] height estimation took 1.344s
+2025-01-14 12:49:57.165395 [info     ] [chr17] [step 3    ] shape analysis took 1.834s
+2025-01-14 12:49:57.165433 [info     ] [chr17] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:57.165462 [info     ] [chr17] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:49:57.540821 [info     ] [chr17] [step 4    ] statistical analysis and post-processing took 375.346ms
+2025-01-14 12:49:57.540946 [info     ] [chr17] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:49:57.569109 [info     ] [chr17] processing took 2.711s
+2025-01-14 12:49:57.569311 [info     ] [chr18] begin processing...
+2025-01-14 12:49:57.793425 [info     ] [chr18] [step 1    ] data pre-processing
+2025-01-14 12:49:57.793567 [info     ] [chr18] [step 1.1  ] applying log-transformation
+2025-01-14 12:49:57.802419 [info     ] [chr18] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:49:57.885388 [info     ] [chr18] [step 1.2  ] removed 49.92% of the non-zero entries (2235787/4479156)
+2025-01-14 12:49:57.885537 [info     ] [chr18] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:49:57.908233 [info     ] [chr18] [step 1    ] preprocessing took 114.648ms
+2025-01-14 12:49:57.908377 [info     ] [chr18] [step 2    ] topological data analysis
+2025-01-14 12:49:57.908423 [info     ] [chr18] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:49:57.924653 [info     ] [chr18] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:49:57.924740 [info     ] [chr18] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:49:57.953825 [info     ] [chr18] [step 2.2.1] lower triangular part
+2025-01-14 12:49:57.966925 [info     ] [chr18] [step 2.2.2] upper triangular part
+2025-01-14 12:49:57.982026 [info     ] [chr18] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:49:58.023274 [info     ] [chr18] [step 2.2.3] lower triangular part: number of seed sites reduced from 485 to 480
+2025-01-14 12:49:58.023357 [info     ] [chr18] [step 2.2.3] upper triangular part: number of seed sites reduced from 524 to 517
+2025-01-14 12:49:58.023409 [info     ] [chr18] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:58.023619 [info     ] [chr18] [step 2.3.1] lower-triangular part: generated 480 candidate stripes
+2025-01-14 12:49:58.023676 [info     ] [chr18] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:49:58.023873 [info     ] [chr18] [step 2.3.2] upper-triangular part: generated 517 candidate stripes
+2025-01-14 12:49:58.024368 [info     ] [chr18] [step 2    ] topological data analysis took 115.956ms
+2025-01-14 12:49:58.024450 [info     ] [chr18] [step 3    ] shape analysis
+2025-01-14 12:49:58.024480 [info     ] [chr18] [step 3.1  ] width estimation
+2025-01-14 12:49:58.024502 [info     ] [chr18] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:49:58.478110 [info     ] [chr18] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:49:58.478395 [info     ] [chr18] [step 3.1  ] width estimation took 453.908ms
+2025-01-14 12:49:58.478439 [info     ] [chr18] [step 3.2  ] height estimation
+2025-01-14 12:49:58.478469 [info     ] [chr18] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:49:59.702206 [info     ] [chr18] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:49:59.702548 [info     ] [chr18] [step 3.2  ] height estimation took 1.224s
+2025-01-14 12:49:59.702693 [info     ] [chr18] [step 3    ] shape analysis took 1.678s
+2025-01-14 12:49:59.702729 [info     ] [chr18] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:49:59.702761 [info     ] [chr18] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:00.053839 [info     ] [chr18] [step 4    ] statistical analysis and post-processing took 351.065ms
+2025-01-14 12:50:00.053960 [info     ] [chr18] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:00.080200 [info     ] [chr18] processing took 2.511s
+2025-01-14 12:50:00.080396 [info     ] [chr19] begin processing...
+2025-01-14 12:50:00.255736 [info     ] [chr19] [step 1    ] data pre-processing
+2025-01-14 12:50:00.255880 [info     ] [chr19] [step 1.1  ] applying log-transformation
+2025-01-14 12:50:00.262548 [info     ] [chr19] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:50:00.322916 [info     ] [chr19] [step 1.2  ] removed 49.92% of the non-zero entries (1761044/3527649)
+2025-01-14 12:50:00.323059 [info     ] [chr19] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:50:00.336835 [info     ] [chr19] [step 1    ] preprocessing took 80.937ms
+2025-01-14 12:50:00.336983 [info     ] [chr19] [step 2    ] topological data analysis
+2025-01-14 12:50:00.337029 [info     ] [chr19] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:50:00.349419 [info     ] [chr19] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:50:00.349509 [info     ] [chr19] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:50:00.370500 [info     ] [chr19] [step 2.2.1] lower triangular part
+2025-01-14 12:50:00.380229 [info     ] [chr19] [step 2.2.2] upper triangular part
+2025-01-14 12:50:00.391858 [info     ] [chr19] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:50:00.422550 [info     ] [chr19] [step 2.2.3] lower triangular part: number of seed sites reduced from 547 to 543
+2025-01-14 12:50:00.422605 [info     ] [chr19] [step 2.2.3] upper triangular part: number of seed sites reduced from 558 to 555
+2025-01-14 12:50:00.422653 [info     ] [chr19] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:00.422899 [info     ] [chr19] [step 2.3.1] lower-triangular part: generated 543 candidate stripes
+2025-01-14 12:50:00.422961 [info     ] [chr19] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:00.423202 [info     ] [chr19] [step 2.3.2] upper-triangular part: generated 555 candidate stripes
+2025-01-14 12:50:00.423665 [info     ] [chr19] [step 2    ] topological data analysis took 86.646ms
+2025-01-14 12:50:00.423745 [info     ] [chr19] [step 3    ] shape analysis
+2025-01-14 12:50:00.423774 [info     ] [chr19] [step 3.1  ] width estimation
+2025-01-14 12:50:00.423796 [info     ] [chr19] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:50:00.781360 [info     ] [chr19] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:50:00.781551 [info     ] [chr19] [step 3.1  ] width estimation took 357.773ms
+2025-01-14 12:50:00.781586 [info     ] [chr19] [step 3.2  ] height estimation
+2025-01-14 12:50:00.781616 [info     ] [chr19] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:50:02.165603 [info     ] [chr19] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:50:02.166001 [info     ] [chr19] [step 3.2  ] height estimation took 1.384s
+2025-01-14 12:50:02.166184 [info     ] [chr19] [step 3    ] shape analysis took 1.742s
+2025-01-14 12:50:02.166225 [info     ] [chr19] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:50:02.166254 [info     ] [chr19] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:02.534826 [info     ] [chr19] [step 4    ] statistical analysis and post-processing took 368.559ms
+2025-01-14 12:50:02.534944 [info     ] [chr19] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:02.561652 [info     ] [chr19] processing took 2.481s
+2025-01-14 12:50:02.561843 [info     ] [chr20] begin processing...
+2025-01-14 12:50:02.759616 [info     ] [chr20] [step 1    ] data pre-processing
+2025-01-14 12:50:02.759761 [info     ] [chr20] [step 1.1  ] applying log-transformation
+2025-01-14 12:50:02.767328 [info     ] [chr20] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:50:02.834834 [info     ] [chr20] [step 1.2  ] removed 49.92% of the non-zero entries (1943362/3892917)
+2025-01-14 12:50:02.834982 [info     ] [chr20] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:50:02.851736 [info     ] [chr20] [step 1    ] preprocessing took 91.957ms
+2025-01-14 12:50:02.851877 [info     ] [chr20] [step 2    ] topological data analysis
+2025-01-14 12:50:02.851927 [info     ] [chr20] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:50:02.865010 [info     ] [chr20] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:50:02.865103 [info     ] [chr20] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:50:02.887962 [info     ] [chr20] [step 2.2.1] lower triangular part
+2025-01-14 12:50:02.898370 [info     ] [chr20] [step 2.2.2] upper triangular part
+2025-01-14 12:50:02.910582 [info     ] [chr20] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:50:02.943664 [info     ] [chr20] [step 2.2.3] lower triangular part: number of seed sites reduced from 501 to 481
+2025-01-14 12:50:02.943719 [info     ] [chr20] [step 2.2.3] upper triangular part: number of seed sites reduced from 411 to 393
+2025-01-14 12:50:02.943765 [info     ] [chr20] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:02.943972 [info     ] [chr20] [step 2.3.1] lower-triangular part: generated 481 candidate stripes
+2025-01-14 12:50:02.944028 [info     ] [chr20] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:02.944210 [info     ] [chr20] [step 2.3.2] upper-triangular part: generated 393 candidate stripes
+2025-01-14 12:50:02.944622 [info     ] [chr20] [step 2    ] topological data analysis took 92.706ms
+2025-01-14 12:50:02.944702 [info     ] [chr20] [step 3    ] shape analysis
+2025-01-14 12:50:02.944729 [info     ] [chr20] [step 3.1  ] width estimation
+2025-01-14 12:50:02.944751 [info     ] [chr20] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:50:03.264725 [info     ] [chr20] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:50:03.264887 [info     ] [chr20] [step 3.1  ] width estimation took 320.155ms
+2025-01-14 12:50:03.264928 [info     ] [chr20] [step 3.2  ] height estimation
+2025-01-14 12:50:03.264956 [info     ] [chr20] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:50:04.354917 [info     ] [chr20] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:50:04.355254 [info     ] [chr20] [step 3.2  ] height estimation took 1.090s
+2025-01-14 12:50:04.355409 [info     ] [chr20] [step 3    ] shape analysis took 1.411s
+2025-01-14 12:50:04.355447 [info     ] [chr20] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:50:04.355477 [info     ] [chr20] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:04.660003 [info     ] [chr20] [step 4    ] statistical analysis and post-processing took 304.511ms
+2025-01-14 12:50:04.660135 [info     ] [chr20] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:04.684762 [info     ] [chr20] processing took 2.123s
+2025-01-14 12:50:04.684961 [info     ] [chr21] begin processing...
+2025-01-14 12:50:04.785682 [info     ] [chr21] [step 1    ] data pre-processing
+2025-01-14 12:50:04.785829 [info     ] [chr21] [step 1.1  ] applying log-transformation
+2025-01-14 12:50:04.789519 [info     ] [chr21] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:50:04.822609 [info     ] [chr21] [step 1.2  ] removed 49.91% of the non-zero entries (975833/1955265)
+2025-01-14 12:50:04.822753 [info     ] [chr21] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:50:04.829599 [info     ] [chr21] [step 1    ] preprocessing took 43.755ms
+2025-01-14 12:50:04.829740 [info     ] [chr21] [step 2    ] topological data analysis
+2025-01-14 12:50:04.829786 [info     ] [chr21] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:50:04.838762 [info     ] [chr21] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:50:04.838853 [info     ] [chr21] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:50:04.854426 [info     ] [chr21] [step 2.2.1] lower triangular part
+2025-01-14 12:50:04.861623 [info     ] [chr21] [step 2.2.2] upper triangular part
+2025-01-14 12:50:04.870422 [info     ] [chr21] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:50:04.894058 [info     ] [chr21] [step 2.2.3] lower triangular part: number of seed sites reduced from 232 to 210
+2025-01-14 12:50:04.894123 [info     ] [chr21] [step 2.2.3] upper triangular part: number of seed sites reduced from 220 to 206
+2025-01-14 12:50:04.894173 [info     ] [chr21] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:04.894287 [info     ] [chr21] [step 2.3.1] lower-triangular part: generated 210 candidate stripes
+2025-01-14 12:50:04.894330 [info     ] [chr21] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:04.894435 [info     ] [chr21] [step 2.3.2] upper-triangular part: generated 206 candidate stripes
+2025-01-14 12:50:04.894828 [info     ] [chr21] [step 2    ] topological data analysis took 65.052ms
+2025-01-14 12:50:04.894903 [info     ] [chr21] [step 3    ] shape analysis
+2025-01-14 12:50:04.894933 [info     ] [chr21] [step 3.1  ] width estimation
+2025-01-14 12:50:04.894956 [info     ] [chr21] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:50:05.008547 [info     ] [chr21] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:50:05.008655 [info     ] [chr21] [step 3.1  ] width estimation took 113.719ms
+2025-01-14 12:50:05.008687 [info     ] [chr21] [step 3.2  ] height estimation
+2025-01-14 12:50:05.008712 [info     ] [chr21] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:50:05.515499 [info     ] [chr21] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:50:05.515729 [info     ] [chr21] [step 3.2  ] height estimation took 507.012ms
+2025-01-14 12:50:05.515817 [info     ] [chr21] [step 3    ] shape analysis took 620.888ms
+2025-01-14 12:50:05.515856 [info     ] [chr21] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:50:05.515884 [info     ] [chr21] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:05.657974 [info     ] [chr21] [step 4    ] statistical analysis and post-processing took 142.077ms
+2025-01-14 12:50:05.658095 [info     ] [chr21] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:05.674466 [info     ] [chr21] processing took 989.456ms
+2025-01-14 12:50:05.674658 [info     ] [chr22] begin processing...
+2025-01-14 12:50:05.784205 [info     ] [chr22] [step 1    ] data pre-processing
+2025-01-14 12:50:05.784349 [info     ] [chr22] [step 1.1  ] applying log-transformation
+2025-01-14 12:50:05.788569 [info     ] [chr22] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:50:05.823964 [info     ] [chr22] [step 1.2  ] removed 49.92% of the non-zero entries (1122624/2248894)
+2025-01-14 12:50:05.824100 [info     ] [chr22] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:50:05.834043 [info     ] [chr22] [step 1    ] preprocessing took 49.676ms
+2025-01-14 12:50:05.834191 [info     ] [chr22] [step 2    ] topological data analysis
+2025-01-14 12:50:05.834237 [info     ] [chr22] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:50:05.843481 [info     ] [chr22] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:50:05.843561 [info     ] [chr22] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:50:05.858842 [info     ] [chr22] [step 2.2.1] lower triangular part
+2025-01-14 12:50:05.865971 [info     ] [chr22] [step 2.2.2] upper triangular part
+2025-01-14 12:50:05.874833 [info     ] [chr22] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:50:05.899984 [info     ] [chr22] [step 2.2.3] lower triangular part: number of seed sites reduced from 310 to 285
+2025-01-14 12:50:05.900039 [info     ] [chr22] [step 2.2.3] upper triangular part: number of seed sites reduced from 286 to 272
+2025-01-14 12:50:05.900091 [info     ] [chr22] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:05.900233 [info     ] [chr22] [step 2.3.1] lower-triangular part: generated 285 candidate stripes
+2025-01-14 12:50:05.900281 [info     ] [chr22] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:05.900406 [info     ] [chr22] [step 2.3.2] upper-triangular part: generated 272 candidate stripes
+2025-01-14 12:50:05.900641 [info     ] [chr22] [step 2    ] topological data analysis took 66.417ms
+2025-01-14 12:50:05.900689 [info     ] [chr22] [step 3    ] shape analysis
+2025-01-14 12:50:05.900724 [info     ] [chr22] [step 3.1  ] width estimation
+2025-01-14 12:50:05.900746 [info     ] [chr22] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:50:06.063510 [info     ] [chr22] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:50:06.063631 [info     ] [chr22] [step 3.1  ] width estimation took 162.904ms
+2025-01-14 12:50:06.063674 [info     ] [chr22] [step 3.2  ] height estimation
+2025-01-14 12:50:06.063704 [info     ] [chr22] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:50:06.779866 [info     ] [chr22] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:50:06.780100 [info     ] [chr22] [step 3.2  ] height estimation took 716.390ms
+2025-01-14 12:50:06.780184 [info     ] [chr22] [step 3    ] shape analysis took 879.464ms
+2025-01-14 12:50:06.780219 [info     ] [chr22] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:50:06.780247 [info     ] [chr22] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:06.980759 [info     ] [chr22] [step 4    ] statistical analysis and post-processing took 200.499ms
+2025-01-14 12:50:06.980878 [info     ] [chr22] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:07.000949 [info     ] [chr22] processing took 1.326s
+2025-01-14 12:50:07.001145 [info     ] [chrX ] begin processing...
+2025-01-14 12:50:07.363495 [info     ] [chrX ] [step 1    ] data pre-processing
+2025-01-14 12:50:07.363642 [info     ] [chrX ] [step 1.1  ] applying log-transformation
+2025-01-14 12:50:07.378805 [info     ] [chrX ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:50:07.524235 [info     ] [chrX ] [step 1.2  ] removed 49.88% of the non-zero entries (3106705/6228374)
+2025-01-14 12:50:07.524381 [info     ] [chrX ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:50:07.557036 [info     ] [chrX ] [step 1    ] preprocessing took 193.376ms
+2025-01-14 12:50:07.557198 [info     ] [chrX ] [step 2    ] topological data analysis
+2025-01-14 12:50:07.557248 [info     ] [chrX ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:50:07.587442 [info     ] [chrX ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:50:07.587537 [info     ] [chrX ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:50:07.643824 [info     ] [chrX ] [step 2.2.1] lower triangular part
+2025-01-14 12:50:07.670405 [info     ] [chrX ] [step 2.2.2] upper triangular part
+2025-01-14 12:50:07.700167 [info     ] [chrX ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:50:07.780681 [info     ] [chrX ] [step 2.2.3] lower triangular part: number of seed sites reduced from 1183 to 1097
+2025-01-14 12:50:07.780746 [info     ] [chrX ] [step 2.2.3] upper triangular part: number of seed sites reduced from 1142 to 1054
+2025-01-14 12:50:07.780797 [info     ] [chrX ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:07.781227 [info     ] [chrX ] [step 2.3.1] lower-triangular part: generated 1097 candidate stripes
+2025-01-14 12:50:07.781321 [info     ] [chrX ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:07.781823 [info     ] [chrX ] [step 2.3.2] upper-triangular part: generated 1054 candidate stripes
+2025-01-14 12:50:07.782312 [info     ] [chrX ] [step 2    ] topological data analysis took 225.076ms
+2025-01-14 12:50:07.782373 [info     ] [chrX ] [step 3    ] shape analysis
+2025-01-14 12:50:07.782404 [info     ] [chrX ] [step 3.1  ] width estimation
+2025-01-14 12:50:07.782427 [info     ] [chrX ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:50:09.631726 [info     ] [chrX ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:50:09.632189 [info     ] [chrX ] [step 3.1  ] width estimation took 1.850s
+2025-01-14 12:50:09.632247 [info     ] [chrX ] [step 3.2  ] height estimation
+2025-01-14 12:50:09.632277 [info     ] [chrX ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:50:12.058483 [info     ] [chrX ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:50:12.059094 [info     ] [chrX ] [step 3.2  ] height estimation took 2.427s
+2025-01-14 12:50:12.059399 [info     ] [chrX ] [step 3    ] shape analysis took 4.277s
+2025-01-14 12:50:12.059441 [info     ] [chrX ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:50:12.059472 [info     ] [chrX ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:12.671345 [info     ] [chrX ] [step 4    ] statistical analysis and post-processing took 611.860ms
+2025-01-14 12:50:12.671465 [info     ] [chrX ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:12.712641 [info     ] [chrX ] processing took 5.711s
+2025-01-14 12:50:12.712828 [info     ] [chrY ] begin processing...
+2025-01-14 12:50:12.737453 [info     ] [chrY ] [step 1    ] data pre-processing
+2025-01-14 12:50:12.737532 [info     ] [chrY ] [step 1.1  ] applying log-transformation
+2025-01-14 12:50:12.738391 [info     ] [chrY ] [step 1.2  ] focusing on a neighborhood of the main diagonal
+2025-01-14 12:50:12.744015 [info     ] [chrY ] [step 1.2  ] removed 49.81% of the non-zero entries (225595/452955)
+2025-01-14 12:50:12.744142 [info     ] [chrY ] [step 1.3  ] projecting interactions onto [1, 0]
+2025-01-14 12:50:12.746800 [info     ] [chrY ] [step 1    ] preprocessing took 9.257ms
+2025-01-14 12:50:12.746901 [info     ] [chrY ] [step 2    ] topological data analysis
+2025-01-14 12:50:12.746948 [info     ] [chrY ] [step 2.1.0] computing global 1D pseudo-distributions...
+2025-01-14 12:50:12.754766 [info     ] [chrY ] [step 2.2.0] detection of persistent maxima and corresponding minima for lower- and upper-triangular matrices...
+2025-01-14 12:50:12.754818 [info     ] [chrY ] [step 2.2.0] all maxima and their persistence
+2025-01-14 12:50:12.769835 [info     ] [chrY ] [step 2.2.1] lower triangular part
+2025-01-14 12:50:12.776892 [info     ] [chrY ] [step 2.2.2] upper triangular part
+2025-01-14 12:50:12.785390 [info     ] [chrY ] [step 2.2.3] removing seeds overlapping sparse regions
+2025-01-14 12:50:12.809839 [info     ] [chrY ] [step 2.2.3] lower triangular part: number of seed sites reduced from 130 to 97
+2025-01-14 12:50:12.809891 [info     ] [chrY ] [step 2.2.3] upper triangular part: number of seed sites reduced from 148 to 112
+2025-01-14 12:50:12.809936 [info     ] [chrY ] [step 2.3.1] lower-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:12.810006 [info     ] [chrY ] [step 2.3.1] lower-triangular part: generated 97 candidate stripes
+2025-01-14 12:50:12.810045 [info     ] [chrY ] [step 2.3.2] upper-triangular part: generating list of candidate stripes...
+2025-01-14 12:50:12.810121 [info     ] [chrY ] [step 2.3.2] upper-triangular part: generated 112 candidate stripes
+2025-01-14 12:50:12.810762 [info     ] [chrY ] [step 2    ] topological data analysis took 63.827ms
+2025-01-14 12:50:12.810860 [info     ] [chrY ] [step 3    ] shape analysis
+2025-01-14 12:50:12.810889 [info     ] [chrY ] [step 3.1  ] width estimation
+2025-01-14 12:50:12.810913 [info     ] [chrY ] [step 3.1.1] estimating candidate stripe widths
+2025-01-14 12:50:12.879733 [info     ] [chrY ] [step 3.1.2] updating candidate stripes with width information
+2025-01-14 12:50:12.879808 [info     ] [chrY ] [step 3.1  ] width estimation took 68.917ms
+2025-01-14 12:50:12.879840 [info     ] [chrY ] [step 3.2  ] height estimation
+2025-01-14 12:50:12.879865 [info     ] [chrY ] [step 3.2.1] estimating candidate stripe heights
+2025-01-14 12:50:13.084029 [info     ] [chrY ] [step 3.1.2] updating candidate stripes with height information
+2025-01-14 12:50:13.084150 [info     ] [chrY ] [step 3.2  ] height estimation took 204.282ms
+2025-01-14 12:50:13.084207 [info     ] [chrY ] [step 3    ] shape analysis took 273.320ms
+2025-01-14 12:50:13.084239 [info     ] [chrY ] [step 4    ] statistical analysis and post-processing
+2025-01-14 12:50:13.084265 [info     ] [chrY ] [step 4.1  ] computing stripe biological descriptors
+2025-01-14 12:50:13.141638 [info     ] [chrY ] [step 4    ] statistical analysis and post-processing took 57.369ms
+2025-01-14 12:50:13.141699 [info     ] [chrY ] writing results to file "/tmp/4DNFI9GMP2J8.10000.hdf5"
+2025-01-14 12:50:13.155257 [info     ] [chrY ] processing took 442.386ms
+2025-01-14 12:50:13.155714 [info     ] DONE!
+2025-01-14 12:50:13.155781 [info     ] processed 24 chromosomes in 1m:48.153s
 ```
 
 </details>
 
-Running the above command produces the following output:
+Running the above command produces a single output file named `4DNFI9GMP2J8.10000.hdf5`.
 
-```
-/tmp/stripepy
-└── 4DNFI9GMP2J8
-    └── 10000
-        └── results.hdf5
+The path to the output file can be changed by using the `--output-file` CLI option.
 
-3 directories, 1 file
-```
+Furthermore, it is possible to save the complete log of a run to a file by specifying the path where to store the log file through the `--log-file` CLI option.
 
+Finally, `stripepy call` can generate several diagnostic plots that can be of help to gain more insights into the decisions made by the tool.
+To generate the diagnostic plots, pass `--roi=middle` e specify the path to a folder where to store the plots using `--plot-dir`.
+
+<!--
 When processing larger Hi-C matrix, StripePy can take advantage of multicore processors.
 
 The maximum number of CPU cores use by StripePy can be changed through option `--nproc` (set to 1 core by default).
+-->
 
 #### 4) Fetch stripes in BEDPE format
 
@@ -1058,7 +1089,7 @@ While having access to all this information can be useful, usually we are mostly
 
 ```console
 # Fetch the first 10 stripes in BEDPE format
-user@dev:/tmp$ stripepy view stripepy/4DNFI9GMP2J8/10000/results.hdf5 | head
+user@dev:/tmp$ stripepy view 4DNFI9GMP2J8.10000.hdf5 | head
 
 chr1	910000	960000	chr1	930000	3590000
 chr1	1060000	1110000	chr1	1080000	3540000
@@ -1072,10 +1103,10 @@ chr1	2070000	2120000	chr1	2090000	3540000
 chr1	2170000	2230000	chr1	2190000	3500000
 
 # Redirect stdout to a file
-user@dev:/tmp$ stripepy view stripepy/4DNFI9GMP2J8/10000/results.hdf5 > stripes.bedpe
+user@dev:/tmp$ stripepy view 4DNFI9GMP2J8.10000.hdf5 > stripes.bedpe
 
 # Compress stripes on the fly before writing to a file
-user@dev:/tmp$ stripepy view stripepy/4DNFI9GMP2J8/10000/results.hdf5 | gzip -9 > stripes.bedpe.gz
+user@dev:/tmp$ stripepy view 4DNFI9GMP2J8.10000.hdf5 | gzip -9 > stripes.bedpe.gz
 ```
 
 #### 5) Quickly visualize architectural stripes
@@ -1146,19 +1177,19 @@ Example usage:
 
 ```bash
 # Plot the pseudo-distribution over a region of interest
-stripepy plot pd results.hdf5 /tmp/pseudodistribution.png --region chr2:120100000-122100000
+stripepy plot pd 4DNFI9GMP2J8.10000.hdf5 /tmp/pseudodistribution.png --region chr2:120100000-122100000
 
 # Plot the histograms using genome-wide data
-stripepy plot hist results.hdf5 /tmp/stripe_hist_gw.png
+stripepy plot hist 4DNFI9GMP2J8.10000.hdf5 /tmp/stripe_hist_gw.png
 
 # Plot the Hi-C matrix
 stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix.png
 
 # Plot the Hi-C matrix higlighting the stripe seeds
-stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix_with_seeds.png --stripepy-hdf5 results.hdf5 --highlight-seeds
+stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix_with_seeds.png --stripepy-hdf5 4DNFI9GMP2J8.10000.hdf5 --highlight-seeds
 
 # Plot the Hi-C matrix higlighting the architectural stripes
-stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix_with_stripes.png --stripepy-hdf5 results.hdf5 --highlight-stripes
+stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix_with_stripes.png --stripepy-hdf5 4DNFI9GMP2J8.10000.hdf5 --highlight-stripes
 ```
 
 Some example plots generated with `stripepy plot` can be found in file `stripepy-plot-test-images.tar.xz` from [doi.org/10.5281/zenodo.14283921](https://doi.org/10.5281/zenodo.14283921)

@@ -3,26 +3,14 @@
 # SPDX-License-Identifier: MIT
 
 import pathlib
-import re
 import sys
 import warnings
-from typing import Union
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 
 from stripepy.IO import ResultFile
-
-
-def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
-    new_cols = []
-    for col in df.columns:
-        new_cols.append(re.sub(r"\W+", "_", col.lower()))
-
-    df.columns = new_cols
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return df.convert_dtypes()
 
 
 def _read_stripes(f: ResultFile, chrom: str) -> pd.DataFrame:
@@ -38,13 +26,13 @@ def _read_stripes(f: ResultFile, chrom: str) -> pd.DataFrame:
         df1 = pd.concat([geo_lt, bio_lt], axis="columns")
         df2 = pd.concat([geo_ut, bio_ut], axis="columns")
 
-        return pd.concat([df1, df2]).set_index("seed").sort_index()
+        return pd.concat([df1, df2]).set_index("seed").sort_index(kind="stable")
     except Exception as e:
         raise RuntimeError(f'failed to read stripes for chromosome "{chrom}": {e}')
 
 
 def _stripes_to_bedpe(
-    df: pd.DataFrame, chrom: str, size: int, resolution: int, transpose_policy: Union[str, None]
+    df: pd.DataFrame, chrom: str, size: int, resolution: int, transpose_policy: Optional[str]
 ) -> pd.DataFrame:
     num_stripes = len(df)
 
@@ -90,10 +78,14 @@ def _dump_stripes(f: ResultFile, chrom: str, size: int, resolution: int, cutoff:
 def run(
     h5_file: pathlib.Path,
     relative_change_threshold: float,
-    transform: Union[str, None],
+    transform: Optional[str] = None,
 ) -> int:
-    with ResultFile(h5_file) as f:
-        for chrom, size in f.chromosomes.items():
-            _dump_stripes(f, chrom, size, f.resolution, relative_change_threshold, transform)
+    try:
+        with ResultFile(h5_file) as f:
+            for chrom, size in f.chromosomes.items():
+                _dump_stripes(f, chrom, size, f.resolution, relative_change_threshold, transform)
+    except BrokenPipeError:
+        if sys.stdout.isatty():
+            raise
 
     return 0

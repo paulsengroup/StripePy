@@ -521,10 +521,10 @@ def _fetch_persistence_maximum_points(result: Result, resolution: int, start: in
 
     min_persistence = result.min_persistence
     lt_idx, lt_seeds = fetch(
-        np.sort(TDA(pd_lt, min_persistence=min_persistence)[2]), start // resolution, end // resolution
+        np.sort(TDA(pd_lt, min_persistence=min_persistence)[2], stable=True), start // resolution, end // resolution
     )
     ut_idx, ut_seeds = fetch(
-        np.sort(TDA(pd_ut, min_persistence=min_persistence)[2]), start // resolution, end // resolution
+        np.sort(TDA(pd_ut, min_persistence=min_persistence)[2], stable=True), start // resolution, end // resolution
     )
 
     return {
@@ -535,27 +535,6 @@ def _fetch_persistence_maximum_points(result: Result, resolution: int, start: in
         "seed_indices_lt": lt_idx,
         "seed_indices_ut": ut_idx,
     }
-
-
-def _fetch_geo_descriptors(
-    result: Result,
-    resolution: int,
-    left_bound: int,
-    right_bound: int,
-    location: str,
-) -> pd.DataFrame:
-    assert location in {"LT", "UT"}
-    assert left_bound >= 0
-    assert right_bound >= left_bound
-
-    df = result.get_stripe_geo_descriptors(location)
-
-    for col in df.columns:
-        if col == "top_persistence":
-            continue
-        df[col] = np.minimum(df[col] * resolution, result.chrom[1])
-
-    return df[df["seed"].between(left_bound, right_bound, inclusive="both")]
 
 
 def _plot_pseudodistribution(

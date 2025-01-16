@@ -15,18 +15,21 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: read
+
 env:
   TEST_MCOOL_NAME: 4DNFI9GMP2J8.mcool
-  TEST_MCOOL_URL: "https://zenodo.org/records/14616548/files/4DNFI9GMP2J8.stripepy.mcool?download=1"
+  TEST_MCOOL_URL: "https://zenodo.org/records/14643417/files/4DNFI9GMP2J8.stripepy.mcool?download=1"
   TEST_MCOOL_MD5: "a17d08460c03cf6c926e2ca5743e4888"
   TEST_RESULT_FILE_V1_NAME: results_4DNFI9GMP2J8_v1.hdf5
-  TEST_RESULT_FILE_V1_URL: "https://zenodo.org/records/14616548/files/results_4DNFI9GMP2J8_v1.hdf5?download=1"
-  TEST_RESULT_FILE_V1_MD5: "172872e8de9f35909f87ff33c185a07b"
+  TEST_RESULT_FILE_V1_URL: "https://zenodo.org/records/14643417/files/results_4DNFI9GMP2J8_v1.hdf5?download=1"
+  TEST_RESULT_FILE_V1_MD5: "8f4566c438b2b8a449393fb3b8fc2636"
   TEST_RESULT_FILE_V2_NAME: results_4DNFI9GMP2J8_v2.hdf5
-  TEST_RESULT_FILE_V2_URL: "https://zenodo.org/records/14616548/files/results_4DNFI9GMP2J8_v2.hdf5?download=1"
-  TEST_RESULT_FILE_V2_MD5: "b40e5f929e79cb4a4d3453a59c5a0947"
+  TEST_RESULT_FILE_V2_URL: "https://zenodo.org/records/14643417/files/results_4DNFI9GMP2J8_v2.hdf5?download=1"
+  TEST_RESULT_FILE_V2_MD5: "496fb92c1565c83b323e77d6d51ac321"
   TEST_PLOTS_NAME: stripepy-plot-test-images.tar.xz
-  TEST_PLOTS_URL: "https://zenodo.org/records/14616548/files/stripepy-plot-test-images.tar.xz?download=1"
+  TEST_PLOTS_URL: "https://zenodo.org/records/14643417/files/stripepy-plot-test-images.tar.xz?download=1"
   TEST_PLOTS_MD5: "adf60f386521f70b24936e53a6d11eab"
 
 jobs:

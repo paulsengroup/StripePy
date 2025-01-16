@@ -27,7 +27,7 @@ def TDA(marginal_pd, min_persistence=0):
     )
 
     # Sorting maximum points (and, as a consequence, the corresponding minimum points) w.r.t. persistence:
-    argsorting = np.argsort(list(zip(*filtered_max_points_and_persistence))[1]).tolist()
+    argsorting = np.argsort(list(zip(*filtered_max_points_and_persistence))[1], stable=True).tolist()
 
     if len(filtered_min_points_and_persistence) == 0:
         filtered_min_points = []

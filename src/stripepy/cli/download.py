@@ -24,7 +24,7 @@ from stripepy.utils.progress_bar import initialize_progress_bar
 def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str, str]]:
     assert not math.isnan(max_size)
 
-    record_id = "14616548"
+    record_id = "14643417"
 
     datasets = {
         "4DNFI3RFZLZ5": {
@@ -60,7 +60,7 @@ def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str,
     private_datasets = {
         "__results_v1": {
             "url": f"https://zenodo.org/records/{record_id}/files/results_4DNFI9GMP2J8_v1.hdf5?download=1",
-            "md5": "172872e8de9f35909f87ff33c185a07b",
+            "md5": "8f4566c438b2b8a449393fb3b8fc2636",
             "filename": "results_4DNFI9GMP2J8_v1.hdf5",
             "assembly": "hg38",
             "format": "stripepy",
@@ -68,7 +68,7 @@ def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str,
         },
         "__results_v2": {
             "url": f"https://zenodo.org/records/{record_id}/files/results_4DNFI9GMP2J8_v2.hdf5?download=1",
-            "md5": "b40e5f929e79cb4a4d3453a59c5a0947",
+            "md5": "496fb92c1565c83b323e77d6d51ac321",
             "filename": "results_4DNFI9GMP2J8_v2.hdf5",
             "assembly": "hg38",
             "format": "stripepy",
@@ -229,7 +229,7 @@ def _download_multiple(names: Sequence[str], output_paths: Sequence[pathlib.Path
 
     for name, output_path in zip(names, output_paths):
         t0 = time.time()
-        dset_name, config = _lookup_dataset(name, None, math.inf)
+        dset_name, config = _lookup_dataset(name, None, math.inf, include_private=True)
 
         if output_path.exists():
             logger.info('found existing file "%s"', output_path)
@@ -264,15 +264,15 @@ def _download_data_for_end2end_tests():
 
 
 def run(
-    name: Optional[str],
-    output_path: Optional[pathlib.Path],
-    assembly: Optional[str],
     max_size: float,
     list_only: bool,
     unit_test: bool,
     end2end_test: bool,
     include_private: bool,
     force: bool,
+    name: Optional[str] = None,
+    output_path: Optional[pathlib.Path] = None,
+    assembly: Optional[str] = None,
 ) -> int:
     t0 = time.time()
     if list_only:
