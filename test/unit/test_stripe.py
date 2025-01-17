@@ -6,13 +6,13 @@ from stripepy.utils.stripe import Stripe
 @pytest.fixture(scope="function")
 def U_stripe():
     stripe = Stripe(seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 4), where="upper_triangular")
-    yield stripe
+    return stripe
 
 
 @pytest.fixture(scope="function")
 def L_stripe():
     stripe = Stripe(seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(4, 10), where="lower_triangular")
-    yield stripe
+    return stripe
 
 
 @pytest.mark.unit
