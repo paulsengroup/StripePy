@@ -127,28 +127,6 @@ class TestBandExtraction:
         assert np.array_equal(LT_I.toarray(), verify_array)
         assert np.array_equal(UT_I.toarray, verify_array)
 
-    def test_is_correct_triangle(self):
-        # TODO:delete
-        """
-        |   0   2   0   0   0   |
-        |   1   0   3   0   0   |
-        |   0   2   0   4   0   |
-        |   0   0   3   0   5   |
-        |   0   0   0   4   0   |
-        """
-        row1 = np.array([0, 2, 0, 0, 0])
-        row2 = np.array([1, 0, 3, 0, 0])
-        row3 = np.array([0, 2, 0, 4, 0])
-        row4 = np.array([0, 0, 3, 0, 5])
-        row5 = np.array([0, 0, 0, 4, 0])
-        matrix = np.array(row1, row2, row3, row4, row5)
-        I = ss.csr_matrix(matrix)
-        LT_I, UT_I = _band_extraction(I, 1, 2)
-
-        assert (LT_I.diagonal(0) == np.array([0, 0, 0, 0, 0])).all()
-        assert (LT_I.diagonal(-1) == np.array([1, 2, 3, 4])).all()
-        assert (UT_I.diagonal(1) == np.array([3, 2, 1, 0])).all()
-
 
 @pytest.mark.unit
 class TestScaleIProc:
