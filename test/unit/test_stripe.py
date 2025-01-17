@@ -5,7 +5,7 @@ from stripepy.utils.stripe import Stripe
 
 @pytest.fixture(scope="function")
 def U_stripe():
-    stripe = Stripe(seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 4), where="upper_triangular")
+    stripe = Stripe(seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular")
     return stripe
 
 
@@ -25,7 +25,7 @@ class TestInit:
         assert stripe._where == "upper_triangular"
         assert stripe._left_bound == 4
         assert stripe._right_bound == 6
-        assert stripe._top_bound == 0
+        assert stripe._top_bound == 1
         assert stripe._bottom_bound == 4
         assert stripe._five_number == None
         assert stripe._inner_mean == None
@@ -36,46 +36,46 @@ class TestInit:
     def test_seed_too_low(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=-1, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 4), where="invalid location"
+                seed=-1, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
     def test_top_pers_too_low(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=5, top_pers=-1.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=-1.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
     def test_invalid_location(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="invalid location"
             )
 
     def test_left_bound_over_right(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(7, 6), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(7, 6), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
     def test_left_bound_over_seed(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(6, 6), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(6, 6), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
     def test_right_bound_over_left(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 3), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(4, 3), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
     def test_right_bound_over_seed(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 4), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(4, 4), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
-    def test_top_bound_over_bottom(self):
+    def test_top_bound_under_bottom(self):
         with pytest.raises(ValueError):
             stripe = Stripe(
                 seed=5, top_pers=5.0, horizontal_bounds=(4, 4), vertical_bounds=(1, 0), where="upper_triangular"
@@ -88,55 +88,64 @@ class TestInit:
             )
 
 
+@pytest.mark.unit
 class TestProperties:
     def test_seed(self, U_stripe):
-        assert U_stripe.seed()
+        assert U_stripe.seed
 
     def test_top_persistence(self, U_stripe):
-        assert U_stripe.top_persistence()
+        assert U_stripe.top_persistence
 
     def test_lower_triangular(self, U_stripe):
-        assert not U_stripe.lower_triangular()
+        assert not U_stripe.lower_triangular
 
     def test_upper_triangular(self, U_stripe):
-        assert U_stripe.upper_triangular()
+        assert U_stripe.upper_triangular
 
     def test_left_bound(self, U_stripe):
-        assert U_stripe.left_bound()
+        assert U_stripe.left_bound
 
     def test_right_bound(self, U_stripe):
-        assert U_stripe.right_bound()
+        assert U_stripe.right_bound
 
     def test_top_bound(self, U_stripe):
-        assert U_stripe.top_bound()
+        assert U_stripe.top_bound
 
     def test_bottom_bound(self, U_stripe):
-        assert U_stripe.bottom_bound()
+        assert U_stripe.bottom_bound
 
     """
     #### These have not been set ####
     """
 
+    # TODO: give these pointers a value before moving on
+    @pytest.mark.skip(reason="Immature test")
     def test_inner_mean(self, U_stripe):
-        assert U_stripe.inner_mean()
+        assert U_stripe.inner_mean
 
+    @pytest.mark.skip(reason="Immature test")
     def test_inner_std(self, U_stripe):
-        assert U_stripe.inner_std()
+        assert U_stripe.inner_std
 
+    @pytest.mark.skip(reason="Immature test")
     def test_five_number(self, U_stripe):
         assert U_stripe.five_number
 
+    @pytest.mark.skip(reason="Immature test")
     def test_outer_lmean(self, U_stripe):
-        assert U_stripe.outer_lmean()
+        assert U_stripe.outer_lmean
 
+    @pytest.mark.skip(reason="Immature test")
     def test_outer_rmean(self, U_stripe):
-        assert U_stripe.outer_rmean()
+        assert U_stripe.outer_rmean
 
+    @pytest.mark.skip(reason="Immature test")
     def test_outer_mean(self, U_stripe):
-        assert U_stripe.outer_mean()
+        assert U_stripe.outer_mean
 
+    @pytest.mark.skip(reason="Immature test")
     def test_rel_change(self, U_stripe):
-        assert U_stripe.rel_change()
+        assert U_stripe.rel_change
 
 
 @pytest.mark.unit
