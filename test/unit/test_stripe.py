@@ -88,6 +88,57 @@ class TestInit:
             )
 
 
+class TestProperties:
+    def test_seed(self, U_stripe):
+        assert U_stripe.seed()
+
+    def test_top_persistence(self, U_stripe):
+        assert U_stripe.top_persistence()
+
+    def test_lower_triangular(self, U_stripe):
+        assert not U_stripe.lower_triangular()
+
+    def test_upper_triangular(self, U_stripe):
+        assert U_stripe.upper_triangular()
+
+    def test_left_bound(self, U_stripe):
+        assert U_stripe.left_bound()
+
+    def test_right_bound(self, U_stripe):
+        assert U_stripe.right_bound()
+
+    def test_top_bound(self, U_stripe):
+        assert U_stripe.top_bound()
+
+    def test_bottom_bound(self, U_stripe):
+        assert U_stripe.bottom_bound()
+
+    """
+    #### These have not been set ####
+    """
+
+    def test_inner_mean(self, U_stripe):
+        assert U_stripe.inner_mean()
+
+    def test_inner_std(self, U_stripe):
+        assert U_stripe.inner_std()
+
+    def test_five_number(self, U_stripe):
+        assert U_stripe.five_number
+
+    def test_outer_lmean(self, U_stripe):
+        assert U_stripe.outer_lmean()
+
+    def test_outer_rmean(self, U_stripe):
+        assert U_stripe.outer_rmean()
+
+    def test_outer_mean(self, U_stripe):
+        assert U_stripe.outer_mean()
+
+    def test_rel_change(self, U_stripe):
+        assert U_stripe.rel_change()
+
+
 @pytest.mark.unit
 class TestInferLocation:
     def test_within_upper_triangle(self, U_stripe):
