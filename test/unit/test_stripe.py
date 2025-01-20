@@ -27,13 +27,13 @@ def L_stripe():
     return stripe
 
 
-def custom_stripe(seed=None, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None):
+def custom_stripe(seed="NaN", top_pers="NaN", horizontal_bounds="NaN", vertical_bounds="NaN", where="NaN"):
     stripe = Stripe(
-        seed=(seed or 5),
-        top_pers=(top_pers or 5.0),
-        horizontal_bounds=(horizontal_bounds or (4, 6)),
-        vertical_bounds=(vertical_bounds or (1, 4)),
-        where=(where or "upper_triangular"),
+        seed=(seed if seed != "NaN" else 5),
+        top_pers=(top_pers if top_pers != "NaN" else 5.0),
+        horizontal_bounds=(horizontal_bounds if horizontal_bounds != "NaN" else (4, 6)),
+        vertical_bounds=(vertical_bounds if vertical_bounds != "NaN" else (1, 4)),
+        where=(where if where != "NaN" else "upper_triangular"),
     )
     return stripe
 
