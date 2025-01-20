@@ -16,13 +16,13 @@ def U_stripe():
 
 
 @pytest.fixture(scope="function")
-def L_stripe(seed=None, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None):
+def L_stripe():
     stripe = Stripe(
-        seed=(seed or 5),
-        top_pers=(top_pers or 5.0),
-        horizontal_bounds=(horizontal_bounds or (4, 6)),
-        vertical_bounds=(vertical_bounds or (4, 10)),
-        where=(where or "lower_triangular"),
+        seed=5,
+        top_pers=5.0,
+        horizontal_bounds=(4, 6),
+        vertical_bounds=(4, 10),
+        where="lower_triangular",
     )
     return stripe
 
