@@ -56,59 +56,59 @@ class TestInit:
         assert stripe._outer_lmean == None
         assert stripe._outer_rmean == None
 
+    def test_seed_lower_valid(self):
+        stripe = custom_stripe(seed=0)
+
     def test_seed_too_low(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=-1, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(seed=-1)
+        assert e
 
     def test_top_pers_too_low(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=-1.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(top_pers=-1.0)
+        assert e
+
+    def test_where_is_opposite(self):
+        with pytest.raises(RuntimeError) as e:
+            stripe = custom_stripe(seed=5, vertical_bounds=(1, 6), where="upper_triangular")
+
+            assert stripe.lower_triangular()
+        assert e
 
     def test_invalid_location(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="invalid location"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(where="invalid_location")
+        assert e
 
     def test_left_bound_over_right(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(7, 6), vertical_bounds=(1, 4), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(horizontal_bounds=(7, 6))
+        assert e
 
     def test_left_bound_over_seed(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(6, 6), vertical_bounds=(1, 4), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(horizontal_bounds=(6, 6))
+        assert e
 
     def test_right_bound_over_left(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 3), vertical_bounds=(1, 4), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(horizontal_bounds=(4, 3))
+        assert e
 
     def test_right_bound_over_seed(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 4), vertical_bounds=(1, 4), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(horizontal_bounds=(4, 4))
+        assert e
 
     def test_top_bound_under_bottom(self):
-        with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 4), vertical_bounds=(1, 0), where="upper_triangular"
-            )
+        with pytest.raises(ValueError) as e:
+            stripe = custom_stripe(vertical_bounds=(1, 0))
+        assert e
 
     def test_bottom_bound_over_top(self):
         with pytest.raises(ValueError):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(5, 4), where="upper_triangular"
-            )
+            stripe = custom_stripe(vertical_bounds=(5, 4))
 
 
 @pytest.mark.unit
