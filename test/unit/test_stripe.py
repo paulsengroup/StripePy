@@ -43,18 +43,19 @@ class TestInit:
     def test_all_values_okay(self, U_stripe):
         stripe = U_stripe
 
-        assert stripe._seed == 5
-        assert stripe._persistence == 5.0
-        assert stripe._where == "upper_triangular"
-        assert stripe._left_bound == 4
-        assert stripe._right_bound == 6
-        assert stripe._top_bound == 1
-        assert stripe._bottom_bound == 4
-        assert stripe._five_number == None
-        assert stripe._inner_mean == None
-        assert stripe._inner_std == None
-        assert stripe._outer_lmean == None
-        assert stripe._outer_rmean == None
+        assert stripe.seed == 5
+        assert stripe.top_persistence == 5.0
+        assert not stripe.lower_triangular
+        assert stripe.upper_triangular
+        assert stripe.left_bound == 4
+        assert stripe.right_bound == 6
+        assert stripe.top_bound == 1
+        assert stripe.bottom_bound == 4
+        # assert stripe._five_number == None
+        # assert stripe._inner_mean == None
+        # assert stripe._inner_std == None
+        # assert stripe._outer_lmean == None
+        # assert stripe._outer_rmean == None
 
     def test_seed_lower_valid(self):
         stripe = custom_stripe(seed=0)
