@@ -58,7 +58,12 @@ class TestInit:
         # assert stripe._outer_rmean == None
 
     def test_seed_lower_valid(self):
-        stripe = custom_stripe(seed=0)
+        with pytest.raises(RuntimeError) as e:
+            stripe = custom_stripe(seed=0, horizontal_bounds=(0, 2))
+        assert (
+            str(e.value)
+            == "computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular"
+        )
 
     def test_seed_too_low(self):
         with pytest.raises(ValueError) as e:
@@ -112,64 +117,206 @@ class TestInit:
             stripe = custom_stripe(vertical_bounds=(5, 4))
 
 
+def statisticalStripe(
+    inner_mean=1.0,
+    inner_std=1.0,
+    five_number=[1.0] * 5,
+    outer_lmean=1.0,
+    outer_rmean=1.0,
+    outer_mean=None,
+    rel_change=None,
+):
+    if outer_mean == None:
+        outer_mean = (outer_lmean + outer_rmean) / 2
+    if rel_change == None:  # 1
+        rel_change = abs(inner_mean - outer_mean) / outer_mean * 100  # 0
+
+    stripe = Stripe(
+        seed=5,
+        top_pers=5.0,
+        horizontal_bounds=(4, 6),
+        vertical_bounds=(1, 4),
+        where="upper_triangular",
+    )
+    stripe._inner_mean = inner_mean
+    stripe._inner_std = inner_std
+    stripe._five_number = five_number
+    stripe._outer_lmean = outer_lmean
+    stripe._outer_rmean = outer_rmean
+    stripe._outer_mean = outer_mean
+    stripe._rel_change = rel_change
+    return stripe
+
+
 @pytest.mark.unit
-class TestProperties:
-    def test_seed(self, U_stripe):
-        assert U_stripe.seed
+class TestSetters:
+    #####
+    ### Triangles
+    #####
+    def test_lower_triangular(self, L_stripe):
+        assert L_stripe.lower_triangular
 
-    def test_top_persistence(self, U_stripe):
-        assert U_stripe.top_persistence
-
-    def test_lower_triangular(self, U_stripe):
+    def test_not_lower_triangular(self, U_stripe):
         assert not U_stripe.lower_triangular
 
     def test_upper_triangular(self, U_stripe):
         assert U_stripe.upper_triangular
 
-    def test_left_bound(self, U_stripe):
-        assert U_stripe.left_bound
+    def test_not_upper_triangular(self, L_stripe):
+        assert not L_stripe.upper_triangular
 
-    def test_right_bound(self, U_stripe):
-        assert U_stripe.right_bound
+    #####
+    ### Left boundary
+    #####
+    def test_left_bound_to_left(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        stripe.set_horizontal_bounds(3, 6)
+        assert stripe.left_bound == 3
 
-    def test_top_bound(self, U_stripe):
-        assert U_stripe.top_bound
+    def test_left_bound_to_right(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        stripe.set_horizontal_bounds(5, 6)
 
-    def test_bottom_bound(self, U_stripe):
-        assert U_stripe.bottom_bound
+        assert stripe.left_bound == 5
 
-    """
-    #### These have not been set ####
-    """
+    def test_left_bound_over_seed(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_horizontal_bounds(6, 6)
+        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=6"
 
-    # TODO: give these pointers a value before moving on
-    @pytest.mark.skip(reason="Immature test")
-    def test_inner_mean(self, U_stripe):
-        assert U_stripe.inner_mean
+    def test_left_bound_over_right(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_horizontal_bounds(7, 6)
+        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=7, right_bound=6"
 
-    @pytest.mark.skip(reason="Immature test")
-    def test_inner_std(self, U_stripe):
-        assert U_stripe.inner_std
+    #####
+    ### Right boundary
+    #####
 
-    @pytest.mark.skip(reason="Immature test")
-    def test_five_number(self, U_stripe):
-        assert U_stripe.five_number
+    def test_right_bound_to_right(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        stripe.set_horizontal_bounds(4, 7)
 
-    @pytest.mark.skip(reason="Immature test")
-    def test_outer_lmean(self, U_stripe):
-        assert U_stripe.outer_lmean
+        assert stripe.right_bound == 7
 
-    @pytest.mark.skip(reason="Immature test")
-    def test_outer_rmean(self, U_stripe):
-        assert U_stripe.outer_rmean
+    def test_right_bound_to_left(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        stripe.set_horizontal_bounds(4, 5)
 
-    @pytest.mark.skip(reason="Immature test")
-    def test_outer_mean(self, U_stripe):
-        assert U_stripe.outer_mean
+        assert stripe.right_bound == 5
 
-    @pytest.mark.skip(reason="Immature test")
-    def test_rel_change(self, U_stripe):
-        assert U_stripe.rel_change
+    def test_right_bound_over_seed(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_horizontal_bounds(4, 4)
+        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4"
+
+    def test_right_bound_over_left(self):
+        stripe = custom_stripe(horizontal_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_horizontal_bounds(4, 3)
+        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=3"
+
+    #####
+    ### Top boundary
+    #####
+
+    def test_top_bound_over_matrix_top(self):
+        stripe = custom_stripe(vertical_bounds=None)
+        stripe.set_vertical_bounds(-1, 4)
+
+        assert stripe.top_bound == -1
+
+    def test_top_bound_under_diagonal(self):
+        stripe = custom_stripe(vertical_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_vertical_bounds(7, 4)
+        assert (
+            str(e.value)
+            == "the lower vertical bound must be greater than the upper vertical bound: top_bound=7, bottom_bound=4"
+        )
+
+    def test_top_bound_under_bottom(self):
+        stripe = custom_stripe(vertical_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_vertical_bounds(5, 4)
+        assert (
+            str(e.value)
+            == "the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4"
+        )
+
+    #####
+    ### Bottom boundary
+    #####
+
+    def test_bottom_bound_over_top(self):
+        stripe = custom_stripe(vertical_bounds=None)
+        with pytest.raises(ValueError) as e:
+            stripe.set_vertical_bounds(4, 1)
+        assert (
+            str(e.value)
+            == "the lower vertical bound must be greater than the upper vertical bound: top_bound=4, bottom_bound=1"
+        )
+
+        # assert stripe.bottom_bound < stripe.top_bound
+
+    def test_bottom_bound_under_diagonal(self):
+        stripe = custom_stripe(where="lower_triangular", vertical_bounds=None)
+        stripe.set_vertical_bounds(1, 6)
+
+        assert stripe.bottom_bound > stripe.seed
+
+    def test_bottom_bound_under_matrix_bottom(self):
+        stripe = custom_stripe(where="lower_triangular", vertical_bounds=None)
+        stripe.set_vertical_bounds(1, 12)
+
+        assert stripe.bottom_bound > 10
+
+    #####
+    ### Manually instantiated values
+    #####
+    def test_inner_mean(self):
+        stripe = statisticalStripe()
+
+        assert stripe.inner_mean == 1.0
+        assert stripe.inner_mean
+
+    def test_inner_std(self):
+        stripe = statisticalStripe()
+
+        assert stripe.inner_std == 1.0
+        assert stripe.inner_std
+
+    def test_five_number(self):
+        stripe = statisticalStripe()
+
+        assert stripe.five_number == [1.0] * 5
+        assert stripe.five_number
+
+    def test_outer_lmean(self):
+        stripe = statisticalStripe()
+
+        assert stripe.outer_lmean == 1.0
+        assert stripe.outer_lmean
+
+    def test_outer_rmean(self):
+        stripe = statisticalStripe()
+
+        assert stripe.outer_rmean == 1.0
+        assert stripe.outer_rmean
+
+    def test_outer_mean(self):
+        stripe = statisticalStripe()
+
+        assert stripe.outer_mean == 1.0
+        assert stripe.outer_mean
+
+    def test_rel_change(self):
+        stripe = statisticalStripe()
+
+        assert stripe.rel_change == 0.0
 
 
 @pytest.mark.unit
