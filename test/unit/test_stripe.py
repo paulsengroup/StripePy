@@ -4,14 +4,26 @@ from stripepy.utils.stripe import Stripe
 
 
 @pytest.fixture(scope="function")
-def U_stripe():
-    stripe = Stripe(seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular")
+def U_stripe(seed=None, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None):
+    stripe = Stripe(
+        seed=(seed or 5),
+        top_pers=(top_pers or 5.0),
+        horizontal_bounds=(horizontal_bounds or (4, 6)),
+        vertical_bounds=(vertical_bounds or (4, 10)),
+        where=(where or "upper_triangular"),
+    )
     return stripe
 
 
 @pytest.fixture(scope="function")
-def L_stripe():
-    stripe = Stripe(seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(4, 10), where="lower_triangular")
+def L_stripe(seed=None, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None):
+    stripe = Stripe(
+        seed=(seed or 5),
+        top_pers=(top_pers or 5.0),
+        horizontal_bounds=(horizontal_bounds or (4, 6)),
+        vertical_bounds=(vertical_bounds or (4, 10)),
+        where=(where or "lower_triangular"),
+    )
     return stripe
 
 
