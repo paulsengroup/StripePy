@@ -54,12 +54,12 @@ class TestBandExtraction:
         row3 = np.array([0, 0, 0, 0, 0])
         row4 = np.array([0, 0, 0, 0, 0])
         row5 = np.array([0, 0, 0, 0, 0])
-        matrix = np.array(row1, row2, row3, row4, row5)
+        matrix = np.array([row1, row2, row3, row4, row5])
         I = ss.csr_matrix(matrix)
 
         LT_I, UT_I = _band_extraction(I, 1, 4)
 
-        assert np.array_equal(LT_I.toarray() == UT_I.toarray())
+        assert np.array_equal(LT_I.toarray(), UT_I.toarray())
 
     def test_non_symmetric(self):
         """
@@ -74,12 +74,12 @@ class TestBandExtraction:
         row3 = np.array([0, 2, 0, 0, 0])
         row4 = np.array([0, 0, 3, 0, 0])
         row5 = np.array([0, 0, 0, 4, 0])
-        matrix = np.array(row1, row2, row3, row4, row5)
+        matrix = np.array([row1, row2, row3, row4, row5])
         I = ss.csr_matrix(matrix)
 
         LT_I, UT_I = _band_extraction(I, 1, 4)
 
-        assert np.array_equal(LT_I.toarray() == matrix)
+        assert np.array_equal(LT_I.toarray(), matrix)
         assert UT_I.size == 0
 
     def test_non_diagonal(self):
@@ -95,14 +95,14 @@ class TestBandExtraction:
         row3 = np.array([0, 2, 0, 4, 0])
         row4 = np.array([0, 0, 3, 0, 5])
         row5 = np.array([0, 0, 0, 4, 0])
-        matrix = np.array(row1, row2, row3, row4, row5)
+        matrix = np.array([row1, row2, row3, row4, row5])
         I = ss.csr_matrix(matrix)
 
         LT_I, UT_I = _band_extraction(I, 1, 4)
 
         verify_LT = np.array([[0, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 2, 0, 0, 0], [0, 0, 3, 0, 0], [0, 0, 0, 4, 0]])
         verify_UT = np.array([[0, 2, 0, 0, 0], [0, 0, 3, 0, 0], [0, 0, 0, 4, 0], [0, 0, 0, 0, 5], [0, 0, 0, 0, 0]])
-        assert np.array_equal(LT_I.toarray, verify_LT)
+        assert np.array_equal(LT_I.toarray(), verify_LT)
         assert np.array_equal(UT_I.toarray(), verify_UT)
 
     def test_matrix_belt_oob(self):
@@ -118,14 +118,14 @@ class TestBandExtraction:
         row3 = np.array([0, 0, 3, 0, 0])
         row4 = np.array([0, 0, 0, 4, 0])
         row5 = np.array([0, 0, 0, 0, 5])
-        matrix = np.array(row1, row2, row3, row4, row5)
+        matrix = np.array([row1, row2, row3, row4, row5])
         I = ss.csr_matrix(matrix)
 
-        LT_I, UT_I = _band_extraction(I, 1, 3 * 10**12)
+        LT_I, UT_I = _band_extraction(I, 1, 3 * 10**3)
         verify_array = np.array([[1, 0, 0, 0, 0], [0, 2, 0, 0, 0], [0, 0, 3, 0, 0], [0, 0, 0, 4, 0], [0, 0, 0, 0, 5]])
 
         assert np.array_equal(LT_I.toarray(), verify_array)
-        assert np.array_equal(UT_I.toarray, verify_array)
+        assert np.array_equal(UT_I.toarray(), verify_array)
 
 
 @pytest.mark.unit
@@ -141,14 +141,14 @@ class TestScaleIProc:
         row2 = np.array([0, 1, 0, 0])
         row3 = np.array([0, 0, 1, 0])
         row4 = np.array([0, 0, 0, 1])
-        matrix = (row1, row2, row3, row4)
+        matrix = [row1, row2, row3, row4]
         I = ss.csr_matrix(matrix)
         LT_I, UT_I = _band_extraction(I, 1, 5)
         IScaled, LT_IScaled, UT_IScaled = _scale_Iproc(I, LT_I, UT_I)
 
-        assert np.array_equal(IScaled, LT_IScaled)
-        assert np.array_equal(LT_IScaled, UT_IScaled)
-        assert np.array_equal(UT_IScaled, matrix)
+        assert np.array_equal(IScaled.toarray(), LT_IScaled.toarray())
+        assert np.array_equal(LT_IScaled.toarray(), UT_IScaled.toarray())
+        assert np.array_equal(UT_IScaled.toarray(), matrix)
 
     def test_halve(self):
         """
@@ -158,10 +158,10 @@ class TestScaleIProc:
         |   0   0   0   1   |
         """
         row1 = np.array([1, 0, 0, 0])
-        row2 = np.arary([0, 2, 0, 0])
-        row3 = np.arary([0, 0, 1, 0])
+        row2 = np.array([0, 2, 0, 0])
+        row3 = np.array([0, 0, 1, 0])
         row4 = np.array([0, 0, 0, 1])
-        matrix = (row1, row2, row3, row4)
+        matrix = [row1, row2, row3, row4]
         I = ss.csr_matrix(matrix)
         LT_I, UT_I = _band_extraction(I, 1, 5)
         IScaled, LT_IScaled, UT_IScaled = _scale_Iproc(I, LT_I, UT_I)
