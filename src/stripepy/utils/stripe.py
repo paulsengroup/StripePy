@@ -131,9 +131,13 @@ class Stripe(object):
     def _validate_vertical_bounds(left_bound: int, right_bound: int, top_bound: int, bottom_bound: int, location: str):
         assert location in {"upper_triangular", "lower_triangular"}
         if location == "lower_triangular" and not (left_bound <= top_bound <= right_bound):
-            raise ValueError(f"top bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {top_bound=}")
+            raise ValueError(
+                f"top bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {top_bound=}"
+            )
         elif location == "upper_triangular" and not (left_bound <= bottom_bound <= right_bound):
-            raise ValueError(f"bottom bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {bottom_bound=}")
+            raise ValueError(
+                f"bottom bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {bottom_bound=}"
+            )
 
     def _compute_convex_comp(self) -> int:
         cfx1 = 0.99
@@ -372,7 +376,9 @@ class Stripe(object):
             )
 
         if self._horizontal_bounds_set():
-            Stripe._validate_vertical_bounds(self._left_bound, self._right_bound, top_bound, bottom_bound, computed_where)
+            Stripe._validate_vertical_bounds(
+                self._left_bound, self._right_bound, top_bound, bottom_bound, computed_where
+            )
 
         self._top_bound = top_bound
         self._bottom_bound = bottom_bound
