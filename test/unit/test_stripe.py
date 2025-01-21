@@ -117,7 +117,7 @@ class TestInit:
             stripe = custom_stripe(vertical_bounds=(5, 4))
 
 
-def statisticalStripe(
+def statistical_stripe(
     inner_mean=1.0,
     inner_std=1.0,
     five_number=[1.0] * 5,
@@ -278,43 +278,43 @@ class TestSetters:
     ### Manually instantiated values
     #####
     def test_inner_mean(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.inner_mean == 1.0
         assert stripe.inner_mean
 
     def test_inner_std(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.inner_std == 1.0
         assert stripe.inner_std
 
     def test_five_number(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.five_number == [1.0] * 5
         assert stripe.five_number
 
     def test_outer_lmean(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.outer_lmean == 1.0
         assert stripe.outer_lmean
 
     def test_outer_rmean(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.outer_rmean == 1.0
         assert stripe.outer_rmean
 
     def test_outer_mean(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.outer_mean == 1.0
         assert stripe.outer_mean
 
     def test_rel_change(self):
-        stripe = statisticalStripe()
+        stripe = statistical_stripe()
 
         assert stripe.rel_change == 0.0
 
