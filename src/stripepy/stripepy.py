@@ -160,7 +160,7 @@ def _check_neighborhood(
 ) -> List[int]:
     # TODO rea1991 Change neighborhood size from "matrix" to "genomic" (eg, default of 1 Mb)
     assert 0 <= min_value
-    assert 1 <= neighborhood_size <= len(values)
+    assert 0 < neighborhood_size
     assert 0 <= threshold_percentage <= 1
 
     mask = [0] * len(values)

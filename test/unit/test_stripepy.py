@@ -8,6 +8,8 @@ import scipy.sparse as ss
 
 from stripepy.stripepy import (
     _band_extraction,
+    _check_neighborhood,
+    _compute_global_pseudodistribution,
     _extract_RoIs,
     _log_transform,
     _scale_Iproc,
@@ -196,12 +198,20 @@ STEP 2
 @pytest.mark.unit
 class TestComputeGlobalPseudodistribution:
     # TODO: implement generator function for matrix
+
     """
     The input matrix looks like
     |   9   0   0   |
     |   0   2   0   |
     |   0   4   0   |
     """
+
+    @pytest.mark.skip(reason="Outgoing matrix is not necessarily sparse")
+    def test_is_sparse(self):
+        I = ss.rand(10, 10, density=0.5, format="csr")
+        I_RoI = _compute_global_pseudodistribution(I, {"matrix": [2, 5]})
+
+        assert ss.issparse(I_RoI)
 
     def test_is_marginalized(self):
         row = np.array([0, 1, 2])
@@ -242,6 +252,7 @@ class TestCheckNeighborhood:
     def generic_setup(self):
         yield (np.linspace(0.0, 29.0, 30), 5.0, 4, 0.5)
 
+    # TODO: The vector can be a lot smaller than this. Just calculate the resulting values, and you get the correct result.
     @pytest.fixture(scope="class")
     def values(self):
         yield np.linspace(0.0, 99.0, 100)
@@ -259,6 +270,7 @@ class TestCheckNeighborhood:
         yield 0.5
 
     # TODO: test_min_value_too_low_for_params and test_threshold_percentage_too_low modifies to the same list. Change this, so that every output is unique
+    # TODO: Verify neighborhood size shouldn't be more than half the size of the values array
     def test_correct_output(self, values, min_value, neighborhood_size, threshold_percentage, correct_mask):
 
         mask = _check_neighborhood(values, min_value, neighborhood_size, threshold_percentage)
