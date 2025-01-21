@@ -120,7 +120,9 @@ def _extract_RoIs(I: ss.csr_matrix, RoI: Dict[str, List[int]]) -> Optional[NDArr
     return I_RoI
 
 
-def _compute_global_pseudodistribution(T: ss.csr_matrix, smooth: bool = True) -> NDArray[float]:
+def _compute_global_pseudodistribution(
+    T: ss.csr_matrix, smooth: bool = True, decimal_places: int = 10
+) -> NDArray[float]:
     """
     Given a sparse matrix T, marginalize it, scale the marginal so that maximum is 1, and then smooth it.
 
@@ -130,10 +132,13 @@ def _compute_global_pseudodistribution(T: ss.csr_matrix, smooth: bool = True) ->
         the sparse matrix to be processed
     smooth: bool
         if set to True, smoothing is applied to the pseudo-distribution (default value is True)
+    decimal_places: int
+        the number of decimal places to truncate the pseudo-distribution to.
+        Pass -1 to not truncate the pseudo-distribution values
 
     Returns
     -------
-    NDArray[np.float64]
+    NDArray[float]
         a vector with the re-scaled and smoothed marginals.
     """
 
@@ -141,34 +146,13 @@ def _compute_global_pseudodistribution(T: ss.csr_matrix, smooth: bool = True) ->
     pseudo_dist /= np.max(pseudo_dist)  # scaling
     if smooth:
         pseudo_dist = np.maximum(regressions._compute_wQISA_predictions(pseudo_dist, 11), pseudo_dist)  # smoothing
+
+    if decimal_places >= 0:
+        # We need to truncate FP numbers to ensure that later steps generate consistent results
+        # even in the presence to very minor numeric differences on different platforms.
+        return common.truncate_np(pseudo_dist, decimal_places)
+
     return pseudo_dist
-
-
-def _store_results(
-    hf: h5py._hl.group.Group,
-    pd: NDArray[np.float64],
-    min_points: List[int],
-    pers_of_min_points: List[float],
-    max_points: List[int],
-    pers_of_max_points: List[float],
-    min_persistence: float,
-):
-    hf.create_dataset("pseudo-distribution", data=np.array(pd), compression="gzip", compression_opts=4, shuffle=True)
-    hf.create_dataset(
-        "minima_pts_and_persistence",
-        data=np.array([min_points, pers_of_min_points]),
-        compression="gzip",
-        compression_opts=4,
-        shuffle=True,
-    )
-    hf.create_dataset(
-        "maxima_pts_and_persistence",
-        data=np.array([max_points, pers_of_max_points]),
-        compression="gzip",
-        compression_opts=4,
-        shuffle=True,
-    )
-    hf.parent.attrs["min_persistence_used"] = min_persistence
 
 
 def _check_neighborhood(
@@ -176,7 +160,7 @@ def _check_neighborhood(
 ) -> List[int]:
     # TODO rea1991 Change neighborhood size from "matrix" to "genomic" (eg, default of 1 Mb)
     assert 0 <= min_value
-    assert 1 <= neighborhood_size <= len(values)
+    assert 0 < neighborhood_size
     assert 0 <= threshold_percentage <= 1
 
     mask = [0] * len(values)
@@ -290,10 +274,10 @@ def step_2(
     # so that each maximum is still paired to its minimum.
 
     # Maximum and minimum points sorted w.r.t. coordinates (NOTATION: cs = coordinate-sorted):
-    LT_mPs, LT_pers_of_mPs = common.sort_based_on_arg0(LT_ps_mPs, pers_of_LT_ps_mPs)
-    LT_MPs, LT_pers_of_MPs = common.sort_based_on_arg0(LT_ps_MPs, pers_of_LT_ps_MPs)
-    UT_mPs, UT_pers_of_mPs = common.sort_based_on_arg0(UT_ps_mPs, pers_of_UT_ps_mPs)
-    UT_MPs, UT_pers_of_MPs = common.sort_based_on_arg0(UT_ps_MPs, pers_of_UT_ps_MPs)
+    LT_mPs, LT_pers_of_mPs = common.sort_values(LT_ps_mPs, pers_of_LT_ps_mPs)
+    LT_MPs, LT_pers_of_MPs = common.sort_values(LT_ps_MPs, pers_of_LT_ps_MPs)
+    UT_mPs, UT_pers_of_mPs = common.sort_values(UT_ps_mPs, pers_of_UT_ps_mPs)
+    UT_MPs, UT_pers_of_MPs = common.sort_values(UT_ps_MPs, pers_of_UT_ps_MPs)
 
     logger.bind(step=(2, 2, 3)).info("removing seeds overlapping sparse regions")
     LT_mask = _check_neighborhood(_compute_global_pseudodistribution(L, smooth=False))
@@ -402,34 +386,42 @@ def step_3(
     LT_bounded_mPs = np.concatenate(LT_bounded_mPs, dtype=int)
     UT_bounded_mPs = np.concatenate(UT_bounded_mPs, dtype=int)
 
-    # List of pairs (pair = left and right boundaries):
-    # Choose the variable criterion between max_ascent and max_perc_descent
-    # ---> When variable criterion is set to max_ascent, set the variable max_ascent
-    # ---> When variable criterion is set to max_perc_descent, set the variable max_perc_descent
+    # DataFrame with the left and right boundaries for each seed site
     LT_HIoIs = finders.find_HIoIs(
-        LT_pseudo_distrib, LT_MPs, LT_bounded_mPs, int(max_width / (2 * resolution)) + 1, map=map
+        pseudodistribution=LT_pseudo_distrib,
+        seed_sites=LT_MPs,
+        seed_site_bounds=LT_bounded_mPs,
+        max_width=int(max_width / (2 * resolution)) + 1,
+        logger=logger,
     )
     UT_HIoIs = finders.find_HIoIs(
-        UT_pseudo_distrib, UT_MPs, UT_bounded_mPs, int(max_width / (2 * resolution)) + 1, map=map
+        pseudodistribution=UT_pseudo_distrib,
+        seed_sites=UT_MPs,
+        seed_site_bounds=UT_bounded_mPs,
+        max_width=int(max_width / (2 * resolution)) + 1,
+        logger=logger,
     )
-
-    # List of left or right boundaries:
-    LT_L_bounds, LT_R_bounds = map(list, zip(*LT_HIoIs))
-    UT_L_bounds, UT_R_bounds = map(list, zip(*UT_HIoIs))
 
     logger.bind(step=(3, 1, 2)).info("updating candidate stripes with width information")
     stripes = result.get("stripes", "LT")
-    for num_cand_stripe, (LT_L_bound, LT_R_bound) in enumerate(zip(LT_L_bounds, LT_R_bounds)):
-        stripes[num_cand_stripe].set_horizontal_bounds(LT_L_bound, LT_R_bound)
+    LT_HIoIs.apply(
+        lambda seed: stripes[seed.name].set_horizontal_bounds(seed["left_bound"], seed["right_bound"]),
+        axis="columns",
+    )
 
     stripes = result.get("stripes", "UT")
-    for num_cand_stripe, (UT_L_bound, UT_R_bound) in enumerate(zip(UT_L_bounds, UT_R_bounds)):
-        stripes[num_cand_stripe].set_horizontal_bounds(UT_L_bound, UT_R_bound)
+    UT_HIoIs.apply(
+        lambda seed: stripes[seed.name].set_horizontal_bounds(seed["left_bound"], seed["right_bound"]),
+        axis="columns",
+    )
 
     logger.bind(step=(3, 1)).info("width estimation took %s", common.pretty_format_elapsed_time(start_time))
 
     logger.bind(step=(3, 2)).info("height estimation")
     start_time = time.time()
+
+    LT_HIoIs = LT_HIoIs.to_numpy()  # TODO remove
+    UT_HIoIs = UT_HIoIs.to_numpy()  # TODO remove
 
     logger.bind(step=(3, 2, 1)).info("estimating candidate stripe heights")
     LT_VIoIs, LT_peaks_ids = finders.find_VIoIs(
@@ -678,6 +670,8 @@ def _plot_local_pseudodistributions(
     map,
     logger,
 ):
+    output_folder.mkdir()
+
     start, end = result.roi["genomic"]
     max_height = int(np.ceil(genomic_belt / resolution))
 
@@ -742,7 +736,7 @@ def _plot_stripes_helper(args):
     fig, _ = plot.plot(
         result, resolution, "matrix_with_stripes", start=start, end=end, matrix=matrix, relative_change_threshold=cutoff
     )
-    dest = output_folder / f"stripes_{cutoff:.2g}.jpg"
+    dest = output_folder / f"stripes_{cutoff:.2f}.jpg"
     fig.savefig(dest, dpi=256)
     plt.close(fig)
 
@@ -817,12 +811,11 @@ def step_5(
     genomic_belt: int,
     loc_pers_min: float,
     loc_trend_min: float,
-    output_folder: Optional[pathlib.Path],
+    output_folder: pathlib.Path,
     map=map,
     logger=None,
 ):
-    if result.roi is None:
-        return
+    assert result.roi is not None
 
     plt = common._import_pyplot()
 
@@ -831,6 +824,10 @@ def step_5(
 
     chrom_name, chrom_size = result.chrom
     start, end = result.roi["genomic"]
+
+    for directory in ("1_preprocessing", "2_TDA", "3_shape_analysis", "4_biological_analysis"):
+        (output_folder / chrom_name / directory).mkdir(parents=True, exist_ok=True)
+
     dummy_result = IO.Result(chrom_name, chrom_size)
 
     matrix_output_paths = (

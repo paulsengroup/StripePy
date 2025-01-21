@@ -33,6 +33,9 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: read
+
 jobs:
   matrix-factory:
     name: Generate job matrix
@@ -58,7 +61,8 @@ jobs:
             var includes = []
             for (const plat of platforms) {
                 for (const ver of python_versions) {
-                    includes.push({os: plat, python_version: ver})
+                    includes.push({os: plat, python_version: ver, minimal_install: true})
+                    includes.push({os: plat, python_version: ver, minimal_install: false})
                 }
             }
 
@@ -81,46 +85,33 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Generate dependency file
+        run: |
+          echo 'os=${{ matrix.os }}' > dep-file.txt
+          echo 'python_version=${{ matrix.python_version }}' >> dep-file.txt
+          echo 'minimal_install=${{ matrix.minimal_install }}' >> dep-file.txt
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: |
+            pyproject.toml
+            dep-file.txt
 
-      - name: Install package (Unix)
-        if: runner.os != 'Windows'
+      - name: Install package
         run: |
-          python -m venv venv
-          python -m venv venv-core
-
-          venv/bin/pip install '.[all,test]'
-          venv-core/bin/pip install '.' pytest pytest-cov
-
-          echo "STRIPEPY_ROOT=venv/bin" >> "$GITHUB_ENV"
-          echo "STRIPEPY_CORE_ROOT=venv-core/bin" >> "$GITHUB_ENV"
-
-      - name: Install package (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          python -m venv venv
-          python -m venv venv-core
-
-          venv/Scripts/pip install '.[all,test]'
-          venv-core/Scripts/pip install '.' pytest pytest-cov
-
-          echo "STRIPEPY_ROOT=venv/Scripts" >> "$GITHUB_ENV"
-          echo "STRIPEPY_CORE_ROOT=venv-core/Scripts" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.minimal_install }} == 'true' ]]; then
+            pip install '.' pytest pytest-cov
+          else
+            pip install '.[all,test]'
+          fi
 
       - name: Run simple CLI tests
         run: |
-          "$STRIPEPY_ROOT/stripepy" --help
-          "$STRIPEPY_ROOT/stripepy" --version
-
-      - name: Run simple CLI tests (core)
-        run: |
-          "$STRIPEPY_CORE_ROOT/stripepy" --help
-          "$STRIPEPY_CORE_ROOT/stripepy" --version
+          stripepy --help
+          stripepy --version
 
       - name: Restore test dataset
         uses: actions/cache/restore@v4
@@ -132,7 +123,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          "$STRIPEPY_ROOT/python" -m pytest \
+          python -m pytest \
             --cov=stripepy \
             --verbose \
             --cov-report=xml \
@@ -141,7 +132,8 @@ jobs:
             -m unit
 
       - name: Upload unit test coverage report to Codecov
-        uses: codecov/codecov-action@v5
+        if: (! matrix.minimal_install)
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         with:
           flags: "tests | unit | python-${{ matrix.python_version }}"
           disable_search: true
@@ -150,20 +142,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-      - name: Run unit tests (core)
-        run: |
-          rm -f coverage.xml
-
-          "$STRIPEPY_CORE_ROOT/python" -m pytest \
-            --cov=stripepy \
-            --verbose \
-            --cov-report=xml \
-            --cov-report=term \
-            test/ \
-            -m unit
-
       - name: Upload unit test coverage report to Codecov (core)
-        uses: codecov/codecov-action@v5
+        if: matrix.minimal_install
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         with:
           flags: "tests | unit | python-${{ matrix.python_version }} | core"
           disable_search: true
@@ -171,12 +152,11 @@ jobs:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
-
       - name: Run integration tests
         run: |
           rm -f coverage.xml
 
-          "$STRIPEPY_ROOT/python" -m pytest \
+          python -m pytest \
             --cov=stripepy \
             --verbose \
             --cov-report=xml \
@@ -185,7 +165,8 @@ jobs:
             -m end2end
 
       - name: Upload end2end test coverage report to Codecov
-        uses: codecov/codecov-action@v5
+        if: (! matrix.minimal_install)
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         with:
           flags: "tests | integration | python-${{ matrix.python_version }}"
           disable_search: true
@@ -194,20 +175,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
-      - name: Run integration tests (core)
-        run: |
-          rm -f coverage.xml
-
-          "$STRIPEPY_CORE_ROOT/python" -m pytest \
-            --cov=stripepy \
-            --verbose \
-            --cov-report=xml \
-            --cov-report=term \
-            test/ \
-            -m end2end
-
       - name: Upload end2end test coverage report to Codecov (core)
-        uses: codecov/codecov-action@v5
+        if: matrix.minimal_install
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303 # v5.1.2
         with:
           flags: "tests | integration | python-${{ matrix.python_version }} | core"
           disable_search: true

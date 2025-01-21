@@ -19,7 +19,7 @@ def _setup_matplotlib(subcommand: str, **kwargs):
     if subcommand not in {"call", "plot"}:
         return
 
-    if subcommand == "call" and kwargs["configs_input"]["roi"] is None:
+    if subcommand == "call" and "roi" not in kwargs:
         return
 
     try:
@@ -206,7 +206,9 @@ def _get_longest_chrom_name(path: pathlib.Path) -> str:
     return max(chroms, key=len)  # noqa
 
 
-def _setup_logger(level: str, file: Optional[pathlib.Path] = None, matrix_file: Optional[pathlib.Path] = None):
+def _setup_logger(
+    level: str, file: Optional[pathlib.Path] = None, force: bool = False, matrix_file: Optional[pathlib.Path] = None
+):
     # https://www.structlog.org/en/stable/standard-library.html#rendering-using-structlog-based-formatters-within-logging
     timestamper = structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f")
     pre_chain = [
@@ -258,6 +260,8 @@ def _setup_logger(level: str, file: Optional[pathlib.Path] = None, matrix_file: 
 
     exception = None
     if file is not None:
+        if file.exists() and not force:
+            raise RuntimeError(f"Refusing to overwrite existing file {file}. Pass --force to overwrite.")
         try:
             file.parent.mkdir(parents=True, exist_ok=True)
             if file.exists():
@@ -307,8 +311,10 @@ def _setup_logger(level: str, file: Optional[pathlib.Path] = None, matrix_file: 
     )
 
     if exception is not None:
-        logger = structlog.get_logger()
-        logger.warn('failed to initialize log file "%s" for writing: %s', file, exception)
+        structlog.get_logger().warn('failed to initialize log file "%s" for writing: %s', file, exception)
+    elif file is not None:
+        assert file.is_file()
+        structlog.get_logger().debug('successfully initialized log file "%s"', file)
 
 
 def main(args: Union[List[str], None] = None):
@@ -321,7 +327,12 @@ def main(args: Union[List[str], None] = None):
         _setup_matplotlib(subcommand, **args)
 
         if subcommand == "call":
-            _setup_logger(verbosity.upper(), matrix_file=args["configs_input"]["contact_map"])
+            _setup_logger(
+                verbosity.upper(),
+                file=args.get("log_file"),
+                force=args["force"],
+                matrix_file=args["contact_map"],
+            )
             return call.run(**args)
         if subcommand == "download":
             _setup_logger(verbosity.upper())

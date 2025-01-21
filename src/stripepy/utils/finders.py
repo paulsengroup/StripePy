@@ -2,41 +2,58 @@
 #
 # SPDX-License-Identifier: MIT
 
+import itertools
+import time
 from functools import partial
 from typing import List, Optional, Tuple
 
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
+import scipy.sparse as ss
+import structlog
 
 from . import TDA
+from .common import pretty_format_elapsed_time
 from .regressions import _compute_wQISA_predictions
 
 
-def find_horizontal_domain(pd, coarse_h_domain, max_width=1e9):
+def find_horizontal_domain(
+    profile: npt.NDArray[float],
+    params: Tuple[int, int, int, float],
+    max_width: int = 1e9,
+) -> Tuple[int, int]:
+    """
+    Returns
+    -------
+    Tuple[int, int]
+        the left and right coordinates of the horizontal domain
+    """
 
     # Unpacking:
-    MP, L_mP, R_mP = coarse_h_domain
+    MP, L_mP, R_mP, max_profile_value = params
 
     # Left and sides of candidate:
-    L_interval = np.flip(pd[L_mP : MP + 1])
-    R_interval = pd[MP : R_mP + 1]
+    L_interval = np.flip(profile[L_mP : MP + 1])
+    R_interval = profile[MP : R_mP + 1]
 
     # LEFT INTERVAL
-    L_interval_shifted = np.append(L_interval[1:], [max(pd) + 1], axis=0)
+    L_interval_shifted = np.append(L_interval[1:], [max_profile_value + 1], axis=0)
     L_bound = np.where(L_interval - L_interval_shifted < 0)[0][0] + 1
     # L_interval_restr = L_interval[:L_bound]
     # L_interval_shifted_restr = L_interval_shifted[:L_bound]
     # L_bound = np.argmax(L_interval_restr - L_interval_shifted_restr) + 1
-    L_bound = min(L_bound, max_width)
+    L_bound = np.minimum(L_bound, max_width)
 
     # RIGHT INTERVAL
-    R_interval_shifted = np.append(R_interval[1:], [max(pd) + 1], axis=0)
+    R_interval_shifted = np.append(R_interval[1:], [max_profile_value + 1], axis=0)
     R_bound = np.where(R_interval - R_interval_shifted < 0)[0][0] + 1
     # R_interval_restr = R_interval[:R_bound]
     # R_interval_shifted_restr = R_interval_shifted[:R_bound]
     # R_bound = np.argmax(R_interval_restr - R_interval_shifted_restr) + 1
-    R_bound = min(R_bound, max_width)
+    R_bound = np.minimum(R_bound, max_width)
 
-    return [max(MP - L_bound, 0), min(MP + R_bound, len(pd))]
+    return max(MP - L_bound, 0), min(MP + R_bound, len(profile))
 
 
 def find_lower_v_domain(I, threshold_cut, max_height, min_persistence, it) -> Tuple[List, Optional[List]]:
@@ -114,38 +131,50 @@ def find_upper_v_domain(I, threshold_cut, max_height, min_persistence, it) -> Tu
     return [seed_site - candida_bound[0], seed_site], list(seed_site - np.array(loc_Maxima[:-1]))
 
 
-def find_HIoIs(pd, seed_sites, seed_site_bounds, max_width, map=map):
+def find_HIoIs(
+    pseudodistribution: npt.NDArray[float],
+    seed_sites: npt.NDArray[int],
+    seed_site_bounds: npt.NDArray[int],
+    max_width: int,
+    logger=None,
+) -> pd.DataFrame:
     """
-    :param pd:                  acronym for pseudo-distribution, but can be any 1D array representing a uniformly-sample
-                                scalar function works
+    :param pseudodistribution:  1D array representing a uniformly-sample scalar function works
     :param seed_sites:          maximum values in the pseudo-distribution (i.e., genomic coordinates hosting linear
                                 patterns)
     :param seed_site_bounds:    for the i-th entry of seed_sites:
                                 (*) seed_site_bounds[i] is the left boundary
                                 (*) seed_site_bounds[i+1] is the right boundary
     :param max_width:           maximum width allowed
-    :param map:                 alternative implementation of the built-in map function. Can be used to e.g. run this step in parallel by passing multiprocessing.Pool().map.
     :return:
-    HIoIs                       list of lists, where each sublist is a pair consisting of the left and right boundaries
+    HIoIs                       a pd.DataFrame the list of left and right boundary for each seed site
     """
     assert len(seed_site_bounds) == len(seed_sites) + 1
 
-    iterable_input = [
-        (seed_site, seed_site_bounds[num_MP], seed_site_bounds[num_MP + 1])
+    t0 = time.time()
+    if logger is None:
+        logger = structlog.get_logger()
+
+    max_pseudodistribution_value = pseudodistribution.max()
+    params = (
+        (seed_site, seed_site_bounds[num_MP], seed_site_bounds[num_MP + 1], max_pseudodistribution_value)
         for num_MP, seed_site in enumerate(seed_sites)
-    ]
+    )
 
-    HIoIs = list(map(partial(find_horizontal_domain, pd, max_width=max_width), iterable_input))
+    tasks = map(partial(find_horizontal_domain, pseudodistribution, max_width=max_width), params)
+    # This efficiently constructs a 2D numpy with shape (N, 2) from a list of 2-element tuples, where N is the number of seed sites.
+    # The first and second columns contains the left and right boundaries of the horizontal domains, respectively.
+    HIoIs = np.fromiter(itertools.chain.from_iterable(tasks), count=2 * len(seed_sites), dtype=int).reshape(-1, 2)
 
-    # Handle possible overlapping intervals:
-    for i in range(len(HIoIs) - 1):
-        current_pair = HIoIs[i]
-        next_pair = HIoIs[i + 1]
+    # Handle possible overlapping intervals by ensuring that the
+    # left bound of interval i + 1 is always greater or equal than the right bound of interval i
+    HIoIs[1:, 0] = np.maximum(HIoIs[1:, 0], HIoIs[:-1, 1])
 
-        if current_pair[1] > next_pair[0]:  # Check for intersection
-            next_pair[0] = current_pair[1]  # Modify the second pair
+    df = pd.DataFrame(data=HIoIs, columns=["left_bound", "right_bound"])
 
-    return HIoIs
+    logger.debug("find_HIoIs took %s", pretty_format_elapsed_time(t0))
+
+    return df
 
 
 def find_VIoIs(

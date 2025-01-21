@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
+# Copyright (C) 2024 Andrea Raffo <andrea.raffo@ibv.uio.no>
+#
+# SPDX-License-Identifier: MIT
+
 import argparse
+import itertools
 import pathlib
 import subprocess as sp
 import time
@@ -51,8 +56,7 @@ def make_cli():
     cli.add_argument(
         "stripebench-path",
         type=_input_dir_checked,
-        help="Path to the StripeBench dataset, which can be downloaded from XX.",
-        # TODO complete when benchmark is online
+        help="Path to the StripeBench dataset, which can be downloaded from Zenodo (DOI: 10.5281/zenodo.14448328).",
     )
 
     cli.add_argument(
@@ -68,7 +72,7 @@ def make_cli():
         "-o",
         "--output-folder",
         type=_output_dir_checked,
-        default=pathlib.Path("."),
+        default=pathlib.Path.cwd(),
         help="Path to the folder where the user wants the output to be placed (default: current folder).",
     )
 
@@ -135,8 +139,8 @@ def run_stripepy(
         resolution,
         "-b",
         str(genomic_belt),
-        "-o",
-        output_folder,
+        "--output-file",
+        str(output_folder / path_to_mcool.stem / str(resolution) / "results.hdf5"),
         "--max-width",
         str(max_width),
         "--glob-pers-min",
@@ -150,38 +154,46 @@ def run_stripepy(
     if force:
         args.append("--force")
 
-    sp.check_call(args)
+    try:
+        sp.check_call(args)
+    except sp.CalledProcessError as e:
+        if "unrecognized arguments: --output-file" not in e:
+            raise
+        i = args.index("--output-file")
+        args[i] = "--output-folder"
+        args[i + i] = output_folder
+        sp.check_call(args)
 
 
 def main():
     args = vars(make_cli().parse_args())
 
-    with open(f"{args["output_folder"]}/output.log", "w") as f:
+    with open(args["output_folder"] / "output.log", "w") as f:
         t0 = time.time()
-        resolutions = ["5000", "10000", "25000", "50000"]
-        contact_densities = ["1", "5", "10", "15"]
-        noise_levels = ["0", "5000", "10000", "15000"]
-        for contact_density in contact_densities:
-            for noise_level in noise_levels:
-                this_contact_map = (
-                    args["stripebench-path"]
-                    / "data"
-                    / f"grch38_h1_rad21_{contact_density}_{noise_level}"
-                    / f"grch38_h1_rad21_{contact_density}_{noise_level}.mcool"
-                )
-                for resolution in resolutions:
-                    run_stripepy(
-                        args["stripepy-exec"],
-                        this_contact_map,
-                        resolution,
-                        args["genomic_belt"],
-                        args["output_folder"],
-                        args["max_width"],
-                        args["glob_pers_min"],
-                        args["loc_pers_min"],
-                        args["loc_trend_min"],
-                        args["force"],
-                    )
+        resolutions = ("5000", "10000", "25000", "50000")
+        contact_densities = ("1", "5", "10", "15")
+        noise_levels = ("0", "5000", "10000", "15000")
+
+        params = itertools.product(contact_densities, noise_levels, resolutions)
+        for contact_density, noise_level, resolution in params:
+            this_contact_map = (
+                args["stripebench-path"]
+                / "data"
+                / f"grch38_h1_rad21_{contact_density}_{noise_level}"
+                / f"grch38_h1_rad21_{contact_density}_{noise_level}.mcool"
+            )
+            run_stripepy(
+                args["stripepy-exec"],
+                this_contact_map,
+                resolution,
+                args["genomic_belt"],
+                args["output_folder"],
+                args["max_width"],
+                args["glob_pers_min"],
+                args["loc_pers_min"],
+                args["loc_trend_min"],
+                args["force"],
+            )
         delta = time.time() - t0
         print("Total time: ", file=f)
         print(delta, file=f)

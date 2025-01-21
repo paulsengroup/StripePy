@@ -56,19 +56,33 @@ TEST_DATASET="$1"
 stripepy call \
   "$TEST_DATASET" \
   20000 \
-  -o stripepy/ \
-  --glob-pers-min 0.10 \
-  --loc-pers-min 0.33 \
-  --loc-trend-min 0.25 \
+  -o out.hdf5 \
+  --log-file out.log \
+  --plot-dir plots/ \
   --roi middle \
   --nproc "$(nproc)"
 
-find stripepy/ -type f -exec ls -lah {} +
+ok=true
 
-if [ ! -f stripepy/*/*/results.hdf5 ]; then
-  1>&2 echo 'results.hdf5 is missing!'
+if [ ! -f out.hdf5 ]; then
+  ok=false
+  1>&2 echo 'out.hdf5 is missing!'
+fi
+if [ ! -f out.log ]; then
+  ok=false
+  1>&2 echo 'out.log is missing!'
+fi
+if [ ! -d plots/ ]; then
+  ok=false
+  1>&2 echo 'plots/ is missing!'
+fi
+
+if [ "$ok" != true ]; then
+  1>&2 echo "### FAILURE!"
   exit 1
 fi
+
+1>&2 echo "### SUCCESS!"
 
 EOM
 

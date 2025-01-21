@@ -7,7 +7,7 @@ import math
 import multiprocessing as mp
 import pathlib
 from importlib.metadata import version
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 
 # Create a custom formatter to allow multiline and bulleted descriptions
@@ -36,12 +36,8 @@ def _existing_file(arg: str) -> pathlib.Path:
     raise argparse.ArgumentTypeError(f'Not an existing file: "{arg}"')
 
 
-def _output_dir_checked(arg: str) -> pathlib.Path:
-    parent = pathlib.Path(arg).parent
-    if parent.exists() and parent.is_dir():
-        return pathlib.Path(arg)
-
-    raise argparse.ArgumentTypeError(f'Output folder "{arg}" is not reachable: parent folder does not exist')
+def _directory_is_empty(directory: Union[pathlib.Path, str]) -> bool:
+    return not any(pathlib.Path(directory).iterdir())
 
 
 def _probability(arg) -> float:
@@ -105,16 +101,31 @@ def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
     sc.add_argument(
         "--roi",
         type=str,
-        default=None,
-        help="Specify 'middle' or input range as 'chr2:10000000-12000000' (default: None)",
+        choices={"middle", "start"},
+        help="Criterion used to select a region from each chromosome used to generate diagnostic plots (default: None).\n"
+        "Requires --plot-dir.",
     )
 
     sc.add_argument(
         "-o",
-        "--output-folder",
-        type=_output_dir_checked,
-        default=pathlib.Path("."),
-        help="Path to the folder where the user wants the output to be placed (default: current folder).",
+        "--output-file",
+        type=pathlib.Path,
+        help="Path where to store the output HDF5 file.\n"
+        "When not specified, the output file will be saved in the current working directory with a named based on the name of input matrix file.",
+    )
+
+    sc.add_argument(
+        "--log-file",
+        type=pathlib.Path,
+        help="Path where to store the log file.",
+    )
+
+    sc.add_argument(
+        "--plot-dir",
+        type=pathlib.Path,
+        help="Path where to store the output plots.\n"
+        "Required when --roi is specified and ignored otherwise.\n"
+        "If the specified folder does not already exist, it will be created.",
     )
 
     sc.add_argument(
@@ -508,47 +519,71 @@ def _make_cli() -> argparse.ArgumentParser:
     return cli
 
 
-def _process_stripepy_call_args(args: Dict[str, Any]) -> Dict[str, Any]:
-
-    # Gather input parameters in dictionaries:
-    configs_input = {key: args[key] for key in ["contact_map", "resolution", "normalization", "genomic_belt", "roi"]}
-    configs_thresholds = {
-        key: args[key]
-        for key in [
-            "glob_pers_min",
-            "constrain_heights",
-            "loc_pers_min",
-            "loc_trend_min",
-            "max_width",
-            "min_chrom_size",
-        ]
-    }
-    configs_output = {key: args[key] for key in ["output_folder", "force"]}
-
-    configs_output["output_folder"] = (
-        configs_output["output_folder"] / configs_input["contact_map"].stem / str(configs_input["resolution"])
-    )
-    configs_other = {"nproc": args["nproc"]}
-
-    return {
-        "configs_input": configs_input,
-        "configs_thresholds": configs_thresholds,
-        "configs_output": configs_output,
-        "configs_other": configs_other,
-    }
-
-
 def _normalize_args(args: Dict[str, Any]) -> Dict[str, Any]:
-    return {k.replace("-", "_"): v for k, v in args.items()}
+    return {k.replace("-", "_"): v for k, v in args.items() if v is not None}
+
+
+def _define_default_args(parser: argparse.ArgumentParser, args: Dict[str, Any]) -> Dict[str, Any]:
+    if args["subcommand"] == "call":
+        if "output_file" not in args:
+            try:
+                args["output_file"] = (
+                    pathlib.Path(pathlib.Path(str(args["contact_map"]).partition("::")[0]).stem)
+                    .with_suffix(f".{args['resolution']}.hdf5")
+                    .absolute()
+                )
+            except Exception as e:  # noqa
+                parser.error(f"failed to infer the output file name: {e}")
+
+    return args
+
+
+def _validate_stripepy_call_args(parser: argparse.ArgumentParser, args: Dict[str, Any]):
+    if "roi" in args and "plot_dir" not in args:
+        parser.error("--plot-dir is required when using --roi")
+
+    if not args["force"]:
+        path_collisions = []
+
+        output_file = args["output_file"]
+        log_file = args.get("log_file")
+        plot_dir = args.get("plot_dir")
+
+        if output_file.exists():
+            path_collisions.append(f'refusing to overwrite existing file "{output_file}"')
+        if log_file is not None and log_file.exists():
+            path_collisions.append(f'refusing to overwrite existing file "{log_file}"')
+        if plot_dir is not None and plot_dir.is_file():
+            path_collisions.append(f'refusing to overwrite existing file "{plot_dir}"')
+        elif plot_dir is not None and plot_dir.is_dir() and not _directory_is_empty(plot_dir):
+            path_collisions.append(f'refusing to write in the non-empty directory "{plot_dir}"')
+
+        num_collisions = len(path_collisions)
+        if num_collisions == 1:
+            parser.error(f"{path_collisions[0]}\n" "Pass --force to overwrite.")
+        elif num_collisions > 1:
+            path_collisions = "\n - ".join(path_collisions)
+            parser.error(
+                f"encountered the following {num_collisions} path collisions:\n"
+                f" - {path_collisions}\n"
+                "Pass --force to overwrite."
+            )
+
+
+def _validate_args(parser: argparse.ArgumentParser, args: Dict[str, Any]):
+    if args["subcommand"] == "call":
+        _validate_stripepy_call_args(parser, args)
 
 
 def parse_args(cli_args: List[str]) -> Tuple[str, Any, str]:
+    parser = _make_cli()
+
     # Parse the input parameters:
-    args = _normalize_args(vars(_make_cli().parse_args(cli_args)))
+    args = vars(parser.parse_args(cli_args))
+    args = _normalize_args(args)
+    args = _define_default_args(parser, args)
+    _validate_args(parser, args)
 
     subcommand = args.pop("subcommand")
     verbosity = args.pop("verbosity")
-    if subcommand == "call":
-        return subcommand, _process_stripepy_call_args(args), verbosity
-
     return subcommand, args, verbosity
