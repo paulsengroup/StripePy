@@ -119,37 +119,6 @@ class TestInit:
             stripe = custom_stripe(vertical_bounds=(5, 4))
 
 
-def statistical_stripe(
-    inner_mean=1.0,
-    inner_std=1.0,
-    five_number=[1.0] * 5,
-    outer_lmean=1.0,
-    outer_rmean=1.0,
-    outer_mean=None,
-    rel_change=None,
-):
-    if outer_mean == None:
-        outer_mean = (outer_lmean + outer_rmean) / 2
-    if rel_change == None:  # 1
-        rel_change = abs(inner_mean - outer_mean) / outer_mean * 100  # 0
-
-    stripe = Stripe(
-        seed=5,
-        top_pers=5.0,
-        horizontal_bounds=(4, 6),
-        vertical_bounds=(1, 4),
-        where="upper_triangular",
-    )
-    stripe._inner_mean = inner_mean
-    stripe._inner_std = inner_std
-    stripe._five_number = five_number
-    stripe._outer_lmean = outer_lmean
-    stripe._outer_rmean = outer_rmean
-    stripe._outer_mean = outer_mean
-    stripe._rel_change = rel_change
-    return stripe
-
-
 @pytest.mark.unit
 class TestBoundaryProperties:
     #####
@@ -265,8 +234,8 @@ class TestBoundaryProperties:
 @pytest.fixture(scope="function")
 def matrix():
     row1 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    row2 = np.array([0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    row3 = np.array([0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0])
+    row2 = np.array([0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0])
+    row3 = np.array([0, 0, 3, 0, 3, 4, 0, 0, 0, 0, 0])
     row4 = np.array([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
     row5 = np.array([0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0])
     row6 = np.array([0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0])
@@ -275,8 +244,39 @@ def matrix():
     row9 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0])
     row10 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0])
     row11 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11])
-    matrix = np.array(row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11)
-    return matrix
+    matrix = np.array([row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11])
+    return ss.csr_matrix(matrix)
+
+
+def statistical_stripe(
+    inner_mean=1.0,
+    inner_std=1.0,
+    five_number=[1.0] * 5,
+    outer_lmean=1.0,
+    outer_rmean=1.0,
+    outer_mean=None,
+    rel_change=None,
+):
+    if outer_mean == None:
+        outer_mean = (outer_lmean + outer_rmean) / 2
+    if rel_change == None:  # 1
+        rel_change = abs(inner_mean - outer_mean) / outer_mean * 100  # 0
+
+    stripe = Stripe(
+        seed=5,
+        top_pers=5.0,
+        horizontal_bounds=(4, 6),
+        vertical_bounds=(1, 4),
+        where="upper_triangular",
+    )
+    stripe._inner_mean = inner_mean
+    stripe._inner_std = inner_std
+    stripe._five_number = five_number
+    stripe._outer_lmean = outer_lmean
+    stripe._outer_rmean = outer_rmean
+    stripe._outer_mean = outer_mean
+    stripe._rel_change = rel_change
+    return stripe
 
 
 @pytest.mark.unit
@@ -295,10 +295,31 @@ class TestStatistics:
     def test_compute_statistics(self, matrix, U_stripe):
         U_stripe.compute_biodescriptors(matrix)
         """
-        rows = slice(1, 3)
+        horizontal_bound = (4,6)
+        vertical_bounds = (1,4)
+        convex_comp = 4
+        rows = slice(1, 4)
         cols = slice(4, 6)
-
+        restI =     |   1   2   |
+                    |   3   4   |
+                    |   0   0   |
+        restI.size = 6
+        _compute_inner_descriptors(restrI) = (array([0.0, 0.25, 1.5, 2.75, 4.0]), 1.6666666666666667, 1.4907119849998596)
+        five_number = array([0.0, 0.25, 1.5, 2.75, 4.0]
+        inner_mean = 1.6666666666666667
+        inner_std = 1.4907119849998596
+        submatrix = I[1:3, 1:4] =   |   2   0   0   |
+                                    |   0   3   0   |
+                                    |   0   0   4   |
+        outer_lmean = 1.0
+        outer_rmean = 0.0
         """
+
+        assert np.array_equal(U_stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
+        assert U_stripe._inner_mean == 1.6666666666666667
+        assert U_stripe._inner_std == 1.4907119849998596
+        assert U_stripe._outer_lmean == 1.0
+        assert U_stripe._outer_rmean == 0.0
 
 
 @pytest.mark.unit
