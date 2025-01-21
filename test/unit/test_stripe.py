@@ -262,39 +262,15 @@ class TestSetters:
     #####
     ### Manually instantiated values
     #####
-    def test_inner_mean(self):
+    def test_statistical_manual(self):
         stripe = statistical_stripe()
 
         assert stripe.inner_mean == 1.0
-
-    def test_inner_std(self):
-        stripe = statistical_stripe()
-
         assert stripe.inner_std == 1.0
-
-    def test_five_number(self):
-        stripe = statistical_stripe()
-
         assert stripe.five_number == [1.0] * 5
-
-    def test_outer_lmean(self):
-        stripe = statistical_stripe()
-
         assert stripe.outer_lmean == 1.0
-
-    def test_outer_rmean(self):
-        stripe = statistical_stripe()
-
         assert stripe.outer_rmean == 1.0
-
-    def test_outer_mean(self):
-        stripe = statistical_stripe()
-
         assert stripe.outer_mean == 1.0
-
-    def test_rel_change(self):
-        stripe = statistical_stripe()
-
         assert stripe.rel_change == 0.0
 
 
