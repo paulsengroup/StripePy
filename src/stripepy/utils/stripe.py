@@ -99,6 +99,8 @@ class Stripe(object):
 
         self._left_bound = None
         self._right_bound = None
+        self._bottom_bound = None
+        self._top_bound = None
         if horizontal_bounds is not None:
             self.set_horizontal_bounds(*horizontal_bounds)
 
