@@ -264,11 +264,17 @@ class TestBoundaryProperties:
 
 @pytest.fixture(scope="function")
 def matrix():
-    row1 = np.array([1, 0, 0, 0])
-    row2 = np.array([0, 2, 0, 0])
-    row3 = np.array([0, 0, 3, 0])
-    row4 = np.array([0, 0, 0, 4])
-    matrix = np(row1, row2, row3, row4)
+    row1 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    row2 = np.array([0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    row3 = np.array([0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0])
+    row4 = np.array([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
+    row5 = np.array([0, 0, 0, 0, 5, 0, 0, 0, 0, 0])
+    row6 = np.array([0, 0, 0, 0, 0, 6, 0, 0, 0, 0])
+    row7 = np.array([0, 0, 0, 0, 0, 0, 7, 0, 0, 0])
+    row8 = np.array([0, 0, 0, 0, 0, 0, 0, 8, 0, 0])
+    row9 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 9, 0])
+    row10 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 10])
+    matrix = np(row1, row2, row3, row4, row5, row6, row7, row8, row9, row10)
     return matrix
 
 
