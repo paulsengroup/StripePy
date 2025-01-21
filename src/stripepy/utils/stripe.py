@@ -127,6 +127,14 @@ class Stripe(object):
 
         NotImplementedError
 
+    @staticmethod
+    def _validate_vertical_bounds(left_bound: int, right_bound: int, top_bound: int, bottom_bound: int, location: str):
+        assert location in {"upper_triangular", "lower_triangular"}
+        if location == "lower_triangular" and not (left_bound <= top_bound <= right_bound):
+            raise ValueError(f"top bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {top_bound=}")
+        elif location == "upper_triangular" and not (left_bound <= bottom_bound <= right_bound):
+            raise ValueError(f"bottom bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {bottom_bound=}")
+
     def _compute_convex_comp(self) -> int:
         cfx1 = 0.99
         cfx2 = 0.01
@@ -190,7 +198,13 @@ class Stripe(object):
         return submatrix.mean()
 
     def _all_bounds_set(self) -> bool:
-        return all((x is not None for x in [self._left_bound, self._right_bound, self._bottom_bound, self._top_bound]))
+        return self._horizontal_bounds_set() and self._vertical_bounds_set()
+
+    def _horizontal_bounds_set(self) -> bool:
+        return self._left_bound is not None and self._right_bound is not None
+
+    def _vertical_bounds_set(self) -> bool:
+        return self._top_bound is not None and self._bottom_bound is not None
 
     @property
     def seed(self) -> int:
@@ -321,6 +335,9 @@ class Stripe(object):
                 f"horizontal bounds must enclose the seed position: seed={self._seed}, {left_bound=}, {right_bound=}"
             )
 
+        if self._vertical_bounds_set():
+            Stripe._validate_vertical_bounds(left_bound, right_bound, self._top_bound, self._bottom_bound, self._where)
+
         self._left_bound = left_bound
         self._right_bound = right_bound
 
@@ -347,15 +364,18 @@ class Stripe(object):
                 f"the lower vertical bound must be greater than the upper vertical bound: {top_bound=}, {bottom_bound=}"
             )
 
-        self._top_bound = top_bound
-        self._bottom_bound = bottom_bound
-
-        computed_where = self._infer_location(self._seed, self._top_bound, self._bottom_bound)
+        computed_where = self._infer_location(self._seed, top_bound, bottom_bound)
 
         if self._where is not None and computed_where != self._where:
             raise RuntimeError(
                 f"computed location does not match the provided stripe location: computed={computed_where}, expected={self._where}"
             )
+
+        if self._horizontal_bounds_set():
+            Stripe._validate_vertical_bounds(self._left_bound, self._right_bound, top_bound, bottom_bound, computed_where)
+
+        self._top_bound = top_bound
+        self._bottom_bound = bottom_bound
 
         self._where = computed_where
 
