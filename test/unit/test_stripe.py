@@ -268,13 +268,14 @@ def matrix():
     row2 = np.array([0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     row3 = np.array([0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0])
     row4 = np.array([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
-    row5 = np.array([0, 0, 0, 0, 5, 0, 0, 0, 0, 0])
-    row6 = np.array([0, 0, 0, 0, 0, 6, 0, 0, 0, 0])
-    row7 = np.array([0, 0, 0, 0, 0, 0, 7, 0, 0, 0])
-    row8 = np.array([0, 0, 0, 0, 0, 0, 0, 8, 0, 0])
-    row9 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 9, 0])
-    row10 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 10])
-    matrix = np(row1, row2, row3, row4, row5, row6, row7, row8, row9, row10)
+    row5 = np.array([0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0])
+    row6 = np.array([0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0])
+    row7 = np.array([0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0])
+    row8 = np.array([0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0])
+    row9 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0])
+    row10 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0])
+    row11 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11])
+    matrix = np.array(row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11)
     return matrix
 
 
@@ -290,6 +291,14 @@ class TestStatistics:
         assert stripe.outer_rmean == 1.0
         assert stripe.outer_mean == 1.0
         assert stripe.rel_change == 0.0
+
+    def test_compute_statistics(self, matrix, U_stripe):
+        U_stripe.compute_biodescriptors(matrix)
+        """
+        rows = slice(1, 3)
+        cols = slice(4, 6)
+
+        """
 
 
 @pytest.mark.unit
