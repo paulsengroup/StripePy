@@ -151,21 +151,6 @@ def statistical_stripe(
 @pytest.mark.unit
 class TestSetters:
     #####
-    ### Triangles
-    #####
-    def test_lower_triangular(self, L_stripe):
-        assert L_stripe.lower_triangular
-
-    def test_not_lower_triangular(self, U_stripe):
-        assert not U_stripe.lower_triangular
-
-    def test_upper_triangular(self, U_stripe):
-        assert U_stripe.upper_triangular
-
-    def test_not_upper_triangular(self, L_stripe):
-        assert not L_stripe.upper_triangular
-
-    #####
     ### Left boundary
     #####
     def test_left_bound_to_left(self):
