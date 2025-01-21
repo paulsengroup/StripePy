@@ -313,6 +313,9 @@ class Stripe(object):
             assert self._right_bound is not None
             raise RuntimeError("horizontal stripe bounds have already been set")
 
+        if left_bound < 0 or right_bound < 0:
+            raise ValueError("stripe bounds must be positive integers")
+
         if not left_bound <= self._seed <= right_bound:
             raise ValueError(
                 f"horizontal bounds must enclose the seed position: seed={self._seed}, {left_bound=}, {right_bound=}"
@@ -335,6 +338,9 @@ class Stripe(object):
         if self._bottom_bound is not None:
             assert self._top_bound is not None
             raise RuntimeError("vertical stripe bounds have already been set")
+
+        if top_bound < 0 or bottom_bound < 0:
+            raise ValueError("stripe bounds must be positive integers")
 
         if top_bound > bottom_bound:
             raise ValueError(
