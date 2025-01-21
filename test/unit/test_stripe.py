@@ -179,7 +179,6 @@ class TestSetters:
     #####
     ### Right boundary
     #####
-
     def test_right_bound_to_right(self):
         stripe = custom_stripe(horizontal_bounds=None)
         stripe.set_horizontal_bounds(4, 7)
@@ -196,18 +195,19 @@ class TestSetters:
         stripe = custom_stripe(horizontal_bounds=None)
         with pytest.raises(ValueError) as e:
             stripe.set_horizontal_bounds(4, 4)
+
         assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4"
 
     def test_right_bound_over_left(self):
         stripe = custom_stripe(horizontal_bounds=None)
         with pytest.raises(ValueError) as e:
             stripe.set_horizontal_bounds(4, 3)
+
         assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=3"
 
     #####
     ### Top boundary
     #####
-
     def test_top_bound_over_matrix_top(self):
         stripe = custom_stripe(vertical_bounds=None)
         stripe.set_vertical_bounds(-1, 4)
@@ -218,6 +218,7 @@ class TestSetters:
         stripe = custom_stripe(vertical_bounds=None)
         with pytest.raises(ValueError) as e:
             stripe.set_vertical_bounds(7, 4)
+
         assert (
             str(e.value)
             == "the lower vertical bound must be greater than the upper vertical bound: top_bound=7, bottom_bound=4"
@@ -227,6 +228,7 @@ class TestSetters:
         stripe = custom_stripe(vertical_bounds=None)
         with pytest.raises(ValueError) as e:
             stripe.set_vertical_bounds(5, 4)
+
         assert (
             str(e.value)
             == "the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4"
@@ -235,17 +237,15 @@ class TestSetters:
     #####
     ### Bottom boundary
     #####
-
     def test_bottom_bound_over_top(self):
         stripe = custom_stripe(vertical_bounds=None)
         with pytest.raises(ValueError) as e:
             stripe.set_vertical_bounds(4, 1)
+
         assert (
             str(e.value)
             == "the lower vertical bound must be greater than the upper vertical bound: top_bound=4, bottom_bound=1"
         )
-
-        # assert stripe.bottom_bound < stripe.top_bound
 
     def test_bottom_bound_under_diagonal(self):
         stripe = custom_stripe(where="lower_triangular", vertical_bounds=None)
@@ -266,37 +266,31 @@ class TestSetters:
         stripe = statistical_stripe()
 
         assert stripe.inner_mean == 1.0
-        assert stripe.inner_mean
 
     def test_inner_std(self):
         stripe = statistical_stripe()
 
         assert stripe.inner_std == 1.0
-        assert stripe.inner_std
 
     def test_five_number(self):
         stripe = statistical_stripe()
 
         assert stripe.five_number == [1.0] * 5
-        assert stripe.five_number
 
     def test_outer_lmean(self):
         stripe = statistical_stripe()
 
         assert stripe.outer_lmean == 1.0
-        assert stripe.outer_lmean
 
     def test_outer_rmean(self):
         stripe = statistical_stripe()
 
         assert stripe.outer_rmean == 1.0
-        assert stripe.outer_rmean
 
     def test_outer_mean(self):
         stripe = statistical_stripe()
 
         assert stripe.outer_mean == 1.0
-        assert stripe.outer_mean
 
     def test_rel_change(self):
         stripe = statistical_stripe()
