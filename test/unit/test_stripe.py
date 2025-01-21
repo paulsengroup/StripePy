@@ -262,6 +262,16 @@ class TestBoundaryProperties:
         assert stripe.bottom_bound > 10
 
 
+@pytest.fixture(scope="function")
+def matrix():
+    row1 = np.array([1, 0, 0, 0])
+    row2 = np.array([0, 2, 0, 0])
+    row3 = np.array([0, 0, 3, 0])
+    row4 = np.array([0, 0, 0, 4])
+    matrix = np(row1, row2, row3, row4)
+    return matrix
+
+
 @pytest.mark.unit
 class TestStatistics:
     def test_statistical_manual(self):
