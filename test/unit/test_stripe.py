@@ -1,4 +1,6 @@
+import numpy as np
 import pytest
+import scipy.sparse as ss
 
 from stripepy.utils.stripe import Stripe
 
@@ -149,7 +151,7 @@ def statistical_stripe(
 
 
 @pytest.mark.unit
-class TestSetters:
+class TestBoundaryProperties:
     #####
     ### Left boundary
     #####
@@ -259,9 +261,9 @@ class TestSetters:
 
         assert stripe.bottom_bound > 10
 
-    #####
-    ### Manually instantiated values
-    #####
+
+@pytest.mark.unit
+class TestStatistics:
     def test_statistical_manual(self):
         stripe = statistical_stripe()
 
