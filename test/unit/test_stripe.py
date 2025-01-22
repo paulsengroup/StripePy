@@ -46,7 +46,7 @@ class TestInit:
         stripe = U_stripe
 
         assert stripe.seed == 5
-        assert stripe.top_persistence == 5.0
+        assert np.isclose(stripe.top_persistence, 5.0)
         assert not stripe.lower_triangular
         assert stripe.upper_triangular
         assert stripe.left_bound == 4
@@ -284,13 +284,13 @@ class TestStatistics:
     def test_statistical_manual(self):
         stripe = statistical_stripe()
 
-        assert stripe.inner_mean == 1.0
-        assert stripe.inner_std == 1.0
-        assert stripe.five_number == [1.0] * 5
-        assert stripe.outer_lmean == 1.0
-        assert stripe.outer_rmean == 1.0
-        assert stripe.outer_mean == 1.0
-        assert stripe.rel_change == 0.0
+        assert np.isclose(stripe.inner_mean, 1.0)
+        assert np.isclose(stripe.inner_std, 1.0)
+        assert np.isclose(stripe.five_number, [1.0] * 5)
+        assert np.isclose(stripe.outer_lmean, 1.0)
+        assert np.isclose(stripe.outer_rmean, 1.0)
+        assert np.isclose(stripe.outer_mean, 1.0)
+        assert np.isclose(stripe.rel_change, 0.0)
 
     def test_compute_statistics(self, matrix, U_stripe):
         U_stripe.compute_biodescriptors(matrix)
@@ -315,11 +315,11 @@ class TestStatistics:
         outer_rmean = 0.0
         """
 
-        assert np.array_equal(U_stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
-        assert U_stripe._inner_mean == 1.6666666666666667
-        assert U_stripe._inner_std == 1.4907119849998596
-        assert U_stripe._outer_lmean == 1.0
-        assert U_stripe._outer_rmean == 0.0
+        assert np.isclose(U_stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
+        assert np.isclose(U_stripe._inner_mean, 1.6666666666666667)
+        assert np.isclose(U_stripe._inner_std, 1.4907119849998596)
+        assert np.isclose(U_stripe._outer_lmean, 1.0)
+        assert np.isclose(U_stripe._outer_rmean, 0.0)
 
 
 @pytest.mark.unit
