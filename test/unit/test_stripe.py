@@ -59,17 +59,25 @@ def matrix():
 
 @pytest.mark.unit
 class TestObjectInitialization:
-    def test_all_values_okay(self, U_stripe):
-        stripe = U_stripe
+    # TODO: Add L_stripe to all test cases
+    def test_constructor(self, U_stripe, L_stripe):
+        assert U_stripe.seed == 5
+        assert np.isclose(U_stripe.top_persistence, 5.0)
+        assert not U_stripe.lower_triangular
+        assert U_stripe.upper_triangular
+        assert U_stripe.left_bound == 4
+        assert U_stripe.right_bound == 6
+        assert U_stripe.top_bound == 1
+        assert U_stripe.bottom_bound == 4
 
-        assert stripe.seed == 5
-        assert np.isclose(stripe.top_persistence, 5.0)
-        assert not stripe.lower_triangular
-        assert stripe.upper_triangular
-        assert stripe.left_bound == 4
-        assert stripe.right_bound == 6
-        assert stripe.top_bound == 1
-        assert stripe.bottom_bound == 4
+        assert L_stripe.seed == 5
+        assert np.isclose(L_stripe.top_persistence, 5.0)
+        assert L_stripe.lower_triangular
+        assert not L_stripe.upper_triangular
+        assert L_stripe.left_bound == 4
+        assert L_stripe.right_bound == 6
+        assert L_stripe.top_bound == 4
+        assert L_stripe.bottom_bound == 10
 
     # TODO: Shouldn't this pass? Use lowest valid value
     def test_seed_lower_valid(self):
