@@ -92,7 +92,7 @@ class Stripe(object):
             raise ValueError("when not None, top_pers must be a positive number")
         self._persistence = top_pers
 
-        valid_locations = {"upper_triangular", "lower_triangular"}
+        valid_locations = ("upper_triangular", "lower_triangular")
         if where is not None and where not in valid_locations:
             raise ValueError(f"when specified, where must be one of {tuple(valid_locations)}")
         self._where = where
