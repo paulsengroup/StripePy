@@ -40,8 +40,25 @@ def custom_stripe(seed="NaN", top_pers="NaN", horizontal_bounds="NaN", vertical_
     return stripe
 
 
+@pytest.fixture(scope="function")
+def matrix():
+    row1 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    row2 = np.array([0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0])
+    row3 = np.array([0, 0, 3, 0, 3, 4, 0, 0, 0, 0, 0])
+    row4 = np.array([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
+    row5 = np.array([0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0])
+    row6 = np.array([0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0])
+    row7 = np.array([0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0])
+    row8 = np.array([0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0])
+    row9 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0])
+    row10 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0])
+    row11 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11])
+    matrix = np.array([row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11])
+    return ss.csr_matrix(matrix)
+
+
 @pytest.mark.unit
-class TestInit:
+class TestObjectInitialization:
     def test_all_values_okay(self, U_stripe):
         stripe = U_stripe
 
@@ -53,11 +70,6 @@ class TestInit:
         assert stripe.right_bound == 6
         assert stripe.top_bound == 1
         assert stripe.bottom_bound == 4
-        # assert stripe._five_number == None
-        # assert stripe._inner_mean == None
-        # assert stripe._inner_std == None
-        # assert stripe._outer_lmean == None
-        # assert stripe._outer_rmean == None
 
     def test_seed_lower_valid(self):
         with pytest.raises(RuntimeError) as e:
@@ -231,23 +243,6 @@ class TestBoundaryProperties:
         assert stripe.bottom_bound > 10
 
 
-@pytest.fixture(scope="function")
-def matrix():
-    row1 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    row2 = np.array([0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0])
-    row3 = np.array([0, 0, 3, 0, 3, 4, 0, 0, 0, 0, 0])
-    row4 = np.array([0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0])
-    row5 = np.array([0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0])
-    row6 = np.array([0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0])
-    row7 = np.array([0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0])
-    row8 = np.array([0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0])
-    row9 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0])
-    row10 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0])
-    row11 = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11])
-    matrix = np.array([row1, row2, row3, row4, row5, row6, row7, row8, row9, row10, row11])
-    return ss.csr_matrix(matrix)
-
-
 def statistical_stripe(
     inner_mean=1.0,
     inner_std=1.0,
@@ -316,8 +311,8 @@ class TestStatistics:
         """
 
         assert np.isclose(U_stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
-        assert np.isclose(U_stripe._inner_mean, 1.6666666666666667)
-        assert np.isclose(U_stripe._inner_std, 1.4907119849998596)
+        assert np.isclose(U_stripe._inner_mean, 1.6666666666666667, atol=1e-16)
+        assert np.isclose(U_stripe._inner_std, 1.4907119849998596, atol=1e-16)
         assert np.isclose(U_stripe._outer_lmean, 1.0)
         assert np.isclose(U_stripe._outer_rmean, 0.0)
 
