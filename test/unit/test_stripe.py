@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pytest
 import scipy.sparse as ss
@@ -81,67 +83,73 @@ class TestObjectInitialization:
 
     # TODO: Shouldn't this pass? Use lowest valid value
     def test_seed_lower_valid(self):
-        with pytest.raises(RuntimeError) as e:
-            stripe = custom_stripe(seed=0, horizontal_bounds=(0, 2))
-        assert (
-            str(e.value)
-            == "computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular"
-        )
+        stripe = custom_stripe(seed=0, horizontal_bounds=(0, 2), vertical_bounds=(0, 0))
 
     # TODO: Add test_seed_upper_valid and maybe test_seed_too_high. Also test middle values
 
     def test_seed_too_low(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError, match="seed must be a non-negative integral number") as e:
             stripe = custom_stripe(seed=-1)
-        assert e
 
     # TODO: add test_top_pers_lower_valid and test_top_pers_upper_valid. Also test middle values
     def test_top_pers_too_low(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError, match="when not None, top_pers must be a positive number") as e:
             stripe = custom_stripe(top_pers=-1.0)
-        assert e
 
     # TODO: Add test_where_upper_valid and test_where_lower_valid. Maybe failing values as well
     def test_where_is_opposite(self):
-        with pytest.raises(RuntimeError) as e:
+        with pytest.raises(
+            RuntimeError,
+            match="computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular",
+        ) as e:
             stripe = custom_stripe(seed=5, vertical_bounds=(1, 6), where="upper_triangular")
 
-            assert stripe.lower_triangular()
-        assert e
-
     def test_invalid_location(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError,
+            match=re.escape(r"when specified, where must be one of ('upper_triangular', 'lower_triangular')"),
+        ) as e:
             stripe = custom_stripe(where="invalid_location")
-        assert e
 
     # TODO: add test_left_bound_over_right_seed_between and test_left_bound_over_right_seed_outside. Same for right, top and bottom boundary.
+    ## These tests do not really add much in the way of testing different scenarios. Go over it again, and make a more comprehensive test suite.
+    ## Also, test for negative integers.
     def test_left_bound_over_right(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=7, right_bound=6"
+        ) as e:
             stripe = custom_stripe(horizontal_bounds=(7, 6))
-        assert e
 
     def test_left_bound_over_seed(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=6"
+        ) as e:
             stripe = custom_stripe(horizontal_bounds=(6, 6))
-        assert e
 
     def test_right_bound_over_left(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=3"
+        ) as e:
             stripe = custom_stripe(horizontal_bounds=(4, 3))
-        assert e
 
     def test_right_bound_over_seed(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4"
+        ) as e:
             stripe = custom_stripe(horizontal_bounds=(4, 4))
-        assert e
 
     def test_top_bound_under_bottom(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError,
+            match="the lower vertical bound must be greater than the upper vertical bound: top_bound=1, bottom_bound=0",
+        ) as e:
             stripe = custom_stripe(vertical_bounds=(1, 0))
-        assert e
 
     def test_bottom_bound_over_top(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match="the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4",
+        ):
             stripe = custom_stripe(vertical_bounds=(5, 4))
 
 
@@ -164,15 +172,17 @@ class TestSetBoundaryProperties:
 
     def test_left_bound_over_seed(self):
         stripe = custom_stripe(horizontal_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=6"
+        ) as e:
             stripe.set_horizontal_bounds(6, 6)
-        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=6"
 
     def test_left_bound_over_right(self):
         stripe = custom_stripe(horizontal_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=7, right_bound=6"
+        ) as e:
             stripe.set_horizontal_bounds(7, 6)
-        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=7, right_bound=6"
 
     #####
     ### Right boundary
@@ -191,17 +201,17 @@ class TestSetBoundaryProperties:
 
     def test_right_bound_over_seed(self):
         stripe = custom_stripe(horizontal_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4"
+        ) as e:
             stripe.set_horizontal_bounds(4, 4)
-
-        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4"
 
     def test_right_bound_over_left(self):
         stripe = custom_stripe(horizontal_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=3"
+        ) as e:
             stripe.set_horizontal_bounds(4, 3)
-
-        assert str(e.value) == "horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=3"
 
     #####
     ### Top boundary
@@ -214,36 +224,30 @@ class TestSetBoundaryProperties:
 
     def test_top_bound_under_diagonal(self):
         stripe = custom_stripe(vertical_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError,
+            match="the lower vertical bound must be greater than the upper vertical bound: top_bound=7, bottom_bound=4",
+        ) as e:
             stripe.set_vertical_bounds(7, 4)
-
-        assert (
-            str(e.value)
-            == "the lower vertical bound must be greater than the upper vertical bound: top_bound=7, bottom_bound=4"
-        )
 
     def test_top_bound_under_bottom(self):
         stripe = custom_stripe(vertical_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError,
+            match="the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4",
+        ) as e:
             stripe.set_vertical_bounds(5, 4)
-
-        assert (
-            str(e.value)
-            == "the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4"
-        )
 
     #####
     ### Bottom boundary
     #####
     def test_bottom_bound_over_top(self):
         stripe = custom_stripe(vertical_bounds=None)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(
+            ValueError,
+            match="the lower vertical bound must be greater than the upper vertical bound: top_bound=4, bottom_bound=1",
+        ) as e:
             stripe.set_vertical_bounds(4, 1)
-
-        assert (
-            str(e.value)
-            == "the lower vertical bound must be greater than the upper vertical bound: top_bound=4, bottom_bound=1"
-        )
 
     def test_bottom_bound_under_diagonal(self):
         stripe = custom_stripe(where="lower_triangular", vertical_bounds=None)
