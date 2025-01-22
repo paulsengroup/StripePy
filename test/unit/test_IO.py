@@ -95,7 +95,7 @@ class TestResult:
     def test_stripe_getters(self):
         res = Result("chr1", 123)
 
-        stripes = [Stripe(10, 1.23)]
+        stripes = [Stripe(10, 1.23, where="upper_triangular")]
         stripes[0].set_vertical_bounds(5, 10)
         stripes[0].set_horizontal_bounds(8, 12)
         stripes[0].compute_biodescriptors(csr_matrix((15, 15), dtype=float))
