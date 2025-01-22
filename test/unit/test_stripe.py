@@ -71,6 +71,7 @@ class TestObjectInitialization:
         assert stripe.top_bound == 1
         assert stripe.bottom_bound == 4
 
+    # TODO: Shouldn't this pass? Use lowest valid value
     def test_seed_lower_valid(self):
         with pytest.raises(RuntimeError) as e:
             stripe = custom_stripe(seed=0, horizontal_bounds=(0, 2))
@@ -79,16 +80,20 @@ class TestObjectInitialization:
             == "computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular"
         )
 
+    # TODO: Add test_seed_upper_valid and maybe test_seed_too_high. Also test middle values
+
     def test_seed_too_low(self):
         with pytest.raises(ValueError) as e:
             stripe = custom_stripe(seed=-1)
         assert e
 
+    # TODO: add test_top_pers_lower_valid and test_top_pers_upper_valid. Also test middle values
     def test_top_pers_too_low(self):
         with pytest.raises(ValueError) as e:
             stripe = custom_stripe(top_pers=-1.0)
         assert e
 
+    # TODO: Add test_where_upper_valid and test_where_lower_valid. Maybe failing values as well
     def test_where_is_opposite(self):
         with pytest.raises(RuntimeError) as e:
             stripe = custom_stripe(seed=5, vertical_bounds=(1, 6), where="upper_triangular")
@@ -101,6 +106,7 @@ class TestObjectInitialization:
             stripe = custom_stripe(where="invalid_location")
         assert e
 
+    # TODO: add test_left_bound_over_right_seed_between and test_left_bound_over_right_seed_outside. Same for right, top and bottom boundary.
     def test_left_bound_over_right(self):
         with pytest.raises(ValueError) as e:
             stripe = custom_stripe(horizontal_bounds=(7, 6))
@@ -132,7 +138,8 @@ class TestObjectInitialization:
 
 
 @pytest.mark.unit
-class TestBoundaryProperties:
+class TestSetBoundaryProperties:
+    # TODO: Focus on making tests that succeed. They are simpler, and easier to verify.
     #####
     ### Left boundary
     #####
@@ -276,7 +283,7 @@ def statistical_stripe(
 
 @pytest.mark.unit
 class TestStatistics:
-    def test_statistical_manual(self):
+    def test_initialize_with_biodescriptors(self):
         stripe = statistical_stripe()
 
         assert np.isclose(stripe.inner_mean, 1.0)
@@ -316,9 +323,12 @@ class TestStatistics:
         assert np.isclose(U_stripe._outer_lmean, 1.0)
         assert np.isclose(U_stripe._outer_rmean, 0.0)
 
+    # TODO: Add tests with lower and upper boundary for all statistical values. Also middle values.
+
 
 @pytest.mark.unit
 class TestInferLocation:
+    # TODO: If the tests are useful, move them to class TestSetBoundaryProperties. If not, delete.
     def test_within_upper_triangle(self, U_stripe):
         UP = U_stripe._infer_location(U_stripe._seed, U_stripe._top_bound, U_stripe._bottom_bound)
 
@@ -332,6 +342,7 @@ class TestInferLocation:
 
 @pytest.mark.unit
 class TestComputeConvexComp:
+    # TODO: Delete.
     def test_in_upper(self, U_stripe):
         comp = U_stripe._compute_convex_comp()
 
