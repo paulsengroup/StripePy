@@ -178,27 +178,27 @@ class TestPropertyBoundaries:
     class TestSetHorizontalRelativeToSeed:
         def test_left_at_seed(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(5, 8), vertical_bounds=(1, 3), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(5, 8), vertical_bounds=(1, 5), where="upper_triangular"
             )
 
         def test_right_at_seed(self):
             stripe = Stripe(
-                seed=6, top_pers=5.0, horizontal_bounds=(3, 6), vertical_bounds=(1, 3), where="upper_triangular"
+                seed=6, top_pers=5.0, horizontal_bounds=(3, 6), vertical_bounds=(1, 5), where="upper_triangular"
             )
 
         def test_left_and_right_at_seed(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(5, 5), vertical_bounds=(1, 3), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(5, 5), vertical_bounds=(1, 5), where="upper_triangular"
             )
 
         def test_seed_adjacent_to_left(self):
             stripe = Stripe(
-                seed=6, top_pers=5.0, horizontal_bounds=(5, 8), vertical_bounds=(1, 4), where="upper_triangular"
+                seed=6, top_pers=5.0, horizontal_bounds=(5, 8), vertical_bounds=(1, 6), where="upper_triangular"
             )
 
         def test_seed_adjacent_to_right(self):
             stripe = Stripe(
-                seed=7, top_pers=5.0, horizontal_bounds=(5, 8), vertical_bounds=(1, 4), where="upper_triangular"
+                seed=6, top_pers=5.0, horizontal_bounds=(5, 7), vertical_bounds=(1, 5), where="upper_triangular"
             )
 
         def test_seed_adjacent_to_left_and_right(self):
@@ -243,12 +243,12 @@ class TestPropertyBoundaries:
     class TestSetHorizontalRelativeToDiagonal:
         def test_left_boundary_on_diagonal_upper_triangle(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(5, 6), vertical_bounds=(0, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(5, 6), vertical_bounds=(0, 5), where="upper_triangular"
             )
 
         def test_right_boundary_on_diagonal_lower_triangle(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 5), vertical_bounds=(6, 10), where="lower_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(4, 5), vertical_bounds=(5, 10), where="lower_triangular"
             )
 
         def test_left_under_diagonal_upper_triangle(self):
@@ -287,7 +287,7 @@ class TestPropertyBoundaries:
 
         def test_left_and_right_at_matrix_edge(self):
             stripe = Stripe(
-                seed=0, top_pers=5.0, horizontal_bounds=(0, 0), vertical_bounds=(1, 10), where="lower_triangular"
+                seed=0, top_pers=5.0, horizontal_bounds=(0, 0), vertical_bounds=(0, 10), where="lower_triangular"
             )
 
         def test_left_over_matrix_edge(self):
@@ -356,11 +356,11 @@ class TestPropertyBoundaries:
 
         def test_top_over_diagonal_lower_triangle(self):
             with pytest.raises(
-                RuntimeError,
-                match="computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular",
+                ValueError,
+                match="top bound is not enclosed between the left and right bounds: left_bound=4, right_bound=6, top_bound=3",
             ):
                 stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 7), where="lower_triangular"
+                    seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(3, 7), where="lower_triangular"
                 )
 
         def test_vertical_field_over_diagonal_lower_triangle(self):
@@ -380,7 +380,7 @@ class TestPropertyBoundaries:
 
         def test_top_and_bottom_at_matrix_edge(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 0), where="upper_triangular"
+                seed=1, top_pers=5.0, horizontal_bounds=(0, 3), vertical_bounds=(0, 0), where="upper_triangular"
             )
 
         def test_top_over_matrix_edge(self):
