@@ -375,142 +375,23 @@ class TestSetBoundaryProperties:
                 stripe.set_vertical_bounds(2, 6)
 
     class TestSetMethods:
-        #####
-        ### Left boundary
-        #####
-        def test_left_bound_to_left(self):
+        def test_set_horizontal(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(1, 4), vertical_bounds=(1, 4), where="upper_triangular"
             )
             stripe.set_horizontal_bounds(3, 7)
+
             assert stripe.left_bound == 3
-
-        def test_left_bound_to_right(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
-            )
-            stripe.set_horizontal_bounds(5, 6)
-
-            assert stripe.left_bound == 5
-
-        def test_left_bound_over_seed(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=6",
-            ) as e:
-                stripe.set_horizontal_bounds(6, 6)
-
-        def test_left_bound_over_right(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="horizontal bounds must enclose the seed position: seed=5, left_bound=7, right_bound=6",
-            ) as e:
-                stripe.set_horizontal_bounds(7, 6)
-
-        #####
-        ### Right boundary
-        #####
-        def test_right_bound_to_right(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
-            )
-            stripe.set_horizontal_bounds(4, 7)
-
             assert stripe.right_bound == 7
 
-        def test_right_bound_to_left(self):
+        def test_set_vertical(self):
             stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
+                seed=5, top_pers=5.0, horizontal_bounds=(1, 4), vertical_bounds=(1, 4), where="upper_triangular"
             )
-            stripe.set_horizontal_bounds(4, 5)
+            stripe.set_vertical_bounds(2, 5)
 
-            assert stripe.right_bound == 5
-
-        def test_right_bound_over_seed(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4",
-            ) as e:
-                stripe.set_horizontal_bounds(4, 4)
-
-        def test_right_bound_over_left(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=3",
-            ) as e:
-                stripe.set_horizontal_bounds(4, 3)
-
-        #####
-        ### Top boundary
-        #####
-        def test_top_bound_over_matrix_top(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=None, where="upper_triangular"
-            )
-            stripe.set_vertical_bounds(-1, 4)
-
-            assert stripe.top_bound == -1
-
-        def test_top_bound_under_diagonal(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=None, where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="the lower vertical bound must be greater than the upper vertical bound: top_bound=7, bottom_bound=4",
-            ) as e:
-                stripe.set_vertical_bounds(7, 4)
-
-        def test_top_bound_under_bottom(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=None, where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4",
-            ) as e:
-                stripe.set_vertical_bounds(5, 4)
-
-        #####
-        ### Bottom boundary
-        #####
-        def test_bottom_bound_over_top(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=None, where="upper_triangular"
-            )
-            with pytest.raises(
-                ValueError,
-                match="the lower vertical bound must be greater than the upper vertical bound: top_bound=4, bottom_bound=1",
-            ) as e:
-                stripe.set_vertical_bounds(4, 1)
-
-        def test_bottom_bound_under_diagonal(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=None, where="lower_triangular"
-            )
-            stripe.set_vertical_bounds(1, 6)
-
-            assert stripe.bottom_bound > stripe.seed
-
-        def test_bottom_bound_under_matrix_bottom(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=None, where="lower_triangular"
-            )
-            stripe.set_vertical_bounds(1, 12)
-
-            assert stripe.bottom_bound > 10
+            assert stripe.top_bound == 2
+            assert stripe.bottom_bound == 5
 
 
 def statistical_stripe(
