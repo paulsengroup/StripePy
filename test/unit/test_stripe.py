@@ -412,6 +412,34 @@ class TestPropertyBoundaries:
             with pytest.raises(RuntimeError, match="vertical stripe bounds have already been set"):
                 stripe.set_vertical_bounds(2, 6)
 
+    class TestWhere:
+        def test_where_upper(self):
+            u_stripe = Stripe(
+                seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
+            )
+
+        def test_where_lower(self):
+            l_stripe = Stripe(
+                seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(4, 10), where="lower_triangular"
+            )
+
+        def test_where_invalid_input(self):
+            with pytest.raises(
+                ValueError,
+                match=re.escape(r"when specified, where must be one of ('upper_triangular', 'lower_triangular')"),
+            ) as e:
+                u_stripe = Stripe(
+                    seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(1, 4), where="invalid_triangular"
+                )
+
+            with pytest.raises(
+                ValueError,
+                match=re.escape(r"when specified, where must be one of ('upper_triangular', 'lower_triangular')"),
+            ) as e:
+                l_stripe = Stripe(
+                    seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(4, 10), where="invalid_triangular"
+                )
+
     class TestSetterMethods:
         def test_set_horizontal(self):
             stripe = Stripe(
