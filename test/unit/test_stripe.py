@@ -163,7 +163,8 @@ class TestPropertyBoundaries:
             stripe = Stripe(seed=0, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
         def test_seed_outside_matrix(self):
-            stripe = Stripe(seed=-1, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+            with pytest.raises(ValueError, match="seed must be a non-negative integral number"):
+                stripe = Stripe(seed=-1, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
         def test_seed_inside_matrix(self):
             stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
