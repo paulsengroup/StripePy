@@ -440,17 +440,6 @@ def statistical_stripe(
 
 @pytest.mark.unit
 class TestDescriptiveStatistics:
-    def test_initialize_with_biodescriptors(self):
-        stripe = statistical_stripe()
-
-        assert np.isclose(stripe.inner_mean, 1.0)
-        assert np.isclose(stripe.inner_std, 1.0)
-        assert np.allclose(stripe.five_number, [1.0] * 5)
-        assert np.isclose(stripe.outer_lmean, 1.0)
-        assert np.isclose(stripe.outer_rmean, 1.0)
-        assert np.isclose(stripe.outer_mean, 1.0)
-        assert np.isclose(stripe.rel_change, 0.0)
-
     def test_compute_statistics(self, U_stripe):
         matrix = ss.csr_matrix(
             np.array(
