@@ -61,6 +61,14 @@ class TestPropertyBoundaries:
         def test_seed_inside_matrix(self):
             stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
+        def test_seed_none(self):
+            with pytest.raises(
+                TypeError, match=re.escape(r"'<' not supported between instances of 'NoneType' and 'int'")
+            ):
+                stripe = Stripe(
+                    seed=None, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 4), where="upper_triangular"
+                )
+
     class TestTopPersistence:
         def test_top_persistence_1(self):
             stripe = Stripe(seed=0, top_pers=1.0, horizontal_bounds=None, vertical_bounds=None, where=None)
@@ -314,6 +322,16 @@ class TestPropertyBoundaries:
             l_stripe = Stripe(
                 seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(4, 10), where="lower_triangular"
             )
+
+        def test_where_none_in_upper(self):
+            u_stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(1, 4), where=None)
+
+            assert u_stripe.upper_triangular
+
+        def test_where_none_in_lower(self):
+            l_stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(4, 10), where=None)
+
+            assert l_stripe.lower_triangular
 
         def test_where_invalid_input(self):
             with pytest.raises(
