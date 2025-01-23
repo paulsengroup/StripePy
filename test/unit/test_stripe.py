@@ -169,6 +169,20 @@ class TestPropertyBoundaries:
         def test_seed_inside_matrix(self):
             stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
+    class TestTopPersistence:
+        def test_top_persistence_1(self):
+            stripe = Stripe(seed=0, top_pers=1.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        def test_top_persistence_0(self):
+            stripe = Stripe(seed=0, top_pers=0.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        def test_top_persistence_negative(self):
+            with pytest.raises(ValueError, match="when not None, top_pers must be a positive number"):
+                stripe = Stripe(seed=0, top_pers=-1, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        def top_persistence_higher_value(self):
+            stripe = Stripe(seed=0, top_pers=100.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
     class TestSetHorizontalRelativeToSeed:
         def test_left_at_seed(self):
             stripe = Stripe(
