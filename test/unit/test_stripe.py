@@ -1,3 +1,4 @@
+import math
 import re
 
 import numpy as np
@@ -371,8 +372,18 @@ class TestPropertyBoundaries:
 
 
 @pytest.mark.unit
-class TestDescriptiveStatistics:
-    def test_compute_statistics(self, U_stripe):
+class TestComputeBiodescriptors:
+    #####
+    ### Confirmation tests
+    #####
+    def test_compute_statistics(self):
+        stripe = Stripe(
+            seed=5,
+            top_pers=5.0,
+            horizontal_bounds=(4, 6),
+            vertical_bounds=(1, 4),
+            where="upper_triangular",
+        )
         matrix = ss.csr_matrix(
             np.array(
                 [
@@ -390,7 +401,7 @@ class TestDescriptiveStatistics:
                 ]
             )
         )
-        U_stripe.compute_biodescriptors(matrix)
+        stripe.compute_biodescriptors(matrix)
         """
         horizontal_bound = (4,6)
         vertical_bounds = (1,4)
@@ -412,13 +423,840 @@ class TestDescriptiveStatistics:
         outer_rmean = 0.0
         """
 
-        assert np.allclose(U_stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
-        assert np.isclose(U_stripe._inner_mean, 1.6666666666666667, atol=1e-16)
-        assert np.isclose(U_stripe._inner_std, 1.4907119849998596, atol=1e-16)
-        assert np.isclose(U_stripe._outer_lmean, 1.0)
-        assert np.isclose(U_stripe._outer_rmean, 0.0)
+        assert np.allclose(stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
+        assert np.isclose(stripe._inner_mean, 1.6666666666666667, atol=1e-16)
+        assert np.isclose(stripe._inner_std, 1.4907119849998596, atol=1e-16)
+        assert np.isclose(stripe._outer_lmean, 1.0)
+        assert np.isclose(stripe._outer_rmean, 0.0)
 
-    # TODO: Add tests with lower and upper boundary for all statistical values. Also middle values.
+    def test_compute_stripe_size_0(self):
+        stripe = Stripe(
+            seed=0,
+            top_pers=1.0,
+            horizontal_bounds=(0, 0),
+            vertical_bounds=(0, 0),
+            where="upper_triangular",
+        )
+        matrix = ss.csr_matrix(
+            np.array(
+                [
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                ]
+            )
+        )
+        stripe.compute_biodescriptors(matrix)
+        assert np.allclose(stripe._five_number, np.array([-1.0, -1.0, -1.0, -1.0, -1.0]))
+        assert np.isclose(stripe._inner_mean, -1.0, atol=1e-5)
+        assert np.isclose(stripe._inner_std, -1.0, atol=1e-5)
+        assert np.isclose(stripe._outer_lmean, -1.0, atol=1e-5)
+        assert np.isclose(stripe._outer_rmean, -1.0, atol=1e-5)
+
+    #####
+    ### Boundary tests
+    #####
+    class TestComputeAtLeftEdge:
+        def test_compute_empty_stripe(self):
+            stripe = Stripe(
+                seed=1,
+                top_pers=1.0,
+                horizontal_bounds=(0, 3),
+                vertical_bounds=(1, 4),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert math.isnan(stripe._outer_lmean)
+            assert np.isclose(stripe._outer_rmean, 3.0, atol=1e-5)
+
+        def test_compute_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=1,
+                top_pers=4.0,
+                horizontal_bounds=(0, 3),
+                vertical_bounds=(1, 4),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([2.0, 2.0, 3.0, 4.0, 4.0]))
+            assert np.isclose(stripe._inner_mean, 3.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.816496580927726, atol=1e-15)
+            assert math.isnan(stripe._outer_lmean)
+            assert np.isclose(stripe._outer_rmean, 0.0, atol=1e-5)
+
+        def test_compute_empty_stripe_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=1,
+                top_pers=4.0,
+                horizontal_bounds=(0, 3),
+                vertical_bounds=(1, 4),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert math.isnan(stripe._outer_lmean)
+            assert np.isclose(stripe._outer_rmean, 0.0, atol=1e-5)
+
+        def test_compute_stripe_with_denser_neighbourhoods(self):
+            stripe = Stripe(
+                seed=1,
+                top_pers=4.0,
+                horizontal_bounds=(0, 3),
+                vertical_bounds=(1, 4),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [2, 3, 2, 5, 5, 5, 0, 0, 0, 0, 0],
+                        [2, 3, 2, 5, 5, 5, 0, 0, 0, 0, 0],
+                        [1, 2, 1, 5, 5, 5, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([1.0, 2.0, 2.0, 2.0, 3.0]))
+            assert np.isclose(stripe._inner_mean, 2.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.6666666666666666, atol=1e-16)
+            assert math.isnan(stripe._outer_lmean)
+            assert np.isclose(stripe._outer_rmean, 5.0, atol=1e-5)
+
+        def test_compute_stripe_with_uniform_neighbourhoods(self):
+            stripe = Stripe(
+                seed=1,
+                top_pers=4.0,
+                horizontal_bounds=(0, 3),
+                vertical_bounds=(1, 4),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [5, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+                        [5, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+                        [5, 5, 5, 5, 5, 5, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([5.0, 5.0, 5.0, 5.0, 5.0]))
+            assert np.isclose(stripe._inner_mean, 5.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert math.isnan(stripe._outer_lmean)
+            assert np.isclose(stripe._outer_rmean, 5.0, atol=1e-5)
+
+    class TestComputeAtRightEdge:
+        def test_compute_empty_stripe(self):
+            stripe = Stripe(
+                seed=10,
+                top_pers=4.0,
+                horizontal_bounds=(8, 11),
+                vertical_bounds=(6, 10),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 6.0, atol=1e-5)
+            assert math.isnan(stripe._outer_rmean)
+
+        def test_compute_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=10,
+                top_pers=4.0,
+                horizontal_bounds=(8, 11),
+                vertical_bounds=(6, 10),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 5],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 6],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 7, 6, 7],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 8, 7, 8],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([4.0, 5.0, 6.0, 7.0, 8.0]))
+            assert np.isclose(stripe._inner_mean, 6.166666666666667, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 1.2133516482134197, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert math.isnan(stripe._outer_rmean)
+
+        def test_compute_empty_stripe_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=10,
+                top_pers=4.0,
+                horizontal_bounds=(8, 11),
+                vertical_bounds=(6, 10),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert math.isnan(stripe._outer_rmean)
+
+        def test_compute_stripe_with_denser_neighbourhoods(self):
+            stripe = Stripe(
+                seed=10,
+                top_pers=4.0,
+                horizontal_bounds=(8, 11),
+                vertical_bounds=(6, 10),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 4],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 4],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 4],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 6, 5, 4],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([4.0, 4.0, 5.0, 6.0, 6.0]))
+            assert np.isclose(stripe._inner_mean, 5.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.816496580927726, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert math.isnan(stripe._outer_rmean)
+
+        def test_compute_stripe_with_uniform_neighbourhoods(self):
+            stripe = Stripe(
+                seed=10,
+                top_pers=4.0,
+                horizontal_bounds=(8, 11),
+                vertical_bounds=(6, 10),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 6, 0, 0, 1, 1, 1],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6],
+                        [0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([6.0, 6.0, 6.0, 6.0, 6.0]))
+            assert np.isclose(stripe._inner_mean, 6.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 6.0, atol=1e-5)
+            assert math.isnan(stripe._outer_rmean)
+
+    class TestCopmuteAtMiddleUpperTriangle:
+        def test_compute_empty_stripe(self):
+            stripe = Stripe(
+                seed=5,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(2, 5),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 6, 7, 0, 0, 0, 7, 6, 5, 0],
+                        [0, 4, 5, 6, 0, 0, 0, 6, 5, 4, 0],
+                        [0, 3, 4, 5, 0, 0, 0, 5, 4, 3, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 5.0, atol=1e-5)
+            assert np.isclose(stripe._outer_rmean, 5.0, atol=1e-5)
+
+        def test_compute_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=5,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(2, 5),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 7, 8, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 8, 9, 8, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 7, 8, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([7.0, 7.0, 8.0, 8.0, 9.0]))
+            assert np.isclose(stripe._inner_mean, 7.666666666666667, atol=1e-15)
+            assert np.isclose(stripe._inner_std, 0.6666666666666666, atol=1e-15)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_rmean, 0.0, atol=1e-5)
+
+        def test_compute_empty_stripe_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=5,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(2, 5),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_rmean, 0.0, atol=1e-5)
+
+        def test_compute_stripe_with_denser_neighbourhoods(self):
+            stripe = Stripe(
+                seed=5,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(2, 5),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 7, 8, 7, 4, 5, 4, 7, 8, 7, 0],
+                        [0, 8, 9, 8, 5, 6, 5, 8, 9, 8, 0],
+                        [0, 7, 8, 7, 4, 5, 4, 7, 8, 7, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([4.0, 4.0, 5.0, 5.0, 6.0]))
+            assert np.isclose(stripe._inner_mean, 4.666666666666667, atol=1e-15)
+            assert np.isclose(stripe._inner_std, 0.6666666666666666, atol=1e-15)
+            assert np.isclose(stripe._outer_lmean, 7.666666666666667, atol=1e-15)
+            assert np.isclose(stripe._outer_rmean, 7.666666666666667, atol=1e-15)
+
+        def test_compute_stripe_with_uniform_neighbourhoods(self):
+            stripe = Stripe(
+                seed=5,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(2, 5),
+                where="upper_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([5.0, 5.0, 5.0, 5.0, 5.0]))
+            assert np.isclose(stripe._inner_mean, 5.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-15)
+            assert np.isclose(stripe._outer_lmean, 5.0, atol=1e-15)
+            assert np.isclose(stripe._outer_rmean, 5.0, atol=1e-15)
+
+    class TestComputeAtMiddleLowerTriangle:
+        def test_compute_empty_stripe(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 4, 5, 4, 0, 0, 0, 4, 5, 4, 0],
+                        [0, 5, 6, 5, 0, 0, 0, 5, 6, 5, 0],
+                        [0, 4, 5, 4, 0, 0, 0, 4, 5, 4, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 4.666666666666667, atol=1e-15)
+            assert np.isclose(stripe._outer_rmean, 4.666666666666667, atol=1e-15)
+
+        def test_compute_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 7, 7, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 8, 9, 8, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 7, 7, 7, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([7.0, 7.0, 7.0, 8.0, 9.0]))
+            assert np.isclose(stripe._inner_mean, 7.444444444444445, atol=1e-15)
+            assert np.isclose(stripe._inner_std, 0.6849348892187751, atol=1e-15)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_rmean, 0.0, atol=1e-5)
+
+        def test_compute_empty_stripe_with_empty_neighbourhoods(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            assert np.isclose(stripe._inner_mean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_rmean, 0.0, atol=1e-5)
+
+        def test_compute_stripe_with_denser_neighbourhoods(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 4, 5, 4, 2, 1, 2, 4, 5, 4, 0],
+                        [0, 5, 6, 5, 1, 3, 1, 5, 6, 5, 0],
+                        [0, 4, 5, 4, 2, 1, 2, 4, 5, 4, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([1.0, 1.0, 2.0, 2.0, 3.0]))
+            assert np.isclose(stripe._inner_mean, 1.6666666666666667, atol=1e-15)
+            assert np.isclose(stripe._inner_std, 0.6666666666666666, atol=1e-15)
+            assert np.isclose(stripe._outer_lmean, 4.666666666666667, atol=1e-15)
+            assert np.isclose(stripe._outer_rmean, 4.666666666666667, atol=1e-15)
+
+        def test_compute_stripe_with_uniform_neighbourhoods(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            stripe.compute_biodescriptors(matrix)
+            assert np.allclose(stripe._five_number, np.array([5.0, 5.0, 5.0, 5.0, 5.0]))
+            assert np.isclose(stripe._inner_mean, 5.0, atol=1e-5)
+            assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+            assert np.isclose(stripe._outer_lmean, 5.0, atol=1e-5)
+            assert np.isclose(stripe._outer_rmean, 5.0, atol=1e-5)
+
+    #####
+    ### Error messages
+    #####
+    class TestComputeBiodescriptorErrors:
+        def test_compute_horizontal_bounds_not_set(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=None,
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            with pytest.raises(
+                RuntimeError, match=re.escape(r"compute_biodescriptors() was called on a bound-less stripe")
+            ):
+                stripe.compute_biodescriptors(matrix)
+            with pytest.raises(
+                RuntimeError,
+                match=re.escape(
+                    r"caught an attempt to access five_number property before compute_biodescriptors() was called"
+                ),
+            ):
+                assert stripe.five_number == None
+
+        def test_compute_vertical_bounds_not_set(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=None,
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            with pytest.raises(
+                RuntimeError, match=re.escape(r"compute_biodescriptors() was called on a bound-less stripe")
+            ):
+                stripe.compute_biodescriptors(matrix)
+            with pytest.raises(
+                RuntimeError,
+                match=re.escape(
+                    r"caught an attempt to access five_number property before compute_biodescriptors() was called"
+                ),
+            ):
+                assert stripe.five_number == None
+
+        def test_compute_no_bounds_set(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=None,
+                vertical_bounds=None,
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            with pytest.raises(
+                RuntimeError, match=re.escape(r"compute_biodescriptors() was called on a bound-less stripe")
+            ):
+                stripe.compute_biodescriptors(matrix)
+            with pytest.raises(
+                RuntimeError,
+                match=re.escape(
+                    r"caught an attempt to access five_number property before compute_biodescriptors() was called"
+                ),
+            ):
+                assert stripe.five_number == None
+
+        def test_window_negative(self):
+            stripe = Stripe(
+                seed=4,
+                top_pers=5.0,
+                horizontal_bounds=(4, 7),
+                vertical_bounds=(4, 7),
+                where="lower_triangular",
+            )
+            matrix = ss.csr_matrix(
+                np.array(
+                    [
+                        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 4, 1, 1, 1, 0, 0, 0, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0],
+                        [0, 0, 0, 0, 1, 1, 1, 8, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11],
+                    ]
+                )
+            )
+            with pytest.raises(ValueError, match="window cannot be negative"):
+                stripe.compute_biodescriptors(matrix, window=-1)
+            with pytest.raises(
+                RuntimeError,
+                match=re.escape(
+                    r"caught an attempt to access five_number property before compute_biodescriptors() was called"
+                ),
+            ):
+                assert stripe.five_number == None
 
 
 @pytest.mark.unit
