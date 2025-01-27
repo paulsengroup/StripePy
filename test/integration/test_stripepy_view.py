@@ -46,4 +46,4 @@ class TestStripePyView:
 
             assert len(df.columns) == len(cols)
             assert len(df) == len(df[~df.isnull().values])
-            assert len(df) == 19761
+            assert len(df) == 18625
