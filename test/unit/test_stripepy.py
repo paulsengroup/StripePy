@@ -194,7 +194,6 @@ STEP 2
 """
 
 
-@pytest.mark.skip(reason="not implemented in this branch")
 @pytest.mark.unit
 class TestComputeGlobalPseudodistribution:
     # TODO: implement generator function for matrix
@@ -241,7 +240,6 @@ class TestComputeGlobalPseudodistribution:
         assert I_RoI.max() <= 1.0
 
 
-@pytest.mark.skip(reason="not implemented in this branch")
 @pytest.mark.unit
 class TestCheckNeighborhood:
     @pytest.fixture(scope="function")
