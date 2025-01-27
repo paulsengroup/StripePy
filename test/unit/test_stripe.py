@@ -8,30 +8,6 @@ import scipy.sparse as ss
 from stripepy.utils.stripe import Stripe
 
 
-@pytest.fixture(scope="function")
-def U_stripe():
-    stripe = Stripe(
-        seed=5,
-        top_pers=5.0,
-        horizontal_bounds=(4, 6),
-        vertical_bounds=(1, 4),
-        where="upper_triangular",
-    )
-    return stripe
-
-
-@pytest.fixture(scope="function")
-def L_stripe():
-    stripe = Stripe(
-        seed=5,
-        top_pers=5.0,
-        horizontal_bounds=(4, 6),
-        vertical_bounds=(4, 10),
-        where="lower_triangular",
-    )
-    return stripe
-
-
 @pytest.mark.unit
 class TestObjectInitialization:
     # TODO: Try to pass None-values and other types of values
