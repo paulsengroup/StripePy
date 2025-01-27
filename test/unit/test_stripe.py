@@ -297,26 +297,6 @@ class TestComputeBiodescriptors:
             )
         )
         stripe.compute_biodescriptors(matrix)
-        """
-        horizontal_bound = (4,6)
-        vertical_bounds = (1,4)
-        convex_comp = 4
-        rows = slice(1, 4)
-        cols = slice(4, 6)
-        restI =     |   1   2   |
-                    |   3   4   |
-                    |   0   0   |
-        restI.size = 6
-        _compute_inner_descriptors(restrI) = (array([0.0, 0.25, 1.5, 2.75, 4.0]), 1.6666666666666667, 1.4907119849998596)
-        five_number = array([0.0, 0.25, 1.5, 2.75, 4.0]
-        inner_mean = 1.6666666666666667
-        inner_std = 1.4907119849998596
-        submatrix = I[1:3, 1:4] =   |   2   0   0   |
-                                    |   0   3   0   |
-                                    |   0   0   4   |
-        outer_lmean = 1.0
-        outer_rmean = 0.0
-        """
 
         assert np.allclose(stripe._five_number, np.array([0.0, 0.25, 1.5, 2.75, 4.0]))
         assert np.isclose(stripe._inner_mean, 1.6666666666666667, atol=1e-16)
