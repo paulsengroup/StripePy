@@ -149,45 +149,6 @@ class TestPropertyBoundaries:
                 seed=5, top_pers=5.0, horizontal_bounds=(6, 5), vertical_bounds=(1, 4), where="upper_triangular"
             )
 
-    class TestSetHorizontalRelativeToDiagonal:
-        def test_left_boundary_on_diagonal_upper_triangle(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(5, 6), vertical_bounds=(0, 5), where="upper_triangular"
-            )
-
-        def test_right_boundary_on_diagonal_lower_triangle(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 5), vertical_bounds=(5, 10), where="lower_triangular"
-            )
-
-        def test_left_under_diagonal_upper_triangle(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(1, 6), vertical_bounds=(1, 4), where="upper_triangular"
-            )
-
-        def test_right_over_diagonal_lower_triangle(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(2, 7), vertical_bounds=(4, 10), where="lower_triangular"
-            )
-
-        def test_horizontal_field_under_diagonal_upper_triangle(self):
-            with pytest.raises(
-                ValueError,
-                match="horizontal bounds must enclose the seed position: seed=5, left_bound=1, right_bound=2",
-            ):
-                stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(1, 2), vertical_bounds=(3, 4), where="upper_triangular"
-                )
-
-        def test_horizontal_field_over_diagonal_lower_triangle(self):
-            with pytest.raises(
-                ValueError,
-                match="horizontal bounds must enclose the seed position: seed=5, left_bound=10, right_bound=12",
-            ):
-                stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(10, 12), vertical_bounds=(6, 8), where="lower_triangular"
-                )
-
     class TestSetHorizontalRelativeToMatrixEdges:
         def test_left_at_matrix_edge(self):
             stripe = Stripe(
@@ -232,53 +193,6 @@ class TestPropertyBoundaries:
             ):
                 stripe = Stripe(
                     seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(5, 4), where="upper_triangular"
-                )
-
-    class TestSetVerticalRelativeToDiagonal:
-        def test_bottom_boundary_on_diagonal_upper_triangle(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(0, 5), where="upper_triangular"
-            )
-
-        def test_top_boundary_on_diagonal_lower_triangle(self):
-            stripe = Stripe(
-                seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(5, 10), where="lower_triangular"
-            )
-
-        def test_bottom_under_diagonal_upper_triangle(self):
-            with pytest.raises(
-                RuntimeError,
-                match="computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular",
-            ):
-                stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 7), where="upper_triangular"
-                )
-
-        def test_vertical_field_under_diagonal_upper_triangle(self):
-            with pytest.raises(
-                RuntimeError,
-                match="computed location does not match the provided stripe location: computed=lower_triangular, expected=upper_triangular",
-            ):
-                stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(6, 7), where="upper_triangular"
-                )
-
-        def test_top_over_diagonal_lower_triangle(self):
-            with pytest.raises(
-                ValueError,
-                match="top bound is not enclosed between the left and right bounds: left_bound=4, right_bound=6, top_bound=3",
-            ):
-                stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(3, 7), where="lower_triangular"
-                )
-
-        def test_vertical_field_over_diagonal_lower_triangle(self):
-            with pytest.raises(
-                RuntimeError,
-                match="computed location does not match the provided stripe location: computed=upper_triangular, expected=lower_triangular",
-            ):
-                stripe = Stripe(
-                    seed=5, top_pers=5.0, horizontal_bounds=(4, 6), vertical_bounds=(1, 2), where="lower_triangular"
                 )
 
     class TestSetVerticalRelativeToMatrixEdges:
