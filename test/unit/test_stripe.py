@@ -48,6 +48,9 @@ class TestObjectInitialization:
         assert stripe.top_bound == 1
         assert stripe.bottom_bound == 4
 
+    def test_none_to_constructor(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
 
 @pytest.mark.unit
 class TestPropertyBoundaries:
