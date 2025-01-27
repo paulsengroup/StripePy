@@ -231,22 +231,24 @@ class TestPropertyBoundaries:
                 stripe.set_vertical_bounds(2, 6)
 
     class TestWhere:
-        def test_where_upper(self):
+        def test_where_acceptance(self):
             u_stripe = Stripe(
                 seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(1, 4), where="upper_triangular"
             )
 
-        def test_where_lower(self):
+            assert u_stripe.upper_triangular
+
             l_stripe = Stripe(
                 seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(4, 10), where="lower_triangular"
             )
 
-        def test_where_none_in_upper(self):
+            assert l_stripe.lower_triangular
+
+        def test_where_none(self):
             u_stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(1, 4), where=None)
 
             assert u_stripe.upper_triangular
 
-        def test_where_none_in_lower(self):
             l_stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(4, 10), where=None)
 
             assert l_stripe.lower_triangular
