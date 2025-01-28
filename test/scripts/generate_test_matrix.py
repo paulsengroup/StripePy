@@ -202,7 +202,7 @@ def main():
     args = vars(make_cli().parse_args())
 
     if args["output-matrix"].exists() and not args["force"]:
-        raise RuntimeError(f"refusing to overwrite file {args['output-matrix']}. Pass --force to overwrite.")
+        raise FileExistsError(f"refusing to overwrite file {args['output-matrix']}. Pass --force to overwrite.")
 
     if args["resolutions"] is None:
         if htk.is_cooler(args["input-matrix"]):

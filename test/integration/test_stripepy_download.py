@@ -10,7 +10,7 @@ import pathlib
 
 import pytest
 
-from stripepy import main
+from stripepy.main import main
 
 
 def _hash_file(path: pathlib.Path) -> str:

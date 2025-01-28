@@ -67,7 +67,6 @@ dependencies = [
 
 all = [
     "stripepy-hic",
-    "alive-progress >=3.2, <4",
     "colorama >=0.4, <0.5",
     "matplotlib >=3.8, <4",
     "rich >=13.9, <14",
@@ -88,7 +87,7 @@ dev = [
 ]
 
 [project.scripts]
-stripepy = "stripepy:main"
+stripepy = "stripepy.main:main"
 
 [project.urls]
 Homepage = "https://github.com/paulsengroup/StripePy"
@@ -106,9 +105,31 @@ python_files = [
   "test/integration/test*.py",
 ]
 testpaths = [
-  "test/"
+  "test/integration",
+  "test/unit",
 ]
 
+[tool.coverage.run]
+branch = true
+concurrency = ["multiprocessing", "thread"]
+data_file = "coverage/data/stripepy.cov"
+# debug = ["callers", "config", "pytest"]
+# debug_file = "coverage/debug.txt"
+parallel = true
+source_pkgs = ["stripepy"]
+
+[tool.coverage.html]
+directory = "coverage/html/"
+title = "StripePy coverage report"
+
+[tool.coverage.json]
+output = "coverage/stripepy.json"
+
+[tool.coverage.lcov]
+output = "coverage/stripepy.lcov"
+
+[tool.coverage.xml]
+output = "coverage/stripepy.xml"
 
 [tool.hatch.version]
 source = "vcs"

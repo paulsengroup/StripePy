@@ -13,7 +13,7 @@ import pandas as pd
 
 from stripepy.IO import Result
 from stripepy.utils.common import _DummyPyplot, _import_matplotlib, _import_pyplot
-from stripepy.utils.TDA import TDA
+from stripepy.utils.persistence1d import Persistence1DTable
 
 # Dummy values to not break type annotations when matplotlib is not available
 plt = _DummyPyplot()
@@ -520,11 +520,18 @@ def _fetch_persistence_maximum_points(result: Result, resolution: int, start: in
     pd_ut = result.get("pseudodistribution", "UT")
 
     min_persistence = result.min_persistence
+    lt_persistence = Persistence1DTable.calculate_persistence(pd_lt, min_persistence=min_persistence, sort_by="max")
+    ut_persistence = Persistence1DTable.calculate_persistence(pd_ut, min_persistence=min_persistence, sort_by="max")
+
     lt_idx, lt_seeds = fetch(
-        np.sort(TDA(pd_lt, min_persistence=min_persistence)[2], stable=True), start // resolution, end // resolution
+        lt_persistence.max.index.to_numpy(),
+        start // resolution,
+        end // resolution,
     )
     ut_idx, ut_seeds = fetch(
-        np.sort(TDA(pd_ut, min_persistence=min_persistence)[2], stable=True), start // resolution, end // resolution
+        ut_persistence.max.index.to_numpy(),
+        start // resolution,
+        end // resolution,
     )
 
     return {

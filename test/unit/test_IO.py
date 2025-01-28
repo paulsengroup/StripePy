@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 
+import itertools
 import json
 import math
 import pathlib
+from typing import Dict, Sequence
 
 import hictkpy as htk
 import numpy as np
@@ -152,11 +154,18 @@ class TestResultFile:
             ResultFile(tmpdir / "asdf123.hdf5")
 
         path = pathlib.Path(tmpdir) / "test.hdf5"
-        f = ResultFile(path, "w")
-        assert f.path == path
+        chroms = {"chr1": 10}
+        with ResultFile.create(path, "w", chroms=chroms, resolution=1) as f:
+            assert f.path == path
 
-        with pytest.raises(ValueError):
-            ResultFile(path, "a")
+        with pytest.raises(OSError):
+            ResultFile.create(path, "w", chroms=chroms, resolution=1)
+
+        with pytest.raises(RuntimeError, match="cannot append to a file that has already been finalized!"):
+            ResultFile.create(path, "a", chroms=chroms, resolution=1)
+
+        with pytest.raises(RuntimeError, match="Please use .* to open a file in write mode"):
+            ResultFile(path, "w")
 
     def test_properties(self):
         path = testdir / "data" / "results_4DNFI9GMP2J8_v1.hdf5"
@@ -220,58 +229,112 @@ class TestResultFile:
             with pytest.raises(ValueError):
                 f.get("chr1", "pseudodistribution", "foobar")
 
+    @staticmethod
+    def _write_mock_result_to_file(
+        f: ResultFile,
+        chrom: str,
+        resolution: int,
+        points: Sequence[int],
+        pseudodistribution: Sequence[float],
+        persistence: Sequence[float],
+    ):
+        res = Result(chrom, resolution * len(points))
+        res.set_min_persistence(1.23)
+
+        for location in ("UT", "LT"):
+            res.set("pseudodistribution", pseudodistribution, location)
+
+            for key in (
+                "all_minimum_points",
+                "all_maximum_points",
+                "persistent_minimum_points",
+                "persistent_maximum_points",
+            ):
+                res.set(key, points, location)
+
+            for key in (
+                "persistence_of_all_minimum_points",
+                "persistence_of_all_maximum_points",
+                "persistence_of_minimum_points",
+                "persistence_of_maximum_points",
+            ):
+                res.set(key, persistence, location)
+
+        f.write_descriptors(res)
+
+    @staticmethod
+    def _compare_results(
+        path: pathlib.Path,
+        chroms: Dict[str, int],
+        points: Sequence[int],
+        pseudodistribution: Sequence[float],
+        persistence: Sequence[float],
+    ):
+
+        with ResultFile(path) as f:
+            assert f.chromosomes == chroms
+            assert f.normalization == "weight"
+            assert f.metadata.get("key", "missing") == "value"
+
+            for chrom, location in itertools.product(chroms, ("UT", "LT")):
+                assert np.isclose(f.get_min_persistence(chrom), 1.23)
+                assert np.allclose(
+                    f.get(chrom, "pseudodistribution", location)["pseudodistribution"], pseudodistribution
+                )
+
+                for key in ("all_minimum_points", "all_maximum_points"):
+                    assert (f.get(chrom, key, location)[key] == points).all()
+
+                for key in ("persistence_of_all_minimum_points", "persistence_of_all_maximum_points"):
+                    assert np.allclose(f.get(chrom, key, location)[key], persistence)
+
     def test_file_creation(self, tmpdir):
         tmpdir = pathlib.Path(tmpdir)
 
         resolution = 10_000
         clr_file = generate_singleres_test_file(tmpdir / "test.cool", resolution)
         chroms = htk.File(clr_file).chromosomes()
-        chrom = tuple(chroms.keys())[0]
 
         points = [1, 2, 3]
         persistence = [4.0, 5.0, 6.0]
-        pseudoditribution = [7.0, 8.0, 9.0]
+        pseudodistribution = [7.0, 8.0, 9.0]
 
         # Create a mock ResultFile
-        with ResultFile(tmpdir / "results.hdf5", "w") as f:
-            f.init_file(htk.File(clr_file), "weight", {"key": "value"})
+        path = tmpdir / "results.hdf5"
+        with ResultFile.create_from_file(
+            path,
+            "w",
+            htk.File(clr_file),
+            normalization="weight",
+            metadata={"key": "value"},
+        ) as f:
+            for chrom in chroms:
+                TestResultFile._write_mock_result_to_file(f, chrom, resolution, points, pseudodistribution, persistence)
 
-            res = Result(chrom, resolution * len(points))
-            res.set_min_persistence(1.23)
+        TestResultFile._compare_results(path, chroms, points, pseudodistribution, persistence)
 
-            for location in ["UT", "LT"]:
-                res.set("pseudodistribution", pseudoditribution, location)
+    def test_progressive_file_creation(self, tmpdir):
+        tmpdir = pathlib.Path(tmpdir)
 
-                for key in [
-                    "all_minimum_points",
-                    "all_maximum_points",
-                    "persistent_minimum_points",
-                    "persistent_maximum_points",
-                ]:
-                    res.set(key, points, location)
+        points = [1, 2, 3]
+        persistence = [4.0, 5.0, 6.0]
+        pseudodistribution = [7.0, 8.0, 9.0]
 
-                for key in [
-                    "persistence_of_all_minimum_points",
-                    "persistence_of_all_maximum_points",
-                    "persistence_of_minimum_points",
-                    "persistence_of_maximum_points",
-                ]:
-                    res.set(key, persistence, location)
+        resolution = 10_000
+        clr_file = generate_singleres_test_file(
+            tmpdir / "test.cool", resolution, {"chr1": len(points) * resolution, "chr2": len(points) * resolution}
+        )
+        chroms = htk.File(clr_file).chromosomes()
 
-            f.write_descriptors(res)
+        path = tmpdir / "results.hdf5"
+        with ResultFile.create(path, "a", chroms, resolution, normalization="weight", metadata={"key": "value"}) as f:
+            pass
 
-        with ResultFile(tmpdir / "results.hdf5") as f:
-            assert f.chromosomes == chroms
-            assert f.normalization == "weight"
-            assert f.metadata.get("key", "missing") == "value"
+        for chrom in chroms:
+            with ResultFile.append(path) as f:
+                TestResultFile._write_mock_result_to_file(f, chrom, resolution, points, pseudodistribution, persistence)
 
-            for location in ["UT", "LT"]:
-                assert np.allclose(
-                    f.get(chrom, "pseudodistribution", location)["pseudodistribution"], pseudoditribution
-                )
+        with ResultFile.append(path) as f:
+            f.finalize()
 
-                for key in ["all_minimum_points", "all_maximum_points"]:
-                    assert (f.get(chrom, key, location)[key] == points).all()
-
-                for key in ["persistence_of_all_minimum_points", "persistence_of_all_maximum_points"]:
-                    assert np.allclose(f.get(chrom, key, location)[key], persistence)
+        TestResultFile._compare_results(path, chroms, points, pseudodistribution, persistence)

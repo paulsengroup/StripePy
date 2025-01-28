@@ -8,7 +8,7 @@ import tarfile
 
 import pytest
 
-from stripepy import main
+from stripepy.main import main
 
 from .common import matplotlib_avail
 

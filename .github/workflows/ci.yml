@@ -124,11 +124,10 @@ jobs:
       - name: Run unit tests
         run: |
           python -m pytest \
-            --cov=stripepy \
             --verbose \
+            --cov \
             --cov-report=xml \
             --cov-report=term \
-            test/ \
             -m unit
 
       - name: Upload unit test coverage report to Codecov
@@ -137,7 +136,7 @@ jobs:
         with:
           flags: "tests | unit | python-${{ matrix.python_version }}"
           disable_search: true
-          files: coverage.xml
+          files: coverage/stripepy.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
@@ -148,7 +147,7 @@ jobs:
         with:
           flags: "tests | unit | python-${{ matrix.python_version }} | core"
           disable_search: true
-          files: coverage.xml
+          files: coverage/stripepy.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
@@ -157,11 +156,10 @@ jobs:
           rm -f coverage.xml
 
           python -m pytest \
-            --cov=stripepy \
             --verbose \
+            --cov \
             --cov-report=xml \
             --cov-report=term \
-            test/ \
             -m end2end
 
       - name: Upload end2end test coverage report to Codecov
@@ -170,7 +168,7 @@ jobs:
         with:
           flags: "tests | integration | python-${{ matrix.python_version }}"
           disable_search: true
-          files: coverage.xml
+          files: coverage/stripepy.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
@@ -181,7 +179,7 @@ jobs:
         with:
           flags: "tests | integration | python-${{ matrix.python_version }} | core"
           disable_search: true
-          files: coverage.xml
+          files: coverage/stripepy.xml
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true

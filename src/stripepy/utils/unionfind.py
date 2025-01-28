@@ -6,7 +6,7 @@
 # https://www.csc.kth.se/~weinkauf/notes/persistence1d.html
 
 
-class UnionFind:
+class UnionFind(object):
     """
     Implements the Union-Find data structure.
 

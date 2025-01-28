@@ -339,6 +339,7 @@ def run(
     output_name: pathlib.Path,
     dpi: int,
     force: bool,
+    main_logger,
     **kwargs,
 ) -> int:
     logger = structlog.get_logger()
@@ -352,7 +353,7 @@ def run(
             logger.debug('removing existing output file "%s"', output_name)
             output_name.unlink()
         else:
-            raise RuntimeError(
+            raise FileExistsError(
                 f'Refusing to overwrite file "{output_name}". Pass --force to overwrite existing file(s).'
             )
 

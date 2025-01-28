@@ -4,43 +4,41 @@
 
 import decimal
 import time
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence
 
 import numpy as np
-import pandas as pd
+import scipy.sparse as ss
 from numpy.typing import NDArray
 
 
-def sort_values(*vectors: Sequence) -> Tuple[NDArray]:
+def pretty_format_elapsed_time(
+    t0: float,
+    t1: Optional[float] = None,
+) -> str:
     """
-    Sort two or more sequences of objects as if each sequence was a column in a
-    table and the table was being sorted row-by-row based on values from all columns.
+    Format elapsed time between t1 and t0 as a human-readable string.
+
+    Examples:
+        123ns
+        1.234us
+        1.23ms
+        1.23s
+        1m:2.345s
+        1h:2m:3.456s
 
     Parameters
     ----------
-    vectors: two or more sequences to be sorted
+    t0: float
+        start time in seconds.
+    t1: Optional[float]
+        end time in seconds.
+        When not provided, use the current time.
 
     Returns
     -------
-    Tuple[NDArray]
-        the sorted sequences as numpy.ndarray
+    str
+        a human-friendly string representation of the elapsed time.
     """
-    if len(vectors) < 2:
-        raise ValueError("please specify at least two sequences")
-
-    for v in vectors[1:]:
-        assert len(vectors[0]) == len(v)
-
-    if len(vectors[0]) == 0:
-        return tuple((np.array(v) for v in vectors))  # noqa
-
-    df = pd.DataFrame({i: v for i, v in enumerate(vectors)})
-    df.sort_values(by=df.columns.tolist(), inplace=True, kind="stable")
-
-    return tuple(df[col].to_numpy() for col in df.columns)  # noqa
-
-
-def pretty_format_elapsed_time(t0: float, t1: Optional[float] = None) -> str:
     if t1 is None:
         t1 = time.time()
 
@@ -75,7 +73,10 @@ def pretty_format_elapsed_time(t0: float, t1: Optional[float] = None) -> str:
     return f"{hours:.0f}h:{minutes:.0f}m:{seconds:.3f}s"
 
 
-def truncate_np(v: NDArray[float], places: int) -> NDArray[float]:
+def truncate_np(
+    v: NDArray[float],
+    places: int,
+) -> NDArray[float]:
     """
     Truncate a numpy array to the given number of decimal places.
     Implementation based on https://stackoverflow.com/a/28323804
@@ -103,6 +104,58 @@ def truncate_np(v: NDArray[float], places: int) -> NDArray[float]:
         return np.array([float(decimal.Decimal(str(n)).quantize(exponent)) for n in v], dtype=float)
 
 
+def zero_rows(
+    matrix: ss.csr_matrix,
+    rows: Sequence[int],
+) -> ss.csr_matrix:
+    """
+    Set the given rows of the CSR matrix to zero.
+    Original implementation from https://stackoverflow.com/a/43114513
+
+    Parameters
+    ----------
+    matrix: ss.csr_matrix
+        the CSR matrix to be zeroed
+    rows: Sequence[int]
+        the rows of the CSR matrix to be zeroed
+
+    Returns
+    -------
+    ss.csr_matrix
+        a copy of the input CSR matrix with the relevant rows set to zero.
+    """
+    diag = ss.eye(matrix.shape[0]).tolil()
+    for i in rows:
+        diag[i, i] = 0
+    return diag.dot(matrix).tocsr()
+
+
+def zero_columns(
+    matrix: ss.csc_matrix,
+    columns: Sequence[int],
+) -> ss.csc_matrix:
+    """
+    Set the given columns of the CSC matrix to zero.
+    Original implementation from https://stackoverflow.com/a/43114513
+
+    Parameters
+    ----------
+    matrix: ss.csc_matrix
+        the CSC matrix to be zeroed
+    columns: Sequence[int]
+        the columns of the CSC matrix to be zeroed
+
+    Returns
+    -------
+    ss.csc_matrix
+        a copy of the input CSC matrix with the relevant columns set to zero.
+    """
+    diag = ss.eye(matrix.shape[1]).tolil()
+    for i in columns:
+        diag[i, i] = 0
+    return matrix.dot(diag).tocsc()
+
+
 def _import_matplotlib():
     """
     Helper function to import matplotlib.
@@ -121,7 +174,7 @@ def _import_pyplot():
     """
     Helper function to import matplotlib.pyplot.
     """
-    _import_matplotlib()
+    _import_matplotlib()  # this will deal with import errors
     import matplotlib.pyplot as plt
 
     return plt

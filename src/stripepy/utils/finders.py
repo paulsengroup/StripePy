@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+import functools
 import itertools
 import time
-from functools import partial
-from typing import List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -13,125 +13,334 @@ import pandas as pd
 import scipy.sparse as ss
 import structlog
 
-from . import TDA
-from .common import pretty_format_elapsed_time
-from .regressions import _compute_wQISA_predictions
+from stripepy.utils.common import pretty_format_elapsed_time
+from stripepy.utils.persistence1d import Persistence1DTable
+from stripepy.utils.regressions import compute_wQISA_predictions
+from stripepy.utils.shared_sparse_matrix import SparseMatrix, get_shared_state
 
 
-def find_horizontal_domain(
-    profile: npt.NDArray[float],
-    params: Tuple[int, int, int, float],
-    max_width: int = 1e9,
-) -> Tuple[int, int]:
+def _shift_vector_left(
+    v: npt.NDArray[float],
+    padding: float,
+) -> npt.NDArray[float]:
     """
+    Shift elements in the given vector to the left by one position and pad the remaining values.
+
+    Parameters
+    ----------
+    v: npt.NDArray[float]
+        vector to be shifted
+    padding: float
+        padding value
+
     Returns
     -------
-    Tuple[int, int]
-        the left and right coordinates of the horizontal domain
+    npt.NDArray[float]
+        shifted and padded vector
+    """
+    # assertion disabled for performance reasons
+    # assert len(v) != 0
+
+    vs = np.empty_like(v)
+    vs[:-1] = v[1:]
+    vs[-1] = padding
+
+    return vs
+
+
+def _find_horizontal_domain(
+    profile: npt.NDArray[float],
+    params: Tuple[int, int, int, float],
+    max_width: int = int(1e9),
+) -> Tuple[int, int]:
+    """
+    Find the horizontal domains for the given profile (i.e. pseudo-distribution).
+
+    Parameters
+    ----------
+    profile : npt.NDArray[float]
+        pseudo-distribution vector
+    params: Tuple[int, int, int, float]
+        tuple consisting of:
+        1) maxima
+        2) minima to the left of 1)
+        3) minima to the right of 1)
+        4) global maxima for the given profile
+    max_width : int
+        maximum width allowed
+
+    Returns
+    -------
+    int
+        left boundary of the domain
+    int
+        right boundary of the domain
     """
 
     # Unpacking:
-    MP, L_mP, R_mP, max_profile_value = params
+    maxima, left_minima, right_minima, max_profile_value = params
 
-    # Left and sides of candidate:
-    L_interval = np.flip(profile[L_mP : MP + 1])
-    R_interval = profile[MP : R_mP + 1]
+    # assertions disabled for performance reasons
+    # assert left_minima >= 0
+    # assert right_minima < len(profile)
+    # assert left_minima <= maxima <= right_minima
 
-    # LEFT INTERVAL
-    L_interval_shifted = np.append(L_interval[1:], [max_profile_value + 1], axis=0)
-    L_bound = np.where(L_interval - L_interval_shifted < 0)[0][0] + 1
-    # L_interval_restr = L_interval[:L_bound]
-    # L_interval_shifted_restr = L_interval_shifted[:L_bound]
-    # L_bound = np.argmax(L_interval_restr - L_interval_shifted_restr) + 1
-    L_bound = np.minimum(L_bound, max_width)
+    # Left side of the candidate
+    left_interval = np.flip(profile[left_minima : maxima + 1])
+    left_interval_shifted = _shift_vector_left(left_interval, padding=max_profile_value + 1)
 
-    # RIGHT INTERVAL
-    R_interval_shifted = np.append(R_interval[1:], [max_profile_value + 1], axis=0)
-    R_bound = np.where(R_interval - R_interval_shifted < 0)[0][0] + 1
-    # R_interval_restr = R_interval[:R_bound]
-    # R_interval_shifted_restr = R_interval_shifted[:R_bound]
-    # R_bound = np.argmax(R_interval_restr - R_interval_shifted_restr) + 1
-    R_bound = np.minimum(R_bound, max_width)
+    # Find the left bound
+    left_bound = np.argmax(left_interval - left_interval_shifted < 0) + 1
+    left_bound = min(left_bound, max_width)
 
-    return max(MP - L_bound, 0), min(MP + R_bound, len(profile))
+    # Right side of the candidate
+    right_interval = profile[maxima : right_minima + 1]
+    right_interval_shifted = _shift_vector_left(right_interval, padding=max_profile_value + 1)
+
+    # Find the right bound
+    right_bound = np.argmax(right_interval - right_interval_shifted < 0) + 1
+    right_bound = min(right_bound, max_width)
+
+    return max(maxima - left_bound, 0), min(maxima + right_bound, len(profile))
 
 
-def find_lower_v_domain(I, threshold_cut, max_height, min_persistence, it) -> Tuple[List, Optional[List]]:
+def _extract_standardized_local_1d_pseudodistribution(
+    matrix: SparseMatrix,
+    seed_site: int,
+    left_bound: int,
+    right_bound: int,
+    max_height: int,
+    location: str,
+) -> npt.NDArray[float]:
+    """
+    Extract the standardized local 1D pseudo-distribution from the given matrix as efficiently as possible.
 
-    # For each slice (hosting a seed site):
-    n, seed_site, HIoI = it
+    Parameters
+    ----------
+    matrix : SparseMatrix
+        matrix to be processed
+    seed_site : int
+        seed site position
+    left_bound : int
+        left boundary of the domain
+    right_bound : int
+        right boundary of the domain
+    max_height : int
+        maximum height allowed
+    location: str
+        matrix location (should be "lower" or "upper")
 
-    # Standardized Local 1D pseudo-distribution for current HIoI:
-    rows = slice(seed_site, min(seed_site + max_height, I.shape[0]))
-    cols = slice(HIoI[0], HIoI[1])
-    I_nb = I[rows, :].tocsc()[:, cols].toarray()
+    Returns
+    -------
+    npt.NDArray[float]
+        the standardized local 1D pseudo-distribution for the given seed site.
+    """
+    # assertions disabled for performance reasons
+    # assert left_bound >= 0
+    # assert right_bound < matrix.shape[0]
+    # assert left_bound <= seed_site <= right_bound
+    # assert max_height > 0
 
-    Y = np.sum(I_nb, axis=1)
-    Y /= max(Y)
+    if location == "lower":
+        i0, i1 = seed_site, min(seed_site + max_height, matrix.shape[0])
+    else:
+        i0, i1 = max(seed_site - max_height, 0), seed_site
 
-    # Lower boundary:
-    Y_hat = _compute_wQISA_predictions(Y, 5)  # Basically: average of a 2-"pixel" neighborhood
+    j0, j1 = left_bound, right_bound
+    if isinstance(matrix, ss.csc_matrix):
+        submatrix = matrix[:, j0:j1].tocsr()[i0:i1, :].tocsc()
+    elif isinstance(matrix, ss.csr_matrix):
+        submatrix = matrix[i0:i1, :].tocsc()[:, j0:j1]
+    else:
+        raise NotImplementedError
 
-    # Peaks:
+    y = submatrix.sum(axis=1)
+    if isinstance(y, np.matrix):
+        y = y.A1
+
+    y /= y.max()
+    if location == "lower":
+        return y
+
+    # assertion disabled for performance reasons
+    # assert location == "upper"
+    return np.flip(y)
+
+
+def _find_v_domain_helper(
+    profile: npt.NDArray[float],
+    threshold_cut: float,
+    min_persistence: Optional[float],
+) -> Tuple[int, Optional[npt.NDArray[int]]]:
+    """
+    Helper function for the _find_*_v_domain() functions.
+    # TODO rea1991: document
+    """
     if min_persistence is None:
-        candida_bound = np.where(np.array(Y_hat) < threshold_cut)[0]
-        if len(candida_bound) == 0:
-            candida_bound = [len(Y_hat) - 1]
+        max_points = tuple()
+    else:
+        max_points = (
+            Persistence1DTable.calculate_persistence(profile, min_persistence=min_persistence)
+            .max.sort_values(kind="stable")
+            .index.to_numpy()
+        )
 
-        # Vertical domain + no peak:
-        return [seed_site, seed_site + candida_bound[0]], None
+    if len(max_points) > 1:
+        return max_points.max(), max_points[:-1]  # drop global maximum
 
-    _, _, loc_Maxima, loc_pers_of_Maxima = TDA.TDA(Y, min_persistence=min_persistence)
-    candida_bound = [max(loc_Maxima)]
+    approximated_profile = compute_wQISA_predictions(profile, 5)
+    # the type cast here is just to avoid returning numpy ints
+    candida_bound = int(np.argmax(approximated_profile < threshold_cut))
+    if approximated_profile[candida_bound] >= threshold_cut:
+        candida_bound = len(profile) - 1
 
-    # Consider as min_persistence is set to None:
-    if len(loc_Maxima) < 2:
-        candida_bound = np.where(np.array(Y_hat) < threshold_cut)[0]
-        if len(candida_bound) == 0:
-            candida_bound = [len(Y_hat) - 1]
-
-    # Vertical domain + peaks:
-    return [seed_site, seed_site + candida_bound[0]], list(np.array(loc_Maxima[:-1]) + seed_site)
-
-
-def find_upper_v_domain(I, threshold_cut, max_height, min_persistence, it) -> Tuple[List, Optional[List]]:
-
-    # For each slice (hosting a seed site):
-    n, seed_site, HIoI = it
-
-    # Standardized Local 1D pseudo-distribution for current HIoI:
-    rows = slice(max(seed_site - max_height, 0), seed_site)
-    cols = slice(HIoI[0], HIoI[1])
-    I_nb = I[rows, :].tocsc()[:, cols].toarray()
-    Y = np.flip(np.sum(I_nb, axis=1))
-    Y /= max(Y)
-
-    # Upper boundary:
-    Y_hat = _compute_wQISA_predictions(Y, 5)
-
-    # Peaks:
-    if min_persistence is None:
-        candida_bound = np.where(np.array(Y_hat) < threshold_cut)[0]
-        if len(candida_bound) == 0:
-            candida_bound = [len(Y_hat) - 1]
-
-        # Vertical domain + no peak:
-        return [seed_site - candida_bound[0], seed_site], None
-
-    _, _, loc_Maxima, loc_pers_of_Maxima = TDA.TDA(Y, min_persistence=min_persistence)
-    candida_bound = [max(loc_Maxima)]
-
-    # Consider as min_persistence is set to None:
-    if len(loc_Maxima) < 2:
-        candida_bound = np.where(np.array(Y_hat) < threshold_cut)[0]
-        if len(candida_bound) == 0:
-            candida_bound = [len(Y_hat) - 1]
-
-    # Vertical domain + peaks:
-    return [seed_site - candida_bound[0], seed_site], list(seed_site - np.array(loc_Maxima[:-1]))
+    return candida_bound, None
 
 
-def find_HIoIs(
+def _find_lower_v_domain(
+    coords: Tuple[int, int, int],
+    matrix: Optional[SparseMatrix],
+    threshold_cut: float,
+    max_height: int,
+    min_persistence: float,
+    return_maxima: bool,
+) -> Dict[str, Any]:
+    """
+    Find vertical domains spanning the lower-triangle of the matrix.
+
+    Parameters
+    ----------
+    coords : Tuple[int, int, int]
+        1) seed_site
+        2) left_bound
+        3) right_bound
+    matrix: Optional[SparseMatrix]
+        matrix with the interactions to be processed.
+        When set to None, the matrix will be fetched from the global shared state.
+    threshold_cut: float
+        threshold used to determine the span of vertical domains.
+        Higher values will lead to shorter domains.
+    max_height: int
+        maximum height allowed
+    min_persistence: float
+        threshold used to find peaks in the profile associated with a horizontal domain.
+    return_maxima: bool
+        whether to return the local profile maxima associated with each domain
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary with the following keys:
+        - top_bound: int
+        - bottom_bound: int
+        - local_maxima: npt.NDArray[int] (optional)
+    """
+    seed_site, left_bound, right_bound = coords
+    # assertions disabled for performance reasons
+    # assert left_bound >= 0
+    # assert left_bound <= seed_site <= right_bound
+    # assert 0 <= threshold_cut <= 1
+    # assert max_height > 0
+    # assert 0 <= min_persistence <= 1
+
+    if matrix is None:
+        matrix = get_shared_state("lower").get()
+    # assert right_bound < matrix.shape[0]
+
+    profile = _extract_standardized_local_1d_pseudodistribution(
+        matrix,
+        seed_site,
+        left_bound,
+        right_bound,
+        max_height,
+        "lower",
+    )
+    candidate_bound, local_maxima = _find_v_domain_helper(profile, threshold_cut, min_persistence)
+
+    res = {"top_bound": seed_site, "bottom_bound": seed_site + candidate_bound}
+
+    if not return_maxima or local_maxima is None:
+        return res
+
+    local_maxima += seed_site
+    res["maxima"] = local_maxima
+    return res
+
+
+def _find_upper_v_domain(
+    coords: Tuple[int, int, int],
+    matrix: Optional[SparseMatrix],
+    threshold_cut: float,
+    max_height: int,
+    min_persistence: float,
+    return_maxima: bool,
+) -> Dict[str, Any]:
+    """
+    Find vertical domains spanning the upper-triangle of the matrix.
+
+    Parameters
+    ----------
+    coords : Tuple[int, int, int]
+        1) seed_site
+        2) left_bound
+        3) right_bound
+    matrix: Optional[SparseMatrix]
+        matrix with the interactions to be processed.
+        When set to None, the matrix will be fetched from the global shared state.
+    threshold_cut: float
+        threshold used to determine the span of vertical domains.
+        Higher values will lead to shorter domains.
+    max_height: int
+        maximum height allowed
+    min_persistence: float
+        threshold used to find peaks in the profile associated with a horizontal domain.
+    return_maxima: bool
+        whether to return the local profile maxima associated with each domain
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary with the following keys:
+        - top_bound: int
+        - bottom_bound: int
+        - local_maxima: npt.NDArray[int] (optional)
+    """
+
+    seed_site, left_bound, right_bound = coords
+    # assertions disabled for performance reasons
+    # assert left_bound >= 0
+    # assert left_bound <= seed_site <= right_bound
+    # assert 0 <= threshold_cut <= 1
+    # assert max_height > 0
+    # assert 0 <= min_persistence <= 1
+
+    if matrix is None:
+        matrix = get_shared_state("upper").get()
+    # assert right_bound < matrix.shape[0]
+
+    profile = _extract_standardized_local_1d_pseudodistribution(
+        matrix,
+        seed_site,
+        left_bound,
+        right_bound,
+        max_height,
+        "upper",
+    )
+    candidate_bound, local_maxima = _find_v_domain_helper(profile, threshold_cut, min_persistence)
+
+    res = {"top_bound": seed_site - candidate_bound, "bottom_bound": seed_site}
+
+    if not return_maxima or local_maxima is None:
+        return res
+
+    local_maxima *= -1
+    local_maxima += seed_site
+
+    res["maxima"] = local_maxima
+    return res
+
+
+def find_horizontal_intervals_of_interest(
     pseudodistribution: npt.NDArray[float],
     seed_sites: npt.NDArray[int],
     seed_site_bounds: npt.NDArray[int],
@@ -139,75 +348,169 @@ def find_HIoIs(
     logger=None,
 ) -> pd.DataFrame:
     """
-    :param pseudodistribution:  1D array representing a uniformly-sample scalar function works
-    :param seed_sites:          maximum values in the pseudo-distribution (i.e., genomic coordinates hosting linear
-                                patterns)
-    :param seed_site_bounds:    for the i-th entry of seed_sites:
-                                (*) seed_site_bounds[i] is the left boundary
-                                (*) seed_site_bounds[i+1] is the right boundary
-    :param max_width:           maximum width allowed
-    :return:
-    HIoIs                       a pd.DataFrame the list of left and right boundary for each seed site
+    Find the left and right bounds for the given seed sites.
+
+    Parameters
+    ----------
+    pseudodistribution: npt.NDArray[float]
+        1D array representing a uniformly-sample scalar function works
+    seed_sites: npt.NDArray[int]
+        maximum values in the pseudo-distribution (i.e., genomic coordinates hosting linear patterns)
+    seed_site_bounds: npt.NDArray[int]
+        for the i-th entry of seed_sites:
+        - seed_site_bounds[i] is the left boundary
+        - seed_site_bounds[i+1] is the right boundary
+    max_width: int
+        maximum width allowed
+    logger:
+        logger
+
+    Returns
+    -------
+    pd.DataFrame
+        a DataFrame with the list of left and right boundaries associated with each seed site
     """
     assert len(seed_site_bounds) == len(seed_sites) + 1
+    assert max_width > 0
 
     t0 = time.time()
     if logger is None:
         logger = structlog.get_logger()
 
+    # Pre-compute the global max
     max_pseudodistribution_value = pseudodistribution.max()
+
+    # Declare a generator for the params used to generate tasks
     params = (
-        (seed_site, seed_site_bounds[num_MP], seed_site_bounds[num_MP + 1], max_pseudodistribution_value)
-        for num_MP, seed_site in enumerate(seed_sites)
+        (
+            seed_site,
+            seed_site_bounds[maxima_idx],
+            seed_site_bounds[maxima_idx + 1],
+            max_pseudodistribution_value,
+        )
+        for maxima_idx, seed_site in enumerate(seed_sites)
     )
 
-    tasks = map(partial(find_horizontal_domain, pseudodistribution, max_width=max_width), params)
+    # Set up tasks to find horizontal domains
+    # It is not worth parallelizing this step
+    tasks = map(
+        functools.partial(
+            _find_horizontal_domain,
+            pseudodistribution,
+            max_width=max_width,
+        ),
+        params,
+    )
+
     # This efficiently constructs a 2D numpy with shape (N, 2) from a list of 2-element tuples, where N is the number of seed sites.
     # The first and second columns contains the left and right boundaries of the horizontal domains, respectively.
-    HIoIs = np.fromiter(itertools.chain.from_iterable(tasks), count=2 * len(seed_sites), dtype=int).reshape(-1, 2)
+    bounds = np.fromiter(
+        itertools.chain.from_iterable(tasks),
+        count=2 * len(seed_sites),
+        dtype=int,
+    ).reshape(-1, 2)
 
     # Handle possible overlapping intervals by ensuring that the
     # left bound of interval i + 1 is always greater or equal than the right bound of interval i
-    HIoIs[1:, 0] = np.maximum(HIoIs[1:, 0], HIoIs[:-1, 1])
+    bounds[1:, 0] = np.maximum(bounds[1:, 0], bounds[:-1, 1])
 
-    df = pd.DataFrame(data=HIoIs, columns=["left_bound", "right_bound"])
+    df = pd.DataFrame(data=bounds, columns=["left_bound", "right_bound"])
 
-    logger.debug("find_HIoIs took %s", pretty_format_elapsed_time(t0))
+    logger.debug("find_horizontal_intervals_of_interest() took %s", pretty_format_elapsed_time(t0))
 
     return df
 
 
-def find_VIoIs(
-    I,
-    seed_sites,
-    HIoIs,
-    max_height,
-    threshold_cut=0.1,
-    min_persistence=0.20,
-    where="lower",
-    map=map,
-):
+def find_vertical_intervals_of_interest(
+    matrix: Optional[SparseMatrix],
+    seed_sites: npt.NDArray[int],
+    horizontal_domains: pd.DataFrame,
+    max_height: int,
+    threshold_cut: float,
+    min_persistence: float,
+    location: str,
+    return_maxima: bool = False,
+    map_=map,
+    logger=None,
+) -> pd.DataFrame:
+    """
+    Find the top and bottom bounds for the given seed sites.
 
-    # Triplets to use in multiprocessing:
-    iterable_input = [(n, seed_site, HIoI) for n, (seed_site, HIoI) in enumerate(zip(seed_sites, HIoIs))]
+    Parameters
+    ----------
+    matrix: Optional[SparseMatrix]
+        matrix with the interactions to be processed.
+        When set to None, the matrix will be fetched from the global shared state.
+    seed_sites: npt.NDArray[int]
+        maximum values in the pseudo-distribution (i.e., genomic coordinates hosting linear patterns)
+    horizontal_domains: pd.DataFrame
+        DataFrame with the horizontal domains identified by find_horizontal_intervals_of_interest()
+    max_height: int
+        maximum height allowed
+    threshold_cut: float
+        threshold used to determine the span of vertical domains.
+        Higher values will lead to shorter domains.
+    min_persistence: float
+        threshold used to find peaks in the profile associated with a horizontal domain.
+    location: str
+        matrix location (should be "lower" or "upper")
+    return_maxima: bool
+        whether to return the local profile maxima associated with each domain
+    map_: Callable
+        a callable that behaves like the built-in map function
+    logger:
+        logger
 
-    # Lower-triangular part of the Hi-C matrix:
-    if where == "lower":
-        Vdomains_and_peaks = map(
-            partial(find_lower_v_domain, I, threshold_cut, max_height, min_persistence),
-            iterable_input,
-        )
+    Returns
+    -------
+    pd.DataFrame
+        a DataFrame with the list of top and bottom bounds associated with each seed site.
+        If return_maxima is True, the DataFrame also has a column called "maxima" containing
+        the maxima from the local profile associated with each domain.
+    """
+    assert len(seed_sites) > 0
+    assert len(seed_sites) == len(horizontal_domains)
 
-        VIoIs, peak_locs = list(zip(*Vdomains_and_peaks))
+    t0 = time.time()
+    if logger is None:
+        logger = structlog.get_logger()
 
-    # Upper-triangular part of the Hi-C matrix:
-    elif where == "upper":
-        # HIoIs = pool.map(partial(find_h_domain, pd), iterable_input)
-        Vdomains_and_peaks = map(
-            partial(find_upper_v_domain, I, threshold_cut, max_height, min_persistence),
-            iterable_input,
-        )
+    # Pair each seed site with its left and right bounds
+    df = horizontal_domains.copy()
+    df["seed_site"] = seed_sites
+    df = df[["seed_site", "left_bound", "right_bound"]]
 
-        VIoIs, peak_locs = list(zip(*Vdomains_and_peaks))
+    if location == "lower":
+        finder = _find_lower_v_domain
+    elif location == "upper":
+        finder = _find_upper_v_domain
+    else:
+        raise ValueError("where should be lower or upper")
 
-    return VIoIs, peak_locs
+    # Declare a generator for the params used to generate tasks
+    params = ((seed, lb, rb) for seed, lb, rb in df.itertuples(index=False))
+
+    # Prepare tasks
+    tasks = map_(
+        functools.partial(
+            finder,
+            matrix=matrix,
+            threshold_cut=threshold_cut,
+            max_height=max_height,
+            min_persistence=min_persistence,
+            return_maxima=return_maxima,
+        ),
+        params,
+    )
+
+    # Collect results
+    df = pd.DataFrame.from_records(
+        data=tasks,
+        nrows=len(seed_sites),
+    )
+
+    assert len(df) == len(seed_sites)
+
+    logger.debug("find_vertical_intervals_of_interest() took %s", pretty_format_elapsed_time(t0))
+
+    return df

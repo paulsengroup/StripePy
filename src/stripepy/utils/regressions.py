@@ -6,7 +6,10 @@ import numpy as np
 import numpy.typing as npt
 
 
-def _compute_wQISA_predictions(Y: npt.NDArray, k: int) -> npt.NDArray[float]:
+def compute_wQISA_predictions(Y: npt.NDArray, k: int) -> npt.NDArray[float]:
+    """
+    # TODO rea1991: document
+    """
     assert k >= 1
     # Control points of a weighted quasi-interpolant spline approximation with a k-NN weight function:
     kernel = np.full(k, 1 / k)

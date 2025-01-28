@@ -12,7 +12,7 @@ class _DummyProgressBar(object):
         pass
 
     def __enter__(self):
-        def callable(*args, **kwargs):
+        def callable(*args, **kwargs):  # noqa
             pass
 
         return callable
@@ -26,6 +26,7 @@ def initialize_progress_bar(*args, **kwargs):
     Attempt to initialize a progress bar using alive_progress.
     In case of failure, return a dummy progress bar that does nothing.
     """
+    # TODO switch to Rich
     try:
         import alive_progress
 

@@ -9,7 +9,7 @@ import pathlib
 import pandas as pd
 import pytest
 
-from stripepy import main
+from stripepy.main import main
 
 testdir = pathlib.Path(__file__).resolve().parent.parent
 

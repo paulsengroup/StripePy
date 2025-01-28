@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import os
-from typing import Optional
+from typing import Dict, Optional, Tuple
 
 import hictkpy
 import structlog
@@ -13,9 +13,29 @@ def _raise_invalid_bin_type_except(f: hictkpy.File):
     raise RuntimeError(f"Only files with a uniform bin size are supported, found \"{f.attributes()['bin-type']}\".")
 
 
-def open_matrix_file_checked(path: os.PathLike, resolution: int) -> hictkpy.File:
-    logger = structlog.get_logger()
-    logger.info('validating file "%s" (%dbp)...', path, resolution)
+def open_matrix_file_checked(path: os.PathLike, resolution: int, logger=None) -> hictkpy.File:
+    """
+    Open a file in one of the formats supported by hictkpy and check that it satisfies StripePy requirements.
+
+    Parameters
+    ----------
+    path: os.PathLike
+        path to the matrix file
+    resolution: int
+        resolution to be used to open the matrix file
+    logger:
+        logger
+
+    Returns
+    -------
+    hictkpy.File
+        the given file opened with hictkpy
+    """
+    if logger is None:
+        logger = structlog.get_logger()
+
+    logger.bind(step="IO")
+    logger.info('validating file "%s" (%dbp)', path, resolution)
 
     try:
         if not isinstance(resolution, int):
@@ -44,7 +64,37 @@ def open_matrix_file_checked(path: os.PathLike, resolution: int) -> hictkpy.File
     return f
 
 
-def define_RoI(location: Optional[str], chrom_size: int, resolution: int, window_size: int = 2_000_000):
+def define_region_of_interest(
+    location: Optional[str],
+    chrom_size: int,
+    resolution: int,
+    window_size: int = 2_000_000,
+) -> Optional[Dict[str, Tuple[int, int]]]:
+    """
+    Define the region of interest with the desired properties.
+
+    Parameters
+    ----------
+    location: Optional[str]
+        location of the desired region.
+        When provided, it should be either "start" or "middle".
+    chrom_size: int
+        the chromosome size in base-pairs.
+    resolution: int
+        resolution in base-pairs of the matrix to which the region refers to.
+    window_size: int
+        target width of the region of interest.
+
+    Returns
+    -------
+    Optional[Dict[str, Tuple[int, int]]]
+        return a dictionary with the coordinates of the region of interest.
+        The dictionary has two keys:
+        - genomic: two-element tuple with the genomic coordinates (bp) of the region of interest.
+        - matrix: two-element tuple with the matrix coordinates of the region of interest.
+
+        When location is None, return None.
+    """
     if location is None or window_size <= 0:
         return None
 
@@ -67,5 +117,5 @@ def define_RoI(location: Optional[str], chrom_size: int, resolution: int, window
         e1 = 0
         e2 = window_size
 
-    bounds = [e1, min(chrom_size, e2)]
-    return {"genomic": bounds, "matrix": [x // resolution for x in bounds]}
+    bounds = (e1, min(chrom_size, e2))
+    return {"genomic": bounds, "matrix": tuple(x // resolution for x in bounds)}

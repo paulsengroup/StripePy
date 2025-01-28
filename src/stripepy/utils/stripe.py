@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: MIT
 
 import math
-from typing import Tuple, Union
+from typing import Optional, Tuple
 
 import numpy as np
 import scipy.sparse as ss
 from numpy.typing import NDArray
+
+from stripepy.utils.shared_sparse_matrix import SparseMatrix
 
 
 class Stripe(object):
@@ -64,25 +66,25 @@ class Stripe(object):
     def __init__(
         self,
         seed: int,
-        top_pers: Union[float, None],
-        horizontal_bounds: Union[Tuple[int, int], None] = None,
-        vertical_bounds: Union[Tuple[int, int], None] = None,
-        where: Union[str, None] = None,
+        top_pers: Optional[float],
+        horizontal_bounds: Optional[Tuple[int, int]] = None,
+        vertical_bounds: Optional[Tuple[int, int]] = None,
+        where: Optional[str] = None,
     ):
         """
         Parameters
         ----------
         seed: int
             the stripe seed position
-        top_pers: Union[float, None]
+        top_pers: Optional[float]
             the topological persistence of the seed
-        horizontal_bounds: Union[Tuple[int, int], None]
+        horizontal_bounds: Optional[Tuple[int, int]]
             the horizontal bounds of the stripe
-        vertical_bounds: Union[Tuple[int, int], None]
+        vertical_bounds: Optional[Tuple[int, int]]
             the_vertical bounds of the stripe
-        where: Union[str, None]
+        where: Optional[str]
             the location of the stripe: should be "upper_triangular" or "lower_triangular".
-            When provided, this is validate the coordinates set when calling `set_horizontal_bounds()` and `set_vertical_bounds()`.
+            When provided, this is used validate the coordinates set when calling `set_horizontal_bounds()` and `set_vertical_bounds()`.
         """
         if seed < 0:
             raise ValueError("seed must be a non-negative integral number")
@@ -115,109 +117,12 @@ class Stripe(object):
         self._outer_lmean = None
         self._outer_rmean = None
 
-    @staticmethod
-    def _infer_location(seed: int, top_bound: int, bottom_bound: int) -> str:
-        # TODO this check is temporarily disabled as it fails when processing stripes from chromosomes that are mostly empty
-        # if bottom_bound == top_bound:
-        #    raise ValueError(f"unable to infer stripe location: stripe bottom and top bounds are identical ({top_bound})")
-
-        if bottom_bound > seed:
-            return "lower_triangular"
-        # TODO the equal check should be removed as is not correct
-        if top_bound <= seed:
-            return "upper_triangular"
-
-        NotImplementedError
-
-    @staticmethod
-    def _validate_vertical_bounds(left_bound: int, right_bound: int, top_bound: int, bottom_bound: int, location: str):
-        assert location in {"upper_triangular", "lower_triangular"}
-        if location == "lower_triangular" and not (left_bound <= top_bound <= right_bound):
-            raise ValueError(
-                f"top bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {top_bound=}"
-            )
-        elif location == "upper_triangular" and not (left_bound <= bottom_bound <= right_bound):
-            raise ValueError(
-                f"bottom bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {bottom_bound=}"
-            )
-
-    def _compute_convex_comp(self) -> int:
-        cfx1 = 0.99
-        cfx2 = 0.01
-
-        if self.upper_triangular:
-            cfx1, cfx2 = cfx2, cfx1
-
-        return int(round(cfx1 * self._top_bound + cfx2 * self._bottom_bound))
-
-    def _slice_matrix(self, I: ss.csr_matrix) -> NDArray:
-        convex_comb = self._compute_convex_comp()
-
-        if self.lower_triangular:
-            rows = slice(convex_comb, self._bottom_bound)
-            cols = slice(self._left_bound, self._right_bound)
-            return I[rows, :].tocsc()[:, cols].toarray()
-
-        rows = slice(self._top_bound, convex_comb)
-        cols = slice(self._left_bound, self._right_bound)
-        return I[rows, :].tocsc()[:, cols].toarray()
-
-    @staticmethod
-    def _compute_inner_descriptors(I: NDArray) -> Tuple[NDArray[float], float, float]:
-        return np.percentile(I, [0, 25, 50, 75, 100]), np.mean(I), np.std(I)
-
-    def _compute_lmean(self, I: ss.csr_matrix, window: int) -> float:
-        """
-        Compute the mean intensity for the left neighborhood
-        """
-        assert window >= 0
-
-        new_bound = max(0, self._left_bound - window)
-        if new_bound == self._left_bound:
-            return math.nan
-
-        convex_comb = self._compute_convex_comp()
-        if self.lower_triangular:
-            submatrix = I[convex_comb : self._bottom_bound, new_bound : self._left_bound]
-        else:
-            submatrix = I[self._top_bound : convex_comb, new_bound : self._left_bound]
-
-        return submatrix.mean()
-
-    def _compute_rmean(self, I: ss.csr_matrix, window: int) -> float:
-        """
-        Compute the mean intensity for the right neighborhood
-        """
-        assert window >= 0
-
-        new_bound = min(I.shape[1], self._right_bound + window)
-
-        if new_bound == self._right_bound:
-            return math.nan
-
-        convex_comb = self._compute_convex_comp()
-        if self.lower_triangular:
-            submatrix = I[convex_comb : self._bottom_bound, self._right_bound : new_bound]
-        else:
-            submatrix = I[self._top_bound : convex_comb, self._right_bound : new_bound]
-
-        return submatrix.mean()
-
-    def _all_bounds_set(self) -> bool:
-        return self._horizontal_bounds_set() and self._vertical_bounds_set()
-
-    def _horizontal_bounds_set(self) -> bool:
-        return self._left_bound is not None and self._right_bound is not None
-
-    def _vertical_bounds_set(self) -> bool:
-        return self._top_bound is not None and self._bottom_bound is not None
-
     @property
     def seed(self) -> int:
         return self._seed
 
     @property
-    def top_persistence(self) -> Union[float, None]:
+    def top_persistence(self) -> Optional[float]:
         return self._persistence
 
     @property
@@ -387,15 +292,15 @@ class Stripe(object):
 
         self._where = computed_where
 
-    def compute_biodescriptors(self, I: ss.csr_matrix, window: int = 3):
+    def compute_biodescriptors(self, matrix: SparseMatrix, window: int = 3):
         """
-        Use the sparse matrix I to compute various descriptive statistics.
+        Use the sparse matrix to compute various descriptive statistics.
         Statistics are stored in the current Stripe instance.
         This function raises an exception when it is called before the stripe bounds have been set.
 
         Parameters
         ----------
-        I: ss.csr_matrix
+        matrix: SparseMatrix
             the sparse matrix from which the stripe originated
         window: int
             window size used to compute statistics to the left and right of the stripe
@@ -406,7 +311,7 @@ class Stripe(object):
         if window < 0:
             raise ValueError("window cannot be negative")
 
-        restrI = self._slice_matrix(I)
+        restrI = self._slice_matrix(matrix)
 
         # ATT This can avoid empty stripes, which can occur e.g. when the column has (approximately) constant entries
         if np.prod(restrI.size) == 0:
@@ -420,8 +325,8 @@ class Stripe(object):
         self._five_number, self._inner_mean, self._inner_std = self._compute_inner_descriptors(restrI)
 
         # Mean intensity - left and right neighborhoods:
-        self._outer_lmean = self._compute_lmean(I, window)
-        self._outer_rmean = self._compute_rmean(I, window)
+        self._outer_lmean = self._compute_lmean(matrix, window)
+        self._outer_rmean = self._compute_rmean(matrix, window)
 
     def set_biodescriptors(
         self, inner_mean: float, inner_std: float, outer_lmean: float, outer_rmean: float, five_number: NDArray[float]
@@ -447,3 +352,104 @@ class Stripe(object):
         self._outer_lmean = outer_lmean
         self._outer_rmean = outer_rmean
         self._five_number = five_number
+
+    @staticmethod
+    def _validate_vertical_bounds(left_bound: int, right_bound: int, top_bound: int, bottom_bound: int, location: str):
+        assert location in {"upper_triangular", "lower_triangular"}
+        if location == "lower_triangular" and not (left_bound <= top_bound <= right_bound):
+            raise ValueError(
+                f"top bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {top_bound=}"
+            )
+        elif location == "upper_triangular" and not (left_bound <= bottom_bound <= right_bound):
+            raise ValueError(
+                f"bottom bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {bottom_bound=}"
+            )
+
+    def _all_bounds_set(self) -> bool:
+        return self._horizontal_bounds_set() and self._vertical_bounds_set()
+
+    def _horizontal_bounds_set(self) -> bool:
+        return self._left_bound is not None and self._right_bound is not None
+
+    def _vertical_bounds_set(self) -> bool:
+        return self._top_bound is not None and self._bottom_bound is not None
+
+    @staticmethod
+    def _infer_location(seed: int, top_bound: int, bottom_bound: int) -> str:
+        # TODO this check is temporarily disabled as it fails when processing stripes from chromosomes that are mostly empty
+        # if bottom_bound == top_bound:
+        #    raise ValueError(f"unable to infer stripe location: stripe bottom and top bounds are identical ({top_bound})")
+
+        if bottom_bound > seed:
+            return "lower_triangular"
+        # TODO the equal check should be removed as is not correct
+        if top_bound <= seed:
+            return "upper_triangular"
+
+        raise NotImplementedError
+
+    def _compute_convex_comp(self) -> int:
+        cfx1 = 0.99
+        cfx2 = 0.01
+
+        if self.upper_triangular:
+            cfx1, cfx2 = cfx2, cfx1
+
+        return int(round(cfx1 * self._top_bound + cfx2 * self._bottom_bound))
+
+    def _slice_matrix(self, matrix: SparseMatrix) -> NDArray:
+        convex_comb = self._compute_convex_comp()
+
+        # TODO do we have an off by one error here?
+        if self.lower_triangular:
+            i0, i1 = convex_comb, self._bottom_bound
+            j0, j1 = self._left_bound, self._right_bound
+        else:
+            i0, i1 = self._top_bound, convex_comb
+            j0, j1 = self._left_bound, self._right_bound
+
+        if isinstance(matrix, ss.csr_matrix):
+            return matrix[i0:i1, :].tocsc()[:, j0:j1].toarray()
+
+        return matrix[:, j0:j1].tocsr()[i0:i1, :].toarray()
+
+    @staticmethod
+    def _compute_inner_descriptors(matrix: NDArray) -> Tuple[NDArray[float], float, float]:
+        return np.percentile(matrix, [0, 25, 50, 75, 100]), np.mean(matrix), np.std(matrix)  # noqa
+
+    def _compute_lmean(self, matrix: SparseMatrix, window: int) -> float:
+        """
+        Compute the mean intensity for the left neighborhood
+        """
+        assert window >= 0
+
+        new_bound = max(0, self._left_bound - window)
+        if new_bound == self._left_bound:
+            return math.nan
+
+        convex_comb = self._compute_convex_comp()
+        if self.lower_triangular:
+            submatrix = matrix[convex_comb : self._bottom_bound, new_bound : self._left_bound]
+        else:
+            submatrix = matrix[self._top_bound : convex_comb, new_bound : self._left_bound]
+
+        return submatrix.mean()
+
+    def _compute_rmean(self, matrix: SparseMatrix, window: int) -> float:
+        """
+        Compute the mean intensity for the right neighborhood
+        """
+        assert window >= 0
+
+        new_bound = min(matrix.shape[1], self._right_bound + window)
+
+        if new_bound == self._right_bound:
+            return math.nan
+
+        convex_comb = self._compute_convex_comp()
+        if self.lower_triangular:
+            submatrix = matrix[convex_comb : self._bottom_bound, self._right_bound : new_bound]
+        else:
+            submatrix = matrix[self._top_bound : convex_comb, self._right_bound : new_bound]
+
+        return submatrix.mean()

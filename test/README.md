@@ -19,7 +19,7 @@ venv/bin/stripepy download --unit-test
 ## Running the unit tests
 
 ```console
-user@dev:/tmp/StripePy$ venv/bin/pytest test/ -v -m unit
+user@dev:/tmp/StripePy$ venv/bin/pytest -v -m unit
 
 ============================================== test session starts ==============================================
 platform linux -- Python 3.13.1, pytest-8.3.4, pluggy-1.5.0 -- /tmp/StripePy/venv/bin/python3
@@ -64,7 +64,7 @@ x.center(113, "=")
 -->
 
 ```console
-user@dev:/tmp/StripePy$ venv/bin/pytest test/ -v -m end2end
+user@dev:/tmp/StripePy$ venv/bin/pytest -v -m end2end
 
 ============================================== test session starts ==============================================
 platform linux -- Python 3.13.1, pytest-8.3.4, pluggy-1.5.0 -- /tmp/StripePy/venv/bin/python3
@@ -88,3 +88,14 @@ test/integration/test_stripepy_plot.py::TestStripePyPlot::test_stripe_hist_gw PA
 test/integration/test_stripepy_view.py::TestStripePyView::test_view PASSED                                 [100%]
 ======================================= 12 passed, 19 deselected in 53.73s ======================================
 ```
+
+## For developers
+
+If you need to collect coverage information use the following
+
+```bash
+venv/bin/pytest -v --cov --cov-report term --cov-report html -m unit
+venv/bin/pytest -v --cov --cov-report term --cov-report html --cov-append -m end2end
+```
+
+The HTML coverage will be located under `coverage/html/index.html`.

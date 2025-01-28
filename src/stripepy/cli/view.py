@@ -79,6 +79,7 @@ def run(
     h5_file: pathlib.Path,
     relative_change_threshold: float,
     transform: Optional[str] = None,
+    main_logger=None,
 ) -> int:
     try:
         with ResultFile(h5_file) as f:
