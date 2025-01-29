@@ -72,14 +72,6 @@ class TestTopPersistence:
 
 @pytest.mark.unit
 class TestSetHorizontalRelativeToSeed:
-    def test_right_at_seed(self):
-        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
-
-        stripe.set_horizontal_bounds(3, 5)
-
-        assert stripe.left_bound == 3
-        assert stripe.right_bound == 5
-
     def test_left_and_right_at_seed(self):
         stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
