@@ -46,3 +46,25 @@ class TestSeed:
 
     def test_seed_higher_value(self):
         stripe = Stripe(seed=100, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+
+@pytest.mark.unit
+class TestTopPersistence:
+    def test_top_persistence_1(self):
+        stripe = Stripe(seed=0, top_pers=1.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        assert stripe.top_persistence == 1.0
+
+    def test_top_persistence_0(self):
+        stripe = Stripe(seed=0, top_pers=0.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        assert stripe.top_persistence == 0.0
+
+    def test_top_persistence_negative(self):
+        with pytest.raises(ValueError, match="when not None, top_pers must be a positive number"):
+            stripe = Stripe(seed=0, top_pers=-1.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+    def top_persistence_higher_value(self):
+        stripe = Stripe(seed=0, top_pers=100.0, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        assert stripe.top_persistence == 100.0
