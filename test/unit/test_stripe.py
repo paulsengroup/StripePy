@@ -137,3 +137,42 @@ class TestSetHorizontalWhenAlreadySet:
 
         with pytest.raises(RuntimeError, match="horizontal stripe bounds have already been set"):
             stripe.set_horizontal_bounds(5, 7)
+
+
+@pytest.mark.unit
+class TestVerticalBoundaryValues:
+    def test_vertical_size_0(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        stripe.set_vertical_bounds(5, 5)
+
+        assert stripe.top_bound == 5
+        assert stripe.bottom_bound == 5
+
+    def test_top_and_bottom_cross_themselves(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        with pytest.raises(
+            ValueError,
+            match="the lower vertical bound must be greater than the upper vertical bound: top_bound=5, bottom_bound=4",
+        ):
+            stripe.set_vertical_bounds(5, 4)
+
+    def test_top_and_bottom_at_matrix_edge(self):
+        stripe = Stripe(seed=0, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        stripe.set_vertical_bounds(0, 0)
+
+        assert stripe.top_bound == 0
+        assert stripe.bottom_bound == 0
+
+    def test_top_and_bottom_over_matrix_edge(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+        with pytest.raises(ValueError, match="stripe bounds must be positive integers"):
+            stripe.set_vertical_bounds(-1, -1)
+
+    def test_vertical_bounds_already_set(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=(1, 4), where=None)
+
+        with pytest.raises(RuntimeError, match="vertical stripe bounds have already been set"):
+            stripe.set_vertical_bounds(2, 6)
