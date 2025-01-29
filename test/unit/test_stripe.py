@@ -68,3 +68,72 @@ class TestTopPersistence:
         stripe = Stripe(seed=0, top_pers=100.0, horizontal_bounds=None, vertical_bounds=None, where=None)
 
         assert stripe.top_persistence == 100.0
+
+
+@pytest.mark.unit
+class TestSetHorizontalRelativeToSeed:
+    def test_right_at_seed(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        stripe.set_horizontal_bounds(3, 5)
+
+        assert stripe.left_bound == 3
+        assert stripe.right_bound == 5
+
+    def test_left_and_right_at_seed(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        stripe.set_horizontal_bounds(5, 5)
+
+        assert stripe.left_bound == 5
+        assert stripe.right_bound == 5
+
+    def test_seed_to_left_of_boundary(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=6"
+        ):
+            stripe.set_horizontal_bounds(6, 6)
+
+    def test_seed_to_right_of_boundary(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+        with pytest.raises(
+            ValueError,
+            match="horizontal bounds must enclose the seed position: seed=5, left_bound=4, right_bound=4",
+        ):
+            stripe.set_horizontal_bounds(4, 4)
+
+
+@pytest.mark.unit
+class TestSetHorizontalRelativeToSelf:
+    def test_left_and_right_cross_themselves(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+        with pytest.raises(
+            ValueError, match="horizontal bounds must enclose the seed position: seed=5, left_bound=6, right_bound=5"
+        ):
+            stripe.set_horizontal_bounds(6, 5)
+
+
+@pytest.mark.unit
+class TestSetHorizontalRelativeToMatrixEdges:
+    def test_left_and_right_at_matrix_edge(self):
+        stripe = Stripe(seed=0, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+
+        stripe.set_horizontal_bounds(0, 0)
+
+        assert stripe.left_bound == 0
+        assert stripe.right_bound == 0
+
+    def test_left_over_matrix_edge(self):
+        stripe = Stripe(seed=1, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
+        with pytest.raises(ValueError, match="stripe bounds must be positive integers"):
+            stripe.set_horizontal_bounds(-1, 1)
+
+
+@pytest.mark.unit
+class TestSetHorizontalWhenAlreadySet:
+    def test_horizontal_bounds_already_set(self):
+        stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=(4, 6), vertical_bounds=None, where=None)
+
+        with pytest.raises(RuntimeError, match="horizontal stripe bounds have already been set"):
+            stripe.set_horizontal_bounds(5, 7)
