@@ -1,7 +1,9 @@
+import math
 import re
 
 import numpy as np
 import pytest
+import scipy.sparse as ss
 
 from stripepy.utils.stripe import Stripe
 
@@ -168,3 +170,93 @@ class TestWhere:
             stripe = Stripe(
                 seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where="invalid_triangular"
             )
+
+
+@pytest.mark.unit
+class TestComputeBiodescriptors:
+    def test_stripe_in_upper_left_corner(self):
+        stripe = Stripe(
+            seed=0,
+            top_pers=None,
+            horizontal_bounds=(0, 3),
+            vertical_bounds=(0, 3),
+            where="lower_triangular",
+        )
+        matrix = ss.csr_matrix(
+            np.array(
+                [
+                    [5, 5, 5, 2, 2, 2, 0],
+                    [5, 5, 5, 3, 3, 3, 0],
+                    [5, 5, 5, 4, 4, 4, 0],
+                    [0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 6, 0],
+                    [0, 0, 0, 0, 0, 0, 7],
+                ]
+            )
+        )
+        stripe.compute_biodescriptors(matrix)
+
+        assert np.allclose(stripe._five_number, np.array([5.0, 5.0, 5.0, 5.0, 5.0]))
+        assert np.isclose(stripe._inner_mean, 5.0, atol=1e-5)
+        assert np.isclose(stripe._inner_std, 0.0, atol=1e-5)
+        assert math.isnan(stripe._outer_lmean)
+        assert np.isclose(stripe._outer_rmean, 3.0, atol=1e-5)
+
+    def test_stripe_in_middle(self):
+        stripe = Stripe(
+            seed=5,
+            top_pers=None,
+            horizontal_bounds=(3, 5),
+            vertical_bounds=(3, 7),
+            where="lower_triangular",
+        )
+        matrix = ss.csr_matrix(
+            np.array(
+                [
+                    [1, 0, 0, 0, 0, 0, 0],
+                    [0, 2, 0, 0, 0, 0, 0],
+                    [0, 0, 3, 0, 0, 0, 0],
+                    [0, 0, 0, 4, 5, 0, 0],
+                    [0, 0, 0, 6, 6, 0, 0],
+                    [0, 0, 0, 6, 7, 6, 0],
+                    [0, 0, 0, 5, 5, 0, 7],
+                ]
+            )
+        )
+        stripe.compute_biodescriptors(matrix)
+
+        assert np.allclose(stripe._five_number, np.array([4.0, 5.0, 5.5, 6.0, 7.0]))
+        assert np.isclose(stripe._inner_mean, 5.5, atol=1e-5)
+        assert np.isclose(stripe._inner_std, 0.8660254037844386, atol=1e-16)
+        assert np.isclose(stripe._outer_lmean, 0.0)
+        assert np.isclose(stripe._outer_rmean, 1.625, atol=1e-5)
+
+
+@pytest.mark.unit
+class TestComputeBiodescriptorErrors:
+    def test_compute_no_bounds_set(self):
+        stripe = Stripe(
+            seed=2,
+            top_pers=None,
+            horizontal_bounds=None,
+            vertical_bounds=None,
+            where="lower_triangular",
+        )
+        matrix = ss.csr_matrix(np.array([[1, 0, 0], [0, 2, 0], [0, 0, 3]]))
+        with pytest.raises(
+            RuntimeError, match=re.escape(r"compute_biodescriptors() was called on a bound-less stripe")
+        ):
+            stripe.compute_biodescriptors(matrix)
+
+    def test_window_negative(self):
+        stripe = Stripe(
+            seed=2,
+            top_pers=None,
+            horizontal_bounds=(0, 3),
+            vertical_bounds=(1, 3),
+            where="lower_triangular",
+        )
+        matrix = ss.csr_matrix(np.array([[1, 0, 0], [0, 2, 0], [0, 0, 3]]))
+        with pytest.raises(ValueError, match="window cannot be negative"):
+            stripe.compute_biodescriptors(matrix, window=-1)
