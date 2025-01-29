@@ -64,7 +64,7 @@ class TestTopPersistence:
         with pytest.raises(ValueError, match="when not None, top_pers must be a positive number"):
             stripe = Stripe(seed=0, top_pers=-1.0, horizontal_bounds=None, vertical_bounds=None, where=None)
 
-    def top_persistence_higher_value(self):
+    def test_top_persistence_higher_value(self):
         stripe = Stripe(seed=0, top_pers=100.0, horizontal_bounds=None, vertical_bounds=None, where=None)
 
         assert np.isclose(stripe.top_persistence, 100.0)
