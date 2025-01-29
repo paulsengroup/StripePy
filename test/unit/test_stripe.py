@@ -71,7 +71,7 @@ class TestTopPersistence:
 
 
 @pytest.mark.unit
-class TestSetHorizontalRelativeToSeed:
+class TestHorizontalBoundaryValues:
     def test_left_and_right_at_seed(self):
         stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
@@ -95,9 +95,6 @@ class TestSetHorizontalRelativeToSeed:
         ):
             stripe.set_horizontal_bounds(4, 4)
 
-
-@pytest.mark.unit
-class TestSetHorizontalRelativeToSelf:
     def test_left_and_right_cross_themselves(self):
         stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
         with pytest.raises(
@@ -105,9 +102,6 @@ class TestSetHorizontalRelativeToSelf:
         ):
             stripe.set_horizontal_bounds(6, 5)
 
-
-@pytest.mark.unit
-class TestSetHorizontalRelativeToMatrixEdges:
     def test_left_and_right_at_matrix_edge(self):
         stripe = Stripe(seed=0, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
@@ -121,9 +115,6 @@ class TestSetHorizontalRelativeToMatrixEdges:
         with pytest.raises(ValueError, match="stripe bounds must be positive integers"):
             stripe.set_horizontal_bounds(-1, 1)
 
-
-@pytest.mark.unit
-class TestSetHorizontalWhenAlreadySet:
     def test_horizontal_bounds_already_set(self):
         stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=(4, 6), vertical_bounds=None, where=None)
 
