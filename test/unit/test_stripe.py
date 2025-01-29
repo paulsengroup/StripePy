@@ -159,3 +159,12 @@ class TestVerticalBoundaryValues:
 
         with pytest.raises(RuntimeError, match="vertical stripe bounds have already been set"):
             stripe.set_vertical_bounds(2, 6)
+
+
+@pytest.mark.unit
+class TestWhere:
+    def test_where_invalid_input(self):
+        with pytest.raises(ValueError, match="when specified, where must be one of (.*upper.*|.*lower.*){2}"):
+            stripe = Stripe(
+                seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where="invalid_triangular"
+            )
