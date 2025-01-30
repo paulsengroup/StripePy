@@ -241,9 +241,7 @@ class TestComputeBiodescriptorErrors:
             where="lower_triangular",
         )
         matrix = ss.csr_matrix([5, 5])
-        with pytest.raises(
-            RuntimeError, match=r"compute_biodescriptors\(\) was called on a bound-less stripe"
-        ):
+        with pytest.raises(RuntimeError, match=r"compute_biodescriptors\(\) was called on a bound-less stripe"):
             stripe.compute_biodescriptors(matrix)
 
     def test_window_negative(self):
