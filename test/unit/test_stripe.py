@@ -1,3 +1,7 @@
+# Copyright (C) 2025 Bendik Berg <bendber@ifi.uio.no>
+#
+# SPDX-License-Identifier: MIT
+
 import math
 
 import numpy as np
