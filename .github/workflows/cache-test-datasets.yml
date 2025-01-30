@@ -20,16 +20,16 @@ permissions:
 
 env:
   TEST_MCOOL_NAME: 4DNFI9GMP2J8.mcool
-  TEST_MCOOL_URL: "https://zenodo.org/records/14643417/files/4DNFI9GMP2J8.stripepy.mcool?download=1"
+  TEST_MCOOL_URL: "https://zenodo.org/records/14762415/files/4DNFI9GMP2J8.stripepy.mcool?download=1"
   TEST_MCOOL_MD5: "a17d08460c03cf6c926e2ca5743e4888"
   TEST_RESULT_FILE_V1_NAME: results_4DNFI9GMP2J8_v1.hdf5
-  TEST_RESULT_FILE_V1_URL: "https://zenodo.org/records/14643417/files/results_4DNFI9GMP2J8_v1.hdf5?download=1"
-  TEST_RESULT_FILE_V1_MD5: "8f4566c438b2b8a449393fb3b8fc2636"
+  TEST_RESULT_FILE_V1_URL: "https://zenodo.org/records/14762415/files/results_4DNFI9GMP2J8_v1.hdf5?download=1"
+  TEST_RESULT_FILE_V1_MD5: "03bca8d430191aaf3c90a4bc22a8c579"
   TEST_RESULT_FILE_V2_NAME: results_4DNFI9GMP2J8_v2.hdf5
-  TEST_RESULT_FILE_V2_URL: "https://zenodo.org/records/14643417/files/results_4DNFI9GMP2J8_v2.hdf5?download=1"
-  TEST_RESULT_FILE_V2_MD5: "496fb92c1565c83b323e77d6d51ac321"
+  TEST_RESULT_FILE_V2_URL: "https://zenodo.org/records/14762415/files/results_4DNFI9GMP2J8_v2.hdf5?download=1"
+  TEST_RESULT_FILE_V2_MD5: "dd14a2f69b337c40727d414d85e2f0a4"
   TEST_PLOTS_NAME: stripepy-plot-test-images.tar.xz
-  TEST_PLOTS_URL: "https://zenodo.org/records/14643417/files/stripepy-plot-test-images.tar.xz?download=1"
+  TEST_PLOTS_URL: "https://zenodo.org/records/14762415/files/stripepy-plot-test-images.tar.xz?download=1"
   TEST_PLOTS_MD5: "adf60f386521f70b24936e53a6d11eab"
 
 jobs:
@@ -41,13 +41,17 @@ jobs:
       cache-key: ${{ steps.generate-cache-key.outputs.key }}
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Generate checksum file
+        run: |
+          echo "${{env.TEST_MCOOL_MD5 }}  test/data/${{env.TEST_MCOOL_NAME }}" | tee checksums.md5
+          echo "${{env.TEST_RESULT_FILE_V1_MD5 }}  test/data/${{env.TEST_RESULT_FILE_V1_NAME }}" | tee -a checksums.md5
+          echo "${{env.TEST_RESULT_FILE_V2_MD5 }}  test/data/${{env.TEST_RESULT_FILE_V2_NAME }}" | tee -a checksums.md5
+          echo "${{env.TEST_PLOTS_MD5 }}  test/data/${{env.TEST_PLOTS_NAME }}" | tee -a checksums.md5
 
       - name: Generate cache key
         id: generate-cache-key
         run: |
-          key="test-dataset-${{ hashFiles( '.github/workflows/cache-test-datasets.yml' ) }}"
+          key="test-dataset-$(sha256sum checksums.md5 | cut -f 1 -d ' ')"
 
           echo "key=$key" | tee -a "$GITHUB_OUTPUT"
 
@@ -71,13 +75,7 @@ jobs:
 
       - name: Checksum test datasets
         if: steps.cache-dset.outputs.cache-hit != 'true'
-        run: |
-          echo "${{env.TEST_MCOOL_MD5 }}  test/data/${{env.TEST_MCOOL_NAME }}" | tee checksums.md5
-          echo "${{env.TEST_RESULT_FILE_V1_MD5 }}  test/data/${{env.TEST_RESULT_FILE_V1_NAME }}" | tee -a checksums.md5
-          echo "${{env.TEST_RESULT_FILE_V2_MD5 }}  test/data/${{env.TEST_RESULT_FILE_V2_NAME }}" | tee -a checksums.md5
-          echo "${{env.TEST_PLOTS_MD5 }}  test/data/${{env.TEST_PLOTS_NAME }}" | tee -a checksums.md5
-
-          md5sum -c checksums.md5
+        run: md5sum -c checksums.md5
 
       - name: Save cache
         uses: actions/cache/save@v4

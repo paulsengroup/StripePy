@@ -24,7 +24,7 @@ from stripepy.utils.progress_bar import initialize_progress_bar
 def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str, str]]:
     assert not math.isnan(max_size)
 
-    record_id = "14643417"
+    record_id = "14762415"
 
     datasets = {
         "4DNFI3RFZLZ5": {
@@ -60,7 +60,7 @@ def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str,
     private_datasets = {
         "__results_v1": {
             "url": f"https://zenodo.org/records/{record_id}/files/results_4DNFI9GMP2J8_v1.hdf5?download=1",
-            "md5": "8f4566c438b2b8a449393fb3b8fc2636",
+            "md5": "03bca8d430191aaf3c90a4bc22a8c579",
             "filename": "results_4DNFI9GMP2J8_v1.hdf5",
             "assembly": "hg38",
             "format": "stripepy",
@@ -68,7 +68,7 @@ def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str,
         },
         "__results_v2": {
             "url": f"https://zenodo.org/records/{record_id}/files/results_4DNFI9GMP2J8_v2.hdf5?download=1",
-            "md5": "496fb92c1565c83b323e77d6d51ac321",
+            "md5": "dd14a2f69b337c40727d414d85e2f0a4",
             "filename": "results_4DNFI9GMP2J8_v2.hdf5",
             "assembly": "hg38",
             "format": "stripepy",

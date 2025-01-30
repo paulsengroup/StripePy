@@ -40,7 +40,7 @@ class TestStripePyDownload:
 
         assert dest.is_file()
 
-        assert _hash_file(dest) == "8f4566c438b2b8a449393fb3b8fc2636"
+        assert _hash_file(dest) == "03bca8d430191aaf3c90a4bc22a8c579"
 
     @staticmethod
     def test_download_random(tmpdir):

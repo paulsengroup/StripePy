@@ -154,12 +154,12 @@ class Stripe(object):
         convex_comb = self._compute_convex_comp()
 
         if self.lower_triangular:
-            rows = slice(convex_comb, self._bottom_bound)
-            cols = slice(self._left_bound, self._right_bound)
+            rows = slice(convex_comb, min(self._bottom_bound + 1, I.shape[0]))
+            cols = slice(self._left_bound, min(self._right_bound + 1, I.shape[1]))
             return I[rows, :].tocsc()[:, cols].toarray()
 
-        rows = slice(self._top_bound, convex_comb)
-        cols = slice(self._left_bound, self._right_bound)
+        rows = slice(self._top_bound, min(convex_comb + 1, I.shape[0]))
+        cols = slice(self._left_bound, min(self._right_bound + 1, I.shape[1]))
         return I[rows, :].tocsc()[:, cols].toarray()
 
     @staticmethod
