@@ -30,6 +30,17 @@ class TestObjectInitialization:
         stripe = Stripe(seed=5, top_pers=None, horizontal_bounds=None, vertical_bounds=None, where=None)
 
         assert stripe.seed == 5
+        assert stripe.top_persistence is None
+        with pytest.raises(RuntimeError, match="left_bound has not been set"):
+            assert stripe.left_bound is None
+        with pytest.raises(RuntimeError, match="right_bound has not been set"):
+            assert stripe.right_bound is None
+        with pytest.raises(RuntimeError, match="top_bound has not been set"):
+            assert stripe.top_bound is None
+        with pytest.raises(RuntimeError, match="bottom_bound has not been set"):
+            assert stripe.bottom_bound is None
+        assert not stripe.upper_triangular
+        assert not stripe.lower_triangular
 
 
 @pytest.mark.unit
