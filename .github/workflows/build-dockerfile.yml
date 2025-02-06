@@ -150,7 +150,7 @@ jobs:
 
       - name: Set up QEMU
         if: github.event_name != 'pull_request'
-        uses: docker/setup-qemu-action@53851d14592bedcffcf25ea515637cff71ef929a # 3.3.0
+        uses: docker/setup-qemu-action@4574d27a4764455b42196d70a065bc6853246a25 # 3.4.0
         with:
           platforms: arm64
 
