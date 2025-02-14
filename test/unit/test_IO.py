@@ -125,7 +125,7 @@ class TestResult:
         assert len(df) == 1
 
         assert df["seed"].iloc[0] == 10
-        assert df["top_persistence"].iloc[0] == 1.23
+        assert np.isclose(df["top_persistence"].iloc[0], 1.23)
         assert df["left_bound"].iloc[0] == 8
         assert df["right_bound"].iloc[0] == 12
         assert df["top_bound"].iloc[0] == 5
@@ -137,7 +137,7 @@ class TestResult:
 
         assert df["inner_mean"].iloc[0] == 0
         assert df["outer_mean"].iloc[0] == 0
-        assert df["rel_change"].iloc[0] == -1
+        assert np.isnan(df["rel_change"].iloc[0])
         assert df["inner_std"].iloc[0] == 0
 
 

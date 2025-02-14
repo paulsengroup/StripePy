@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-import math
+import warnings
 from typing import Optional, Tuple
 
 import numpy as np
@@ -53,6 +53,14 @@ class Stripe(object):
         the standard deviation of the number of interactions within the stripe
     five_number: NDArray[float]
         a vector of five numbers corresponding to the 0, 25, 50, 75, and 100 percentiles of the number of within-stripe interactions
+    outer_lsum: float
+        the sum of interactions in the band to the left of the stripe
+    outer_rsum: float
+        the sum of interactions in the band to the right of the stripe
+    outer_lsize float
+        the number of entries in the band to the left of the stripe
+    outer_rsize float
+        the number of entries in the band to the right of the stripe
     outer_lmean: float
         the average number of interactions in the band to the left of the stripe
     outer_rmean: float
@@ -114,8 +122,10 @@ class Stripe(object):
         self._five_number = None
         self._inner_mean = None
         self._inner_std = None
-        self._outer_lmean = None
-        self._outer_rmean = None
+        self._outer_lsum = None
+        self._outer_rsum = None
+        self._outer_lsize = None
+        self._outer_rsize = None
 
     @property
     def seed(self) -> int:
@@ -185,43 +195,80 @@ class Stripe(object):
         return self._five_number
 
     @property
+    def outer_lsum(self) -> float:
+        if self._outer_lsum is None:
+            raise RuntimeError(
+                "caught an attempt to access outer_lsum property before compute_biodescriptors() was called"
+            )
+
+        return self._outer_lsum
+
+    @property
+    def outer_rsum(self) -> float:
+        if self._outer_rsum is None:
+            raise RuntimeError(
+                "caught an attempt to access outer_rsum property before compute_biodescriptors() was called"
+            )
+
+        return self._outer_rsum
+
+    @property
+    def outer_lsize(self) -> float:
+        if self._outer_lsize is None:
+            raise RuntimeError(
+                "caught an attempt to access outer_lsize property before compute_biodescriptors() was called"
+            )
+
+        return self._outer_lsize
+
+    @property
+    def outer_rsize(self) -> float:
+        if self._outer_rsize is None:
+            raise RuntimeError(
+                "caught an attempt to access outer_rsize property before compute_biodescriptors() was called"
+            )
+
+        return self._outer_rsize
+
+    @property
     def outer_lmean(self) -> float:
-        if self._outer_lmean is None:
+        if self._outer_lsum is None or self._outer_lsize is None:
             raise RuntimeError(
                 "caught an attempt to access outer_lmean property before compute_biodescriptors() was called"
             )
 
-        return self._outer_lmean
+        # Suppress divide-by-zero warning:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(category=RuntimeWarning, action="ignore")
+            return self._outer_lsum / self._outer_lsize
 
     @property
     def outer_rmean(self) -> float:
-        if self._outer_rmean is None:
+        if self._outer_rsum is None or self._outer_rsize is None:
             raise RuntimeError(
                 "caught an attempt to access outer_rmean property before compute_biodescriptors() was called"
             )
 
-        return self._outer_rmean
+        # Suppress divide-by-zero warning:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(category=RuntimeWarning, action="ignore")
+            return self._outer_rsum / self._outer_rsize
 
     @property
     def outer_mean(self) -> float:
-        if self.outer_rmean == -1:
-            assert self.outer_lmean == -1
-            return -1.0
-
-        if math.isnan(self.outer_rmean):
-            return self.outer_lmean
-
-        if math.isnan(self.outer_lmean):
-            return self.outer_rmean
-
-        return (self.outer_lmean + self.outer_rmean) / 2
+        # Suppress divide-by-zero warning:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(category=RuntimeWarning, action="ignore")
+            return (self._outer_lsum + self._outer_rsum) / (self._outer_lsize + self._outer_rsize)
 
     @property
     def rel_change(self) -> float:
-        if self.outer_mean <= 0:
-            return -1.0
+        outer_mean = self.outer_mean
 
-        return abs(self.inner_mean - self.outer_mean) / self.outer_mean * 100
+        # Suppress divide-by-zero warning:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(category=RuntimeWarning, action="ignore")
+            return abs(self.inner_mean - outer_mean) / outer_mean * 100
 
     def set_horizontal_bounds(self, left_bound: int, right_bound: int):
         """
@@ -245,9 +292,6 @@ class Stripe(object):
             raise ValueError(
                 f"horizontal bounds must enclose the seed position: seed={self._seed}, {left_bound=}, {right_bound=}"
             )
-
-        if self._vertical_bounds_set():
-            Stripe._validate_vertical_bounds(left_bound, right_bound, self._top_bound, self._bottom_bound, self._where)
 
         self._left_bound = left_bound
         self._right_bound = right_bound
@@ -282,11 +326,6 @@ class Stripe(object):
                 f"computed location does not match the provided stripe location: computed={computed_where}, expected={self._where}"
             )
 
-        if self._horizontal_bounds_set():
-            Stripe._validate_vertical_bounds(
-                self._left_bound, self._right_bound, top_bound, bottom_bound, computed_where
-            )
-
         self._top_bound = top_bound
         self._bottom_bound = bottom_bound
 
@@ -311,25 +350,26 @@ class Stripe(object):
         if window < 0:
             raise ValueError("window cannot be negative")
 
-        restrI = self._slice_matrix(matrix)
+        left_submatrix, stripe_submatrix, right_submatrix = self._slice_matrix(matrix, window)
 
-        # ATT This can avoid empty stripes, which can occur e.g. when the column has (approximately) constant entries
-        if np.prod(restrI.size) == 0:
-            self._five_number = np.array([-1.0] * 5)
-            self._inner_mean = -1.0
-            self._inner_std = -1.0
-            self._outer_lmean = -1.0
-            self._outer_rmean = -1.0
-            return
+        # Suppress divide-by-zero warning:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(category=RuntimeWarning, action="ignore")
+            self._five_number, self._inner_mean, self._inner_std = self._compute_inner_descriptors(stripe_submatrix)
 
-        self._five_number, self._inner_mean, self._inner_std = self._compute_inner_descriptors(restrI)
-
-        # Mean intensity - left and right neighborhoods:
-        self._outer_lmean = self._compute_lmean(matrix, window)
-        self._outer_rmean = self._compute_rmean(matrix, window)
+            # Compute outer descriptors
+            self._outer_lsum, self._outer_lsize = self._compute_outer_descriptors(left_submatrix)
+            self._outer_rsum, self._outer_rsize = self._compute_outer_descriptors(right_submatrix)
 
     def set_biodescriptors(
-        self, inner_mean: float, inner_std: float, outer_lmean: float, outer_rmean: float, five_number: NDArray[float]
+        self,
+        inner_mean: float,
+        inner_std: float,
+        outer_lsum: float,
+        outer_lsize: int,
+        outer_rsum: float,
+        outer_rsize: int,
+        five_number: NDArray[float],
     ):
         """
         Set the stripe biodescriptors based on pre-computed statistics.
@@ -338,9 +378,13 @@ class Stripe(object):
 
         inner_std: float
 
-        outer_lmean: float
+        outer_lsum: float
 
-        outer_rmean: float
+        outer_lsize: int
+
+        outer_rsum: float
+
+        outer_rsize: int
 
         five_number: NDArray[float]
         """
@@ -349,21 +393,11 @@ class Stripe(object):
 
         self._inner_mean = inner_mean
         self._inner_std = inner_std
-        self._outer_lmean = outer_lmean
-        self._outer_rmean = outer_rmean
+        self._outer_lsum = outer_lsum
+        self._outer_lsize = outer_lsize
+        self._outer_rsum = outer_rsum
+        self._outer_rsize = outer_rsize
         self._five_number = five_number
-
-    @staticmethod
-    def _validate_vertical_bounds(left_bound: int, right_bound: int, top_bound: int, bottom_bound: int, location: str):
-        assert location in {"upper_triangular", "lower_triangular"}
-        if location == "lower_triangular" and not (left_bound <= top_bound <= right_bound):
-            raise ValueError(
-                f"top bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {top_bound=}"
-            )
-        elif location == "upper_triangular" and not (left_bound <= bottom_bound <= right_bound):
-            raise ValueError(
-                f"bottom bound is not enclosed between the left and right bounds: {left_bound=}, {right_bound=}, {bottom_bound=}"
-            )
 
     def _all_bounds_set(self) -> bool:
         return self._horizontal_bounds_set() and self._vertical_bounds_set()
@@ -376,17 +410,14 @@ class Stripe(object):
 
     @staticmethod
     def _infer_location(seed: int, top_bound: int, bottom_bound: int) -> str:
-        # TODO this check is temporarily disabled as it fails when processing stripes from chromosomes that are mostly empty
-        # if bottom_bound == top_bound:
-        #    raise ValueError(f"unable to infer stripe location: stripe bottom and top bounds are identical ({top_bound})")
+        # TODO is it ok that when bottom_bound==seed==top_bound the stripe is considered as upper_triangular?
 
-        if bottom_bound > seed:
-            return "lower_triangular"
-        # TODO the equal check should be removed as is not correct
-        if top_bound <= seed:
+        if bottom_bound == seed:
             return "upper_triangular"
+        if top_bound == seed:
+            return "lower_triangular"
 
-        raise NotImplementedError
+        raise ValueError(f"At least one of {top_bound=} and {bottom_bound=} must be equal to {seed=}")
 
     def _compute_convex_comp(self) -> int:
         cfx1 = 0.99
@@ -397,58 +428,122 @@ class Stripe(object):
 
         return int(round(cfx1 * self._top_bound + cfx2 * self._bottom_bound))
 
-    def _slice_matrix(self, matrix: SparseMatrix) -> NDArray:
+    def _pad_horizontal_domain(self, matrix: SparseMatrix, padding: int) -> Tuple[int, int]:
+        j0 = max(0, self._left_bound - padding)
+        j1 = min(self._right_bound + padding + 1, matrix.shape[1])
+        return j0, j1
+
+    def _pad_vertical_domain(self, matrix: SparseMatrix, j0: int, j1: int) -> Tuple[int, int]:
         convex_comb = self._compute_convex_comp()
-
         if self.lower_triangular:
-            i0, i1 = convex_comb, min(self._bottom_bound + 1, matrix.shape[0])
-            j0, j1 = self._left_bound, min(self._right_bound + 1, matrix.shape[1])
+            # convex_comb replaces _top_bound
+            convex_comb = self._top_bound
+            i0 = j0
+            i1 = min(j1 + (self._bottom_bound - convex_comb), matrix.shape[0])
         else:
-            i0, i1 = self._top_bound, min(convex_comb + 1, matrix.shape[0])
-            j0, j1 = self._left_bound, min(self._right_bound + 1, matrix.shape[1])
+            # convex_comb replaces _bottom_bound
+            convex_comb = self._bottom_bound
+            i0 = max(0, j0 - (convex_comb - self._top_bound))
+            i1 = min(j1, matrix.shape[0])
+        return i0, i1
 
+    def _slice_matrix(self, matrix: SparseMatrix, padding: int) -> Tuple[NDArray, NDArray, NDArray]:
+        """
+        Extract the minimum-bounding matrix containing the sub-matrices corresponding to: the current stripe, as well
+        as its left and right neighbors; values outside the sub-matrices are initialized to np.nan. These sub-matrices
+        are computed as k diagonals around the main diagonal (either in the lower or the upper triangular part), where
+        k is the height of the stripe.
+
+        Parameters
+        ----------
+        matrix: SparseMatrix
+            matrix to be sliced
+        padding: int
+            width of the left and right neighborhoods
+
+        Returns
+        -------
+        NDArray
+            The matrix left neighborhood
+        NDArray
+            The matrix stripe
+        NDArray
+            The matrix right neighborhood
+        """
+        stripe_height = self._bottom_bound - self._top_bound + 1
+
+        # Compute the indices for the minimum-bounding matrix
+        j0, j1 = self._pad_horizontal_domain(matrix, padding)
+        i0, i1 = self._pad_vertical_domain(matrix, j0, j1)
+
+        # The sub-matrix we here obtained is the smallest rectangular matrix enclosing the desired matrices
         if isinstance(matrix, ss.csr_matrix):
-            return matrix[i0:i1, :].tocsc()[:, j0:j1].toarray()
+            submatrix = matrix[i0:i1, :].tocsc()[:, j0:j1].toarray()
+        else:
+            submatrix = matrix[:, j0:j1].tocsr()[i0:i1, :].toarray()
 
-        return matrix[:, j0:j1].tocsr()[i0:i1, :].toarray()
+        # Compute the padded matrix shape
+        expected_top_padding = self._seed - self._left_bound + padding
+        expected_bottom_padding = self._right_bound - self._seed + padding
+        expected_width = self._right_bound - self._left_bound + 1 + 2 * padding
+        expected_height = expected_top_padding + stripe_height + expected_bottom_padding
+
+        # Initialized the padded sub-matrix to nan. Note that the previously sliced sub-matrix will fit into this
+        # matrix.
+        padded_submatrix = np.full((expected_height, expected_width), np.nan)
+
+        # Compute the number of rows/columns that we can expand through (around the stripe) in the original matrix.
+        # This can be less than the expected padding when we are at the left/right ends of the chromosome matrix.
+        effective_top_padding = self._top_bound - i0
+        effective_left_padding = self._left_bound - j0
+        effective_right_padding = j1 - self._right_bound - 1
+        effective_bottom_padding = i1 - self._bottom_bound - 1
+
+        # Compute the offsets used to assign the sliced sub-matrix to the padded sub-matrix
+        offset_top_rows = expected_top_padding - effective_top_padding
+        offset_left_cols = padding - effective_left_padding
+        offset_right_cols = effective_right_padding - padding + padded_submatrix.shape[1]
+        offset_bottom_rows = effective_bottom_padding - expected_bottom_padding + padded_submatrix.shape[0]
+
+        assert offset_bottom_rows >= offset_top_rows
+        assert offset_right_cols >= offset_left_cols
+
+        # Fill the padded sub-matrix
+        padded_submatrix[offset_top_rows:offset_bottom_rows, offset_left_cols:offset_right_cols] = submatrix
+
+        # Mask values outside the diagonal window, i.e., the stripe height
+        idx1, idx2 = np.triu_indices(
+            n=padded_submatrix.shape[0],
+            m=padded_submatrix.shape[1],
+            k=1,
+        )
+        idx3, idx4 = np.tril_indices(
+            n=padded_submatrix.shape[0],
+            m=padded_submatrix.shape[1],
+            k=self._top_bound - self._bottom_bound - 1,
+        )
+        padded_submatrix[idx1, idx2] = np.nan
+        padded_submatrix[idx3, idx4] = np.nan
+
+        # Extract the three sub-matrices
+        left_submatrix = padded_submatrix[:, :padding]
+        stripe_submatrix = padded_submatrix[:, padding:-padding]
+        right_submatrix = padded_submatrix[:, -padding:]
+
+        return left_submatrix, stripe_submatrix, right_submatrix
 
     @staticmethod
     def _compute_inner_descriptors(matrix: NDArray) -> Tuple[NDArray[float], float, float]:
-        return np.percentile(matrix, [0, 25, 50, 75, 100]), np.mean(matrix), np.std(matrix)  # noqa
+        assert matrix.size > 0
 
-    def _compute_lmean(self, matrix: SparseMatrix, window: int) -> float:
+        return np.nanpercentile(matrix, [0, 25, 50, 75, 100]), np.nanmean(matrix), np.nanstd(matrix)  # noqa
+
+    @staticmethod
+    def _compute_outer_descriptors(matrix: NDArray) -> Tuple[float, int]:
         """
-        Compute the mean intensity for the left neighborhood
+        Compute the sum and number of entries in the outer-left neighborhood
         """
-        assert window >= 0
 
-        new_bound = max(0, self._left_bound - window)
-        if new_bound == self._left_bound:
-            return math.nan
+        assert matrix.size > 0
 
-        convex_comb = self._compute_convex_comp()
-        if self.lower_triangular:
-            submatrix = matrix[convex_comb : self._bottom_bound, new_bound : self._left_bound]
-        else:
-            submatrix = matrix[self._top_bound : convex_comb, new_bound : self._left_bound]
-
-        return submatrix.mean()
-
-    def _compute_rmean(self, matrix: SparseMatrix, window: int) -> float:
-        """
-        Compute the mean intensity for the right neighborhood
-        """
-        assert window >= 0
-
-        new_bound = min(matrix.shape[1], self._right_bound + window)
-
-        if new_bound == self._right_bound:
-            return math.nan
-
-        convex_comb = self._compute_convex_comp()
-        if self.lower_triangular:
-            submatrix = matrix[convex_comb : self._bottom_bound, self._right_bound : new_bound]
-        else:
-            submatrix = matrix[self._top_bound : convex_comb, self._right_bound : new_bound]
-
-        return submatrix.mean()
+        return np.nansum(matrix), np.isfinite(matrix).sum()

@@ -7,6 +7,7 @@ import functools
 import itertools
 import json
 import pathlib
+import re
 from importlib.metadata import version
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -175,7 +176,15 @@ class Result(object):
 
         stripes = self.get("stripes", location)
 
-        if descriptor in {"seed", "left_bound", "right_bound", "top_bound", "bottom_bound"}:
+        if descriptor in {
+            "seed",
+            "left_bound",
+            "right_bound",
+            "top_bound",
+            "bottom_bound",
+            "outer_lsize",
+            "outer_rsize",
+        }:
             dtype = int
         else:
             dtype = float
@@ -516,16 +525,27 @@ class ResultFile(object):
                 "top_persistence",
                 "inner_mean",
                 "inner_std",
+                "outer_lsum",
+                "outer_lsize",
+                "outer_rsum",
+                "outer_rsize",
                 "outer_lmean",
                 "outer_rmean",
                 "quartile",
             ]
+
+            # Default-initialize missing columns
             for col in cols:
                 if col not in df:
                     if col == "quartile":
                         df[col] = pd.Series(list(np.full(5, np.nan)))
+                    elif re.match(r"^outer_[lr]size", col):
+                        df[col] = 0
                     else:
                         df[col] = np.nan
+
+            # Ensure column order is deterministic
+            df = df[cols]
 
             if location == "LT":
                 location_ = "lower_triangular"
@@ -541,6 +561,10 @@ class ResultFile(object):
                 top_persistence,
                 inner_mean,
                 inner_std,
+                outer_lsum,
+                outer_lsize,
+                outer_rsum,
+                outer_rsize,
                 outer_lmean,
                 outer_rmean,
                 quartile,
@@ -552,11 +576,26 @@ class ResultFile(object):
                     vertical_bounds=(top_bound, bottom_bound),
                     where=location_,
                 )
+
+                if np.isnan(outer_lsum):
+                    # Estimate outer_lsum and outer_lsize
+                    assert not np.isnan(outer_lmean)
+                    outer_lsize = (bottom_bound - top_bound + 1) * 3
+                    outer_lsum = outer_lsize * outer_lmean
+
+                if np.isnan(outer_rsum):
+                    # Estimate outer_rsum and outer_rsize
+                    assert not np.isnan(outer_rmean)
+                    outer_rsize = (bottom_bound - top_bound + 1) * 3
+                    outer_rsum = outer_rsize * outer_rmean
+
                 s.set_biodescriptors(
                     inner_mean=inner_mean,
                     inner_std=inner_std,
-                    outer_lmean=outer_lmean,
-                    outer_rmean=outer_rmean,
+                    outer_lsum=outer_lsum,
+                    outer_lsize=outer_lsize,
+                    outer_rsum=outer_rsum,
+                    outer_rsize=outer_rsize,
                     five_number=quartile,
                 )
                 stripes.append(s)
@@ -686,7 +725,9 @@ class ResultFile(object):
 
         if self._version == 1:
             return self._get_v1(chrom, field, location)
-        return self._get_v2(chrom, field, location)
+        if self._version == 2:
+            return self._get_v2(chrom, field, location)
+        return self._get_v3(chrom, field, location)
 
     def write_descriptors(self, result: Result):
         """
@@ -788,18 +829,18 @@ class ResultFile(object):
             ResultFile._validate(h5, skip_index_validation=True, skip_version_check=True)
 
         # Negative version numbers mark files that have not yet been finalized.
-        # A version value of -2 marks a v2 file that is being constructed
-        version = h5.attrs.get("format-version", -2)  # noqa
+        # A version value of -3 marks a v3 file that is being constructed
+        version = h5.attrs.get("format-version", -3)  # noqa
         if version >= 0:
             raise RuntimeError("cannot append to a file that has already been finalized!")
-        if version != -2:
-            raise RuntimeError("can only append to v2 files")
+        if version != -3:
+            raise RuntimeError("can only append to v3 files")
 
         return h5, mode, version
 
     @staticmethod
     def _open_in_write_mode(path: pathlib.Path) -> Tuple[h5py.File, str, int]:
-        return h5py.File(path, "w-"), "w", 2
+        return h5py.File(path, "w-"), "w", 3
 
     @staticmethod
     def _validate_index(h5: h5py.File):
@@ -834,7 +875,7 @@ class ResultFile(object):
             if format != "HDF5::StripePy":
                 raise RuntimeError(f'unrecognized file format: expected "HDF5::StripePy", found "{format}"')
 
-            known_versions = {1, 2}
+            known_versions = {1, 2, 3}
             if not skip_version_check and format_version not in known_versions:
                 known_versions_ = ", ".join(str(v) for v in known_versions)
                 raise RuntimeError(
@@ -981,6 +1022,55 @@ class ResultFile(object):
 
             return df
 
+        raise NotImplementedError
+
+    def _get_v3(self, chrom: str, field: str, location: str) -> pd.DataFrame:
+        if field not in {"bio_descriptors", "stripes"}:
+            # v3 and v2 layouts are different only for bio_descriptors
+            return self._get_v2(chrom, field, location)
+
+        if field == "stripes":
+            df1 = self._get_v3(chrom, "geo_descriptors", location)
+            df2 = self._get_v3(chrom, "bio_descriptors", location)
+            return pd.concat((df1, df2), axis="columns")
+
+        chrom_id = self._index_chromosomes()[chrom]
+
+        assert field == "bio_descriptors"
+        i1, i2 = self._read_index("chrom_offsets_stripes", location)[chrom_id : chrom_id + 2]
+        inner_mean = self._h5[f"/stripes/{location.lower()}/inner_mean"][i1:i2].astype(float)
+        inner_std = self._h5[f"/stripes/{location.lower()}/inner_std"][i1:i2].astype(float)
+        outer_lsum = self._h5[f"/stripes/{location.lower()}/outer_lsum"][i1:i2].astype(float)
+        outer_lsize = self._h5[f"/stripes/{location.lower()}/outer_lsize"][i1:i2].astype(int)
+        outer_rsum = self._h5[f"/stripes/{location.lower()}/outer_rsum"][i1:i2].astype(float)
+        outer_rsize = self._h5[f"/stripes/{location.lower()}/outer_rsize"][i1:i2].astype(int)
+        quartile = self._h5[f"/stripes/{location.lower()}/quartile"][i1:i2, :].astype(float)
+
+        assert quartile.shape[1] == 5
+
+        df = pd.DataFrame(
+            data={
+                "inner_mean": inner_mean,
+                "inner_std": inner_std,
+                "outer_lsum": outer_lsum,
+                "outer_lsize": outer_lsize,
+                "outer_rsum": outer_rsum,
+                "outer_rsize": outer_rsize,
+                "min": quartile[:, 0],
+                "q1": quartile[:, 1],
+                "q2": quartile[:, 2],
+                "q3": quartile[:, 3],
+                "max": quartile[:, 4],
+            }
+        )
+
+        df["outer_lmean"] = df["outer_lsum"] / df["outer_lsize"]
+        df["outer_rmean"] = df["outer_rsum"] / df["outer_rsize"]
+        df["outer_mean"] = (outer_lsum + outer_rsum) / (outer_lsize + outer_rsize)
+        df["rel_change"] = np.abs(df["inner_mean"] - df["outer_mean"]) / df["outer_mean"] * 100
+
+        return df
+
     def _init_attributes(self, resolution: int, assembly: str, normalization: Optional[str], metadata: Dict[str, Any]):
         if normalization is None:
             normalization = "NONE"
@@ -992,7 +1082,7 @@ class ResultFile(object):
         self._h5.attrs["creation-date"] = datetime.datetime.now().isoformat()
         self._h5.attrs["format"] = "HDF5::StripePy"
         self._h5.attrs["format-url"] = "https://github.com/paulsengroup/StripePy"
-        self._h5.attrs["format-version"] = 2
+        self._h5.attrs["format-version"] = self._version
         self._h5.attrs["generated-by"] = f"StripePy v{version('stripepy-hic')}"
         self._h5.attrs["metadata"] = json.dumps(metadata, indent=2)
         self._h5.attrs["normalization"] = normalization
@@ -1007,7 +1097,6 @@ class ResultFile(object):
 
     def _init_index(self):
         templates = [
-            "/index/{{location}}/chrom_offsets_pd",
             "/index/{{location}}/chrom_offsets_min_points",
             "/index/{{location}}/chrom_offsets_max_points",
             "/index/{{location}}/chrom_offsets_stripes",
@@ -1019,6 +1108,13 @@ class ResultFile(object):
                 name=pattern.replace("{{location}}", location),
                 data=data,
             )
+
+        self._h5.create_dataset(
+            name="/index/lt/chrom_offsets_pd",
+            data=data,
+        )
+
+        self._h5["/index/ut/chrom_offsets_pd"] = h5py.SoftLink("/index/lt/chrom_offsets_pd")
 
     def _init_min_persistence(self):
         self._h5.create_dataset(name="/min_persistence", data=np.full(len(self._chroms), np.nan, dtype=float))
@@ -1086,8 +1182,10 @@ class ResultFile(object):
             "/stripes/{{location}}/top_persistence": params | {"dtype": float},
             "/stripes/{{location}}/inner_mean": params | {"dtype": float},
             "/stripes/{{location}}/inner_std": params | {"dtype": float},
-            "/stripes/{{location}}/outer_lmean": params | {"dtype": float},
-            "/stripes/{{location}}/outer_rmean": params | {"dtype": float},
+            "/stripes/{{location}}/outer_lsum": params | {"dtype": float},
+            "/stripes/{{location}}/outer_lsize": params | {"dtype": int},
+            "/stripes/{{location}}/outer_rsum": params | {"dtype": float},
+            "/stripes/{{location}}/outer_rsize": params | {"dtype": int},
             "/stripes/{{location}}/quartile": params | {"dtype": float, "shape": (0, 0), "maxshape": (None, 5)},
         }
 
@@ -1157,8 +1255,10 @@ class ResultFile(object):
         top_persistence_values = np.empty_like(stripes, dtype=float)
         inner_means = np.empty_like(stripes, dtype=float)
         inner_stds = np.empty_like(stripes, dtype=float)
-        outer_lmeans = np.empty_like(stripes, dtype=float)
-        outer_rmeans = np.empty_like(stripes, dtype=float)
+        outer_lsums = np.empty_like(stripes, dtype=float)
+        outer_lsizes = np.empty_like(stripes, dtype=int)
+        outer_rsums = np.empty_like(stripes, dtype=float)
+        outer_rsizes = np.empty_like(stripes, dtype=int)
         quartiles = np.empty((len(stripes), 5), dtype=float)
 
         for i, s in enumerate(stripes):
@@ -1170,8 +1270,10 @@ class ResultFile(object):
             top_persistence_values[i] = s.top_persistence
             inner_means[i] = s.inner_mean
             inner_stds[i] = s.inner_std
-            outer_lmeans[i] = s.outer_lmean
-            outer_rmeans[i] = s.outer_rmean
+            outer_lsums[i] = s.outer_lsum
+            outer_lsizes[i] = s.outer_lsize
+            outer_rsums[i] = s.outer_rsum
+            outer_rsizes[i] = s.outer_rsize
             quartiles[i] = s.five_number
 
         self._append_to_dset(f"/stripes/{location}/seed", seeds)
@@ -1182,8 +1284,10 @@ class ResultFile(object):
         self._append_to_dset(f"/stripes/{location}/top_persistence", top_persistence_values)
         self._append_to_dset(f"/stripes/{location}/inner_mean", inner_means)
         self._append_to_dset(f"/stripes/{location}/inner_std", inner_stds)
-        self._append_to_dset(f"/stripes/{location}/outer_lmean", outer_lmeans)
-        self._append_to_dset(f"/stripes/{location}/outer_rmean", outer_rmeans)
+        self._append_to_dset(f"/stripes/{location}/outer_lsum", outer_lsums)
+        self._append_to_dset(f"/stripes/{location}/outer_lsize", outer_lsizes)
+        self._append_to_dset(f"/stripes/{location}/outer_rsum", outer_rsums)
+        self._append_to_dset(f"/stripes/{location}/outer_rsize", outer_rsizes)
         self._append_to_dset(f"/stripes/{location}/quartile", quartiles)
 
         self._update_index(

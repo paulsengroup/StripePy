@@ -392,7 +392,7 @@ def step_4(
 
     logger.bind(step=(4, 1)).info("computing stripe biological descriptors")
 
-    return location, list(
+    stripes = list(
         map_(
             functools.partial(
                 _step_4_helper,
@@ -403,6 +403,16 @@ def step_4(
             stripes,
         )
     )
+
+    bad_stripe_indices = []
+    for i, stripe in enumerate(stripes):
+        if not np.isfinite(stripe.rel_change):
+            bad_stripe_indices.append(i)
+
+    for i in bad_stripe_indices[::-1]:
+        stripes.pop(i)
+
+    return location, stripes
 
 
 def step_5(
