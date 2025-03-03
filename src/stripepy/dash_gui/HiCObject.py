@@ -34,6 +34,10 @@ class HiCObject:
             self._set_file()
 
     @property
+    def file(self):
+        return self.f
+
+    @property
     def normalization(self):
         return self._normalization
 
@@ -56,6 +60,11 @@ class HiCObject:
     @property
     def frame(self):
         return pd.DataFrame(self.sel.to_numpy())
+
+    @property
+    def selector(self):
+        selector = self.sel.to_numpy()
+        return pd.DataFrame(selector)
 
     @property
     def nnz(self):
