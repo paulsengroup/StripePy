@@ -39,7 +39,7 @@ app.layout = html.Div(
                                 dcc.Input(placeholder="resolution", type="number", value="", id="resolution"),
                                 html.Button(id="submit-file", n_clicks=0, children="Submit"),
                             ],
-                            style={"padding-bottom": 60},
+                            style={"paddingBottom": 60},
                         ),
                         html.Div(
                             [
@@ -71,7 +71,7 @@ app.layout = html.Div(
                                     disabled=True,
                                 ),
                             ],
-                            style={"padding-bottom": 60},
+                            style={"paddingBottom": 60},
                         ),
                         dcc.Dropdown(
                             options=["KR", "VC", "VC_SQRT"],
