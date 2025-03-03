@@ -15,43 +15,21 @@ import stripepy
 app = Dash(__name__)
 
 hictk_reader = HiCObject()
-hictk_reader.path = "4DNFIOTPSS3L.hic"
-hictk_reader.resolution = 5000
-hictk_reader.region_of_interest = "2L:10,000,000-20,000,000"
-hictk_reader.normalization = "KR"
-
-attributes = hictk_reader.attributes
-nnz = hictk_reader.nnz
-sum = hictk_reader.sum
-frame = hictk_reader.frame
-
-
-# fig = go.Figure(data=go.Heatmap(z=np.log10(frame)))
-fig = go.Figure(data=go.Heatmap(z=np.where(frame > 0, np.log10(frame), 0)))
-fig.update_yaxes(autorange="reversed")
-
-# Forms add several text boxes. One form for adding a plot instead of dcc. Upload, tie to update_file. File name and resolution.
-# https://dash-bootstrap-components.opensource.faculty.ai/docs/components/form/
 
 
 app.layout = html.Div(
     [
-        html.H1("4DNFIOTPSS3L chromosome 2L"),
-        html.Div([html.P((attribute, ": ", str(value))) for attribute, value in attributes.items()]),
-        html.P(("Non-zero values: ", str(nnz()))),
-        html.P(("Sum: ", str(sum()))),
+        html.Div(id="meta-info"),
         html.Div(
             [
                 html.Div(
                     [
                         dcc.Graph(
-                            # id="HeatMap",
-                            figure=fig,
                             style={"width": "90vh", "height": "90vh"},
+                            id="HeatMap",
                         ),
                     ],
                     style={"display": "inline-block"},
-                    id="HeatMap",
                 ),
                 html.Div(
                     [
@@ -70,14 +48,28 @@ app.layout = html.Div(
                                     type="text",
                                     value="",
                                     id="chromosome-name",
+                                    disabled=True,
+                                ),
+                                dcc.Input(
+                                    placeholder="Chromosome interval",
+                                    type="text",
+                                    value="",
+                                    id="chromosome-interval",
+                                    disabled=True,
                                 ),
                                 dcc.Input(
                                     placeholder="Color map",
                                     type="text",
                                     value="",
                                     id="color-map",
+                                    disabled=True,
                                 ),
-                                html.Button(id="submit-chromosome", n_clicks=0, children="Submit"),
+                                html.Button(
+                                    n_clicks=0,
+                                    children="Submit",
+                                    id="submit-chromosome",
+                                    disabled=True,
+                                ),
                             ],
                             style={"padding-bottom": 60},
                         ),
@@ -88,55 +80,73 @@ app.layout = html.Div(
                             id="normalization",
                         ),
                     ],
-                    style={"margin-top": 95},
+                    style={"marginTop": 95},
                 ),
             ],
             style={"display": "flex"},
         ),
-        html.Div(id="callbacks-output"),
+        html.Div(id="callbacks-file", style={"display": "none"}),
     ]
 )
 
 
 @app.callback(
-    Output("HeatMap", "children"),
-    # Output("callbacks-output", "children"),
+    Output("meta-info", "children"),
+    # Output("callbacks-file", "children"),
+    Output("chromosome-name", "disabled"),
+    Output("chromosome-interval", "disabled"),
+    Output("color-map", "disabled"),
+    Output("submit-chromosome", "disabled"),
     Input("submit-file", "n_clicks"),
-    State("resolution", "value"),
     State("file-path", "value"),
+    State("resolution", "value"),
     prevent_initial_call=True,
     running=[(Output("submit-file", "disabled"), True, False)],
 )
 def update_file(n_clicks, filename, resolution):
-    clr = hictkpy.File(filename, resolution)
-    # return clr
-    # return (filename, resolution)
+
+    hictk_reader.path = filename
+    hictk_reader.resolution = resolution
+
+    metaInfo_attributes = html.Div(
+        [html.P((attribute, ": ", str(value))) for attribute, value in hictk_reader.attributes.items()]
+    )
+    metaInfo_nnz = html.P(("Non-zero values: ", str(hictk_reader.nnz)))
+    metaInfo_chromosomes = html.Div(
+        [html.P((chromosome, ":", name)) for chromosome, name in hictk_reader._chromosomes.items()]
+    )
+
+    metaInfo = html.Div([html.Div([metaInfo_attributes]), html.Div([metaInfo_nnz]), html.Div([metaInfo_chromosomes])])
+
+    return metaInfo, False, False, False, False
 
 
-# Dropdown menu for which chromosome to choose; interval of that chromosome on a slider. Resolution should also be changeable in hindsight, which should ideally trigger the function above.
 @app.callback(
-    # Output("HeatMap", "children"),
+    Output("HeatMap", "figure"),
     # Output(chosenChromosome),
-    Input("chromosomes-dropdown", "value"),
-    Input("chromosome-interval", "value"),
+    Input("submit-chromosome", "n_clicks"),
+    State("chromosome-name", "value"),
+    State("chromosome-interval", "value"),
+    State("normalization", "value"),
+    # State("color-maps", "value"),
+    prevent_initial_call=True,
 )
 def update_plot(
+    n_clicks,
     chromosome_name,
     chromosome_interval,
+    normalization,
 ):
-    chosenChromosome = chromosome_name
 
-    chromosome_start, chromosome_end = chromosome_interval
-    chromosome_start = str(chromosome_start)
-    chromosome_end = str(chromosome_end)
+    hictk_reader.region_of_interest = chromosome_name + ":" + chromosome_interval
+    hictk_reader.normalization = normalization
 
-    sel = clr.fetch((chromosome_name, ":", chromosome_start, "-", chromosome_end), join=True, normalization="KR")
+    frame = hictk_reader.selector
 
-    attributes = clr.attributes()
-    m = sel.to_numpy()
-    frame = pd.DataFrame(m)
+    fig = go.Figure(data=go.Heatmap(z=np.where(frame > 0, np.log10(frame), 0)))
+    fig.update_yaxes(autorange="reversed")
 
-    return frame
+    return fig
 
 
 import webbrowser
