@@ -19,7 +19,6 @@ hictk_reader = HiCObject()
 
 app.layout = html.Div(
     [
-        html.Div(id="meta-info"),
         html.Div(
             [
                 html.Div(
@@ -85,6 +84,7 @@ app.layout = html.Div(
             ],
             style={"display": "flex"},
         ),
+        html.Div(id="meta-info"),
         html.Div(id="callbacks-file", style={"display": "none"}),
     ]
 )
