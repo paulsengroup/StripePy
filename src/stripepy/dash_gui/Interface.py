@@ -130,6 +130,7 @@ def update_file(n_clicks, filename, resolution):
     State("normalization", "value"),
     # State("color-maps", "value"),
     prevent_initial_call=True,
+    running=[(Output("submit-chromosome", "disabled"), True, False)],
 )
 def update_plot(
     n_clicks,
