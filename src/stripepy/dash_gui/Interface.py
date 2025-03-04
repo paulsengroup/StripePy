@@ -177,15 +177,10 @@ def update_file(n_clicks, filename, resolution):
     hictk_reader.path = filename
     hictk_reader.resolution = resolution
 
-    metaInfo_attributes = html.Div(
-        [html.P((attribute, ": ", str(value))) for attribute, value in hictk_reader.attributes.items()]
-    )
-    metaInfo_nnz = html.P(("Non-zero values: ", str(hictk_reader.nnz)))
     metaInfo_chromosomes = html.Div(
         [html.P((chromosome, ":", name)) for chromosome, name in hictk_reader._chromosomes.items()]
     )
-
-    metaInfo = html.Div([html.Div([metaInfo_attributes]), html.Div([metaInfo_nnz]), html.Div([metaInfo_chromosomes])])
+    metaInfo = html.Div([html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes])
 
     return metaInfo, False, False, False
 
