@@ -2,15 +2,13 @@
 #
 # SPDX-License-Identifier: MIT
 
-import hictkpy
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, dcc, html
 from HiCObject import HiCObject
-
-import stripepy
+from sklearn.preprocessing import normalize
 
 app = Dash(__name__)
 
@@ -218,8 +216,9 @@ def update_plot(
     hictk_reader.normalization = normalization
 
     frame = hictk_reader.selector
+    frame = np.where(frame > 0, np.log10(frame), 0)
 
-    fig = go.Figure(data=go.Heatmap(z=np.where(frame > 0, np.log10(frame), 0)))
+    fig = go.Figure(data=go.Heatmap(z=normalize(frame, norm="max"), colorscale=colorMap, showscale=False))
     fig.update_yaxes(autorange="reversed")
 
     return fig
