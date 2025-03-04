@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from ColorScales import color_scale
 from dash import Dash, Input, Output, State, dcc, html
 from HiCObject import HiCObject
 from sklearn.preprocessing import normalize
@@ -46,50 +47,47 @@ app.layout = html.Div(
                                     id="resolution",
                                     style={"width": 300, "fontSize": 20},
                                 ),
-                                html.Button(id="submit-file", n_clicks=0, children="Submit"),
                             ],
-                            style={"paddingBottom": 100},
+                        ),
+                        html.Button(
+                            id="submit-file",
+                            n_clicks=0,
+                            children="Submit",
+                            style={"marginBottom": 100},
                         ),
                         html.Div(
                             [
                                 dcc.Input(
-                                    placeholder="Chromosome name",
+                                    placeholder="[Chromosome name]:start_number-end_number",
                                     type="text",
                                     value="",
                                     id="chromosome-name",
                                     disabled=True,
-                                    style={"width": 300, "fontSize": 20},
+                                    style={"width": 700, "fontSize": 20},
                                 ),
-                                dcc.Input(
-                                    placeholder="Chromosome interval",
-                                    type="text",
-                                    value="",
-                                    id="chromosome-interval",
-                                    disabled=True,
-                                    style={"width": 300, "fontSize": 20},
-                                ),
-                                dcc.Input(
+                                dcc.Dropdown(
+                                    options=["Hi-C", *px.colors.named_colorscales()],
                                     placeholder="Color map",
-                                    type="text",
-                                    value="",
+                                    value=None,
                                     id="color-map",
                                     disabled=True,
                                     style={"width": 300, "fontSize": 20},
                                 ),
-                                html.Button(
-                                    n_clicks=0,
-                                    children="Submit",
-                                    id="submit-chromosome",
-                                    disabled=True,
-                                ),
                             ],
-                            style={"paddingBottom": 60},
+                            style={"height": 60, "width": 800, "display": "block"},
                         ),
                         dcc.Dropdown(
                             options=["KR", "VC", "VC_SQRT"],
                             placeholder="Normalization",
                             value="KR",
                             id="normalization",
+                        ),
+                        html.Button(
+                            n_clicks=0,
+                            children="Submit",
+                            id="submit-chromosome",
+                            disabled=True,
+                            style={"marginBottom": 60},
                         ),
                         html.Div(
                             [
@@ -165,9 +163,7 @@ app.layout = html.Div(
 
 @app.callback(
     Output("meta-info", "children"),
-    # Output("callbacks-file", "children"),
     Output("chromosome-name", "disabled"),
-    Output("chromosome-interval", "disabled"),
     Output("color-map", "disabled"),
     Output("submit-chromosome", "disabled"),
     Input("submit-file", "n_clicks"),
@@ -191,28 +187,33 @@ def update_file(n_clicks, filename, resolution):
 
     metaInfo = html.Div([html.Div([metaInfo_attributes]), html.Div([metaInfo_nnz]), html.Div([metaInfo_chromosomes])])
 
-    return metaInfo, False, False, False, False
+    return metaInfo, False, False, False
 
 
 @app.callback(
     Output("HeatMap", "figure"),
-    # Output(chosenChromosome),
     Input("submit-chromosome", "n_clicks"),
     State("chromosome-name", "value"),
-    State("chromosome-interval", "value"),
+    State("color-map", "value"),
     State("normalization", "value"),
-    # State("color-maps", "value"),
     prevent_initial_call=True,
-    running=[(Output("submit-chromosome", "disabled"), True, False)],
+    running=[
+        (Output("submit-chromosome", "disabled"), True, False),
+        (Output("chromosome-name", "disabled"), True, False),
+        (Output("color-map", "disabled"), True, False),
+        (Output("normalization", "disabled"), True, False),
+    ],
 )
 def update_plot(
     n_clicks,
     chromosome_name,
-    chromosome_interval,
+    colorMap,
     normalization,
 ):
+    if colorMap not in px.colors.named_colorscales():
+        colorMap = color_scale(colorMap)
 
-    hictk_reader.region_of_interest = chromosome_name + ":" + chromosome_interval
+    hictk_reader.region_of_interest = chromosome_name
     hictk_reader.normalization = normalization
 
     frame = hictk_reader.selector
