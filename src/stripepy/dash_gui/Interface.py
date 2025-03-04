@@ -31,14 +31,26 @@ app.layout = html.Div(
                     style={"display": "inline-block"},
                 ),
                 html.Div(
-                    [
+                    [  # Right side of screen
                         html.Div(
                             [
-                                dcc.Input(placeholder="File path", type="text", value="", id="file-path"),
-                                dcc.Input(placeholder="resolution", type="number", value="", id="resolution"),
+                                dcc.Input(
+                                    placeholder="File path",
+                                    type="text",
+                                    value="",
+                                    id="file-path",
+                                    style={"width": 300, "fontSize": 20},
+                                ),
+                                dcc.Input(
+                                    placeholder="Resolution",
+                                    type="number",
+                                    value="",
+                                    id="resolution",
+                                    style={"width": 300, "fontSize": 20},
+                                ),
                                 html.Button(id="submit-file", n_clicks=0, children="Submit"),
                             ],
-                            style={"paddingBottom": 60},
+                            style={"paddingBottom": 100},
                         ),
                         html.Div(
                             [
@@ -48,6 +60,7 @@ app.layout = html.Div(
                                     value="",
                                     id="chromosome-name",
                                     disabled=True,
+                                    style={"width": 300, "fontSize": 20},
                                 ),
                                 dcc.Input(
                                     placeholder="Chromosome interval",
@@ -55,6 +68,7 @@ app.layout = html.Div(
                                     value="",
                                     id="chromosome-interval",
                                     disabled=True,
+                                    style={"width": 300, "fontSize": 20},
                                 ),
                                 dcc.Input(
                                     placeholder="Color map",
@@ -62,6 +76,7 @@ app.layout = html.Div(
                                     value="",
                                     id="color-map",
                                     disabled=True,
+                                    style={"width": 300, "fontSize": 20},
                                 ),
                                 html.Button(
                                     n_clicks=0,
