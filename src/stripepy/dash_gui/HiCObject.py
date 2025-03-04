@@ -45,7 +45,7 @@ class HiCObject:
     def normalization(self, algorithm):
         self._normalization = algorithm
         if self.region_of_interest:
-            self.sel = self._fetch()
+            self._fetch()
 
     @property
     def region_of_interest(self):
@@ -55,7 +55,7 @@ class HiCObject:
     def region_of_interest(self, region):
         self._region_of_interest = region
         if self._normalization:
-            self.sel = self._fetch()
+            self._fetch()
 
     @property
     def frame(self):
