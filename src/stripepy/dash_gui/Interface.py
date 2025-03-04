@@ -93,6 +93,66 @@ app.layout = html.Div(
                             value="KR",
                             id="normalization",
                         ),
+                        html.Div(
+                            [
+                                "minimum top persistence ",
+                                dcc.Input(
+                                    type="number",
+                                    value="0.5",
+                                    id="top-pers-input",
+                                    style={"width": 300},
+                                ),
+                            ],
+                            style={"marginTop": 40},
+                        ),
+                        html.Div(
+                            [
+                                "relative change ",
+                                dcc.Input(
+                                    type="number",
+                                    value="0.5",
+                                    id="rel-change-input",
+                                    style={"width": 300},
+                                ),
+                            ],
+                            style={"marginTop": 40},
+                        ),
+                        html.Div(
+                            [
+                                "genomic belt ",
+                                dcc.Input(
+                                    type="number",
+                                    value="1000000",
+                                    id="gen-belt-input",
+                                    style={"width": 300},
+                                ),
+                            ],
+                            style={"marginTop": 40},
+                        ),
+                        html.Div(
+                            [
+                                "loc trend min ",
+                                dcc.Input(
+                                    type="number",
+                                    value="0.5",
+                                    id="loc-trend-input",
+                                    style={"width": 300},
+                                ),
+                            ],
+                            style={"marginTop": 40},
+                        ),
+                        html.Div(
+                            [
+                                "stripe type ",
+                                dcc.Input(
+                                    type="number",
+                                    value="0.5",
+                                    id="stripe-type-input",
+                                    style={"width": 300},
+                                ),
+                            ],
+                            style={"marginTop": 40},
+                        ),
                     ],
                     style={"marginTop": 95},
                 ),
