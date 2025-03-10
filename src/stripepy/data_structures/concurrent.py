@@ -479,7 +479,11 @@ class IOManager(object):
         logger = structlog.get_logger().bind(chrom=chrom_name, step="IO")
 
         logger.info("fetching interactions using normalization=%s", normalization)
-        matrix = hictkpy.File(path, resolution=resolution).fetch(chrom_name, normalization=normalization).to_csr()
+        matrix = (
+            hictkpy.File(path, resolution=resolution)
+            .fetch(chrom_name, normalization=normalization, diagonal_band_width=max(1, genomic_belt // resolution))
+            .to_csr()
+        )
         logger.info("fetched %d pixels in %s", matrix.count_nonzero(), pretty_format_elapsed_time(t0))
 
         logger = structlog.get_logger().bind(chrom=chrom_name, step=(1,))
