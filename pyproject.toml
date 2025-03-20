@@ -70,6 +70,8 @@ all = [
     "colorama >=0.4, <0.5",
     "matplotlib >=3.8, <4",
     "rich >=13.9, <14",
+    "plotly >=6.0.0",
+    "dash >=2.18.0",
 ]
 
 test = [
