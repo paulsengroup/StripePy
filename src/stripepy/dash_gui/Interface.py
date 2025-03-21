@@ -76,7 +76,6 @@ app.layout = html.Div(
                         render_minimum_chromosome_size(),
                         render_verbosity(),
                         render_relative_change(),
-                        render_relative_change(),
                         render_stripe_type(),
                         render_stripe_calling_button(),
                     ],
