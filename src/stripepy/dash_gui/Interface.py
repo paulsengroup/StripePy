@@ -92,6 +92,22 @@ app.layout = html.Div(
 
 
 @app.callback(
+    Output("resolution", "options"),
+    Output("resolution", "disabled"),
+    Output("resolution", "value"),
+    Output("submit-file", "disabled"),
+    Input("look-for-file", "n_clicks"),
+    State("file-path", "value"),
+    prevent_initial_call=True,
+)
+def look_for_file(n_clicks, file_path):
+    mrf = htk.MultiResFile(file_path)
+    print(mrf.resolutions())
+    resolutions = mrf.resolutions()
+    return resolutions, False, resolutions[0], False
+
+
+@app.callback(
     Output("meta-info", "children"),
     Output("chromosome-name", "disabled"),
     Output("color-map", "disabled"),
