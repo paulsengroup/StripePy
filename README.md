@@ -1203,10 +1203,10 @@ stripepy plot hist 4DNFI9GMP2J8.10000.hdf5 /tmp/stripe_hist_gw.png
 # Plot the Hi-C matrix
 stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix.png
 
-# Plot the Hi-C matrix higlighting the stripe seeds
+# Plot the Hi-C matrix highlighting the stripe seeds
 stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix_with_seeds.png --stripepy-hdf5 4DNFI9GMP2J8.10000.hdf5 --highlight-seeds
 
-# Plot the Hi-C matrix higlighting the architectural stripes
+# Plot the Hi-C matrix highlighting the architectural stripes
 stripepy plot cm 4DNFI9GMP2J8.mcool 10000 /tmp/matrix_with_stripes.png --stripepy-hdf5 4DNFI9GMP2J8.10000.hdf5 --highlight-stripes
 ```
 
