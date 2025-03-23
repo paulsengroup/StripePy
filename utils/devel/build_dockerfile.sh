@@ -33,6 +33,7 @@ fi
 
 venv_dir="$(mktemp -d)"
 
+# shellcheck disable=SC2064
 trap "rm -rf '$venv_dir'" EXIT
 
 python3 -m venv "$venv_dir"
@@ -56,7 +57,7 @@ if [ $GIT_IS_DIRTY -ne 0 ]; then
 fi
 
 BASE_IMAGE='docker.io/library/python:3.12.7'
-2>&1 echo "Building \"$IMAGE_NAME:$IMAGE_TAG\" (stripepy v$VERSION) for platform $PLATFORM..."
+1>&2 echo "Building \"$IMAGE_NAME:$IMAGE_TAG\" (stripepy v$VERSION) for platform $PLATFORM..."
 
 sudo -u "$BUILD_USER" docker pull "$BASE_IMAGE"
 BASE_IMAGE_DIGEST="$(sudo -u "$BUILD_USER" docker inspect --format='{{index .RepoDigests 0}}' "$BASE_IMAGE" | cut -f 2 -d '@')"
