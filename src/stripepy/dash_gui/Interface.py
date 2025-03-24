@@ -186,6 +186,7 @@ def update_plot(
     State("normalization", "value"),
     # State("rel-change-input", "value"),
     # State("stripe-type-input", "value"),
+    State("file-path", "value"),
     prevent_initial_call=True,
     running=[
         (Output("start-calling", "disabled"), True, False),
@@ -214,27 +215,36 @@ def call_stripes(
     # rel_change,
     # loc_trend,
     # stripe_type,
+    path,
 ):
-    call.run(
-        chromosome_name,
-        resolution,
-        pathlib.Path("./tmp/called_stripes"),  # output file
-        gen_belt,
-        max_width,  # What is max width?
-        glob_pers,  # glob_pers_min, or maybe loc_pers_min?
-        constrain_heights,  # constrain heights
-        loc_pers_min,  # loc_pers_min
-        loc_trend_min,
-        force,  # force
-        nproc,  # nproc
-        min_chrom_size,  # min_chrom_size
+    with ProcessSafeLogger(
         verbosity,
-        main_logger=ProcessSafeLogger,  # main_logger,
-        # roi,
-        # log_file,
-        # plot_dir,
-        normalization=normalization,
-    )
+        path=pathlib.Path("./tmp/log_file"),
+        force=force,
+        matrix_file=path,
+        print_welcome_message=True,
+        progress_bar_type="call",
+    ) as main_logger:
+        call.run(
+            chromosome_name,
+            resolution,
+            pathlib.Path("./tmp/called_stripes"),  # output file
+            gen_belt,
+            max_width,  # What is max width?
+            glob_pers,  # glob_pers_min, or maybe loc_pers_min?
+            constrain_heights,  # constrain heights
+            loc_pers_min,  # loc_pers_min
+            loc_trend_min,
+            force,  # force
+            nproc,  # nproc
+            min_chrom_size,  # min_chrom_size
+            verbosity,
+            main_logger,  # main_logger,
+            # roi,
+            log_file=pathlib.Path("./tmp/log_file"),  # log_file,
+            # plot_dir,
+            normalization=normalization,
+        )
 
 
 # import webbrowser
