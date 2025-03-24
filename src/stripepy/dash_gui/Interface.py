@@ -6,9 +6,7 @@ import pathlib
 
 import hictkpy as htk
 import numpy as np
-import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from ColorScales import color_scale
 from components.calling import (
     render_constrain_heights,
@@ -101,7 +99,6 @@ app.layout = html.Div(
 )
 def look_for_file(n_clicks, file_path):
     mrf = htk.MultiResFile(file_path)
-    print(mrf.resolutions())
     resolutions = mrf.resolutions()
     return resolutions, False, resolutions[0], False
 
@@ -157,9 +154,12 @@ def update_plot(
     hictk_reader.normalization = normalization
 
     frame = hictk_reader.selector
-    frame = np.where(frame > 0, np.log10(frame), 0)
+    np.log(frame, out=frame, where=frame > 0)
+    frame /= np.nanmax(frame)
 
-    fig = go.Figure(data=go.Heatmap(z=normalize(frame, norm="max"), colorscale=colorMap, showscale=False))
+    fig = px.imshow(frame, color_continuous_scale=colorMap)
+
+    fig.update_layout(coloraxes_showscale=False)
     fig.update_yaxes(autorange="reversed")
 
     return fig
