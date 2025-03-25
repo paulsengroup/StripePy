@@ -32,14 +32,11 @@ from components.plotting import (
     render_submit_button,
 )
 from dash import Dash, Input, Output, State, dcc, html
-from HiCObject import HiCObject
 
 from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger
 
 app = Dash(__name__)
-
-hictk_reader = HiCObject()
 
 
 app.layout = html.Div(
@@ -115,13 +112,13 @@ def look_for_file(n_clicks, file_path):
     running=[(Output("submit-file", "disabled"), True, False)],
 )
 def update_file(n_clicks, filename, resolution):
+    path = filename
+    bin_size = resolution
 
-    hictk_reader.path = filename
-    hictk_reader.resolution = resolution
+    global f
+    f = htk.File(path, bin_size)
 
-    metaInfo_chromosomes = html.Div(
-        [html.P((chromosome, ":", name)) for chromosome, name in hictk_reader._chromosomes.items()]
-    )
+    metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
     metaInfo = html.Div([html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes])
 
     return metaInfo, False, False, False
@@ -150,16 +147,17 @@ def update_plot(
     if colorMap not in px.colors.named_colorscales():
         colorMap = color_scale(colorMap)
 
-    hictk_reader.region_of_interest = chromosome_name
-    hictk_reader.normalization = normalization
+    global sel
+    global frame
+    sel = f.fetch(chromosome_name, normalization=normalization)
+    frame = sel.to_numpy()
 
-    frame = hictk_reader.selector
     np.log(frame, out=frame, where=frame > 0)
     frame /= np.nanmax(frame)
 
     fig = px.imshow(frame, color_continuous_scale=colorMap)
 
-    fig.update_layout(coloraxes_showscale=False)
+    fig.update_layout(coloraxis_showscale=False)
     fig.update_yaxes(autorange="reversed")
 
     return fig
