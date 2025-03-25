@@ -32,6 +32,7 @@ from components.plotting import (
     render_submit_button,
 )
 from dash import Dash, Input, Output, State, dcc, html
+from dash.exceptions import PreventUpdate
 
 from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger
@@ -95,6 +96,16 @@ app.layout = html.Div(
     prevent_initial_call=True,
 )
 def look_for_file(n_clicks, file_path):
+    global last_used_file
+    try:
+        if file_path == last_used_file:
+            raise PreventUpdate
+        else:
+            pass
+    except NameError:
+        pass
+    last_used_file = file_path
+
     mrf = htk.MultiResFile(file_path)
     resolutions = mrf.resolutions()
     return resolutions, False, resolutions[0], False
@@ -112,6 +123,17 @@ def look_for_file(n_clicks, file_path):
     running=[(Output("submit-file", "disabled"), True, False)],
 )
 def update_file(n_clicks, filename, resolution):
+    global last_used_resolution
+    try:
+        if filename == last_used_file and resolution == last_used_resolution:
+            raise PreventUpdate
+        else:
+            pass
+    except NameError:
+        pass
+    last_used_file = filename
+    last_used_resolution = resolution
+
     path = filename
     bin_size = resolution
 
@@ -130,25 +152,46 @@ def update_file(n_clicks, filename, resolution):
     State("chromosome-name", "value"),
     State("color-map", "value"),
     State("normalization", "value"),
+    State("file-path", "value"),
+    State("resolution", "value"),
     prevent_initial_call=True,
     running=[
+        (Output("file-path", "disabled"), True, False),
+        (Output("look-for-file", "disabled"), True, False),
+        (Output("resolution", "disabled"), True, False),
+        (Output("submit-file", "disabled"), True, False),
         (Output("submit-chromosome", "disabled"), True, False),
         (Output("chromosome-name", "disabled"), True, False),
         (Output("color-map", "disabled"), True, False),
         (Output("normalization", "disabled"), True, False),
     ],
 )
-def update_plot(
-    n_clicks,
-    chromosome_name,
-    colorMap,
-    normalization,
-):
+def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution):
+    global last_used_chromosome_name
+    global last_used_colorMap
+    global last_used_normalization
+    try:
+        if (
+            chromosome_name == last_used_chromosome_name
+            and colorMap == last_used_colorMap
+            and normalization == last_used_normalization
+            and last_used_file == filepath
+            and last_used_resolution == resolution
+        ):
+            raise PreventUpdate
+        else:
+            pass
+    except NameError:
+        pass
+    last_used_chromosome_name = chromosome_name
+    last_used_colorMap = colorMap
+    last_used_normalization = normalization
+    last_used_file = filepath
+    last_used_resolution = resolution
+
     if colorMap not in px.colors.named_colorscales():
         colorMap = color_scale(colorMap)
 
-    global sel
-    global frame
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
 
