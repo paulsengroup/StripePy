@@ -189,6 +189,6 @@ def render_stripe_calling_button():
             "marginBottom": 30,
             "marginTop": 30,
             "display": "block",
-            "background-color": "mediumSlateBlue",
+            "backgroundColor": "mediumSlateBlue",
         },
     )

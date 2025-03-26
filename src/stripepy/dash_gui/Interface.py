@@ -7,7 +7,9 @@ import pathlib
 import hictkpy as htk
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 from ColorScales import color_scale
+from components.colorbar import colorbar
 from components.layout import layout
 from dash import Dash, Input, Output, State, html
 from dash.exceptions import PreventUpdate
@@ -130,12 +132,17 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
 
-    np.log(frame, out=frame, where=frame > 0)
-    frame /= np.nanmax(frame)
+    np.log(frame, out=frame, where=np.isnan(frame) == False)
+    # np.where(frame == np.nan, out=frame, )
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=frame,
+            colorbar=colorbar(frame),
+            colorscale=colorMap,
+            # showscale = False,
+        )
+    )
 
-    fig = px.imshow(frame, color_continuous_scale=colorMap)
-
-    fig.update_layout(coloraxis_showscale=False)
     fig.update_yaxes(autorange="reversed")
 
     return fig
