@@ -8,30 +8,8 @@ import hictkpy as htk
 import numpy as np
 import plotly.express as px
 from ColorScales import color_scale
-from components.calling import (
-    render_constrain_heights,
-    render_force,
-    render_genomic_belt,
-    render_global_minimum_persistence,
-    render_local_minimum_persistence,
-    render_local_trend_minimum,
-    render_max_width,
-    render_minimum_chromosome_size,
-    render_nrpoc,
-    render_relative_change,
-    render_stripe_calling_button,
-    render_stripe_type,
-    render_verbosity,
-)
-from components.plotting import (
-    render_chromosome_name,
-    render_color_map,
-    render_filepath,
-    render_normalization,
-    render_resolution,
-    render_submit_button,
-)
-from dash import Dash, Input, Output, State, dcc, html
+from components.layout import layout
+from dash import Dash, Input, Output, State, html
 from dash.exceptions import PreventUpdate
 
 from stripepy.cli import call
@@ -40,50 +18,7 @@ from stripepy.io import ProcessSafeLogger
 app = Dash(__name__)
 
 
-app.layout = html.Div(
-    [
-        html.Div(
-            [
-                html.Div(
-                    [
-                        dcc.Graph(
-                            style={"width": "90vh", "height": "90vh"},
-                            id="HeatMap",
-                        ),
-                    ],
-                    style={"display": "inline-block"},
-                ),
-                html.Div(
-                    [  # Right side of screen
-                        render_filepath(),
-                        render_resolution(),
-                        render_chromosome_name(),
-                        render_color_map(),
-                        render_normalization(),
-                        render_submit_button(),
-                        render_genomic_belt(),
-                        render_max_width(),
-                        render_global_minimum_persistence(),
-                        render_constrain_heights(),
-                        render_local_minimum_persistence(),
-                        render_local_trend_minimum(),
-                        render_force(),
-                        render_nrpoc(),
-                        render_minimum_chromosome_size(),
-                        render_verbosity(),
-                        render_relative_change(),
-                        render_stripe_type(),
-                        render_stripe_calling_button(),
-                    ],
-                    style={"marginTop": 95},
-                ),
-            ],
-            style={"display": "flex"},
-        ),
-        html.Div(id="meta-info"),
-        html.Div(id="callbacks-file", style={"display": "none"}),
-    ]
-)
+app.layout = layout()
 
 
 @app.callback(
