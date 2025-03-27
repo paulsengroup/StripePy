@@ -6,7 +6,6 @@ import pathlib
 
 import hictkpy as htk
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 from ColorScales import color_scale
 from components.colorbar import colorbar
@@ -126,8 +125,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     last_used_file = filepath
     last_used_resolution = resolution
 
-    if colorMap not in px.colors.named_colorscales():
-        colorMap = color_scale(colorMap)
+    colorMap = color_scale(colorMap)
 
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
@@ -213,7 +211,7 @@ def call_stripes(
             resolution,
             pathlib.Path("./tmp/called_stripes"),  # output file
             gen_belt,
-            max_width,  # What is max width?
+            max_width,
             glob_pers,  # glob_pers_min, or maybe loc_pers_min?
             constrain_heights,  # constrain heights
             loc_pers_min,  # loc_pers_min

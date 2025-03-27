@@ -66,12 +66,11 @@ def render_color_map():
         [
             dcc.Dropdown(
                 options=[
-                    "fruit_punch",
-                    "fall",
-                    "fall_log",
-                    "blues_new",
-                    "acidblues",
-                    "nmeth",
+                    "fruit_punch ",
+                    "fall ",
+                    "blues ",
+                    "acidblues ",
+                    "nmeth ",
                     *px.colors.named_colorscales(),
                 ],
                 placeholder="Color map",
