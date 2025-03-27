@@ -65,7 +65,15 @@ def render_color_map():
     return html.Div(
         [
             dcc.Dropdown(
-                options=["Hi-C", *px.colors.named_colorscales()],
+                options=[
+                    "fruit_punch",
+                    "fall",
+                    "fall_log",
+                    "blues_new",
+                    "acidblues",
+                    "nmeth",
+                    *px.colors.named_colorscales(),
+                ],
                 placeholder="Color map",
                 value=None,
                 id="color-map",
