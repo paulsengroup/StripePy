@@ -7,7 +7,7 @@ import pathlib
 import hictkpy as htk
 import numpy as np
 import plotly.graph_objects as go
-from ColorScales import color_scale
+from colorscales import color_scale
 from components.colorbar import colorbar
 from components.layout import layout
 from dash import Dash, Input, Output, State, html
