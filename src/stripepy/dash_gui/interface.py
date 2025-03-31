@@ -144,6 +144,8 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     )
 
     fig.update_yaxes(autorange="reversed")
+    fig.update_layout(plot_bgcolor="mediumslateblue")
+    # NaN-values are transparent
 
     return fig
 
