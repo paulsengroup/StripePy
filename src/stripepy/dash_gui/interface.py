@@ -131,13 +131,15 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     frame = sel.to_numpy()
 
     np.log(frame, out=frame, where=np.isnan(frame) == False)
-    # np.where(frame == np.nan, out=frame, )
+    under_lowest_real_value = np.min(frame[np.isfinite(frame)]) - abs(np.min(frame[np.isfinite(frame)]))
+    # isfinite() dicounts nan, inf and -inf
+
+    frame = np.where(np.isneginf(frame), under_lowest_real_value, frame)
     fig = go.Figure(
         data=go.Heatmap(
             z=frame,
             colorbar=colorbar(frame),
             colorscale=colorMap,
-            # showscale = False,
         )
     )
 
