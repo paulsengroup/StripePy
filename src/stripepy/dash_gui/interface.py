@@ -135,6 +135,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     # isfinite() dicounts nan, inf and -inf
 
     frame = np.where(np.isneginf(frame), under_lowest_real_value, frame)
+
     fig = go.Figure(
         data=go.Heatmap(
             z=frame,

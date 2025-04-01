@@ -2,16 +2,20 @@ import numpy as np
 
 
 def colorbar(matrix):
-    max_value = np.nanmax(matrix)
-    colorbar_max = round(max_value) + 1
-    return _colorbar(colorbar_max)
+    find_normal_values = matrix[np.isfinite(matrix)]
+    max_float = np.nanmax(find_normal_values)
+    min_float = np.nanmin(find_normal_values)
+    return _colorbar(max_float, min_float)
 
 
-def _colorbar(n):
+def _colorbar(max_float, min_float):
+    tickvals = [np.e ** (max_float * num / 20) for num in range(20, 0, -3)]
+
     return dict(
-        tick0=0,
         title="Counts (log)",
         tickmode="array",
-        tickvals=np.linspace(1, n, n + 1),
-        ticktext=np.linspace(1, n, n + 1),
+        exponentformat="e",
+        tickvals=np.log(tickvals),
+        ticktext=[str(int(val)) for val in tickvals],
+        separatethousands=True,
     )
