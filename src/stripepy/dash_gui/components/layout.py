@@ -12,7 +12,6 @@ from .calling import (
     render_nrpoc,
     render_relative_change,
     render_stripe_calling_button,
-    render_stripe_type,
     render_verbosity,
 )
 from .plotting import (
@@ -58,7 +57,6 @@ def layout():
                             render_minimum_chromosome_size(),
                             render_verbosity(),
                             render_relative_change(),
-                            render_stripe_type(),
                             render_stripe_calling_button(),
                         ],
                         style={"marginTop": 95},

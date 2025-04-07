@@ -1,3 +1,4 @@
+import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 DEFAULT_GEN_BELT = "5 000 000"
@@ -23,6 +24,17 @@ def render_genomic_belt():
                 id="gen-belt-input",
                 style={"width": 300},
             ),
+            "  ",
+            html.I(
+                id="gen-belt-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Radius of the band, centred around the diagonal, where the search is restricted to (in bp, default: {DEFAULT_GEN_BELT}.",
+                target="gen-belt-icon",
+                placement="right",
+                trigger="hover",
+            ),
         ],
         style={"marginTop": 40},
     )
@@ -37,6 +49,17 @@ def render_max_width():
                 value=DEFAULT_MAX_WIDTH,
                 id="max-width-input",
                 style={"width": 300},
+            ),
+            "  ",
+            html.I(
+                id="max-width-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Maximum stripe width, in bp (default: {DEFAULT_MAX_WIDTH}).",
+                target="max-width-icon",
+                placement="right",
+                trigger="hover",
             ),
         ],
         style={"marginTop": 40},
@@ -53,6 +76,17 @@ def render_global_minimum_persistence():
                 id="glob-pers-input",
                 style={"width": 300},
             ),
+            "  ",
+            html.I(
+                id="glob-pers-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Threshold value between 0 and 1 to filter persistence maxima points and identify loci of interest, aka seeds (default: {DEFAULT_GLOB_PERS}).",
+                target="glob-pers-icon",
+                placement="right",
+                trigger="hover",
+            ),
         ],
         style={"marginTop": 40},
     )
@@ -68,6 +102,17 @@ def render_constrain_heights():
                 id="constrain-heights-input",
                 style={"width": 300},
             ),
+            "  ",
+            html.I(
+                id="constrain-heights-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Use peaks in signal to constrain the stripe height (default: {DEFAULT_CONSTRAIN_HEIGHTS}).",
+                target="constrain-heights-icon",
+                placement="right",
+                trigger="hover",
+            ),
         ],
         style={"marginTop": 40},
     )
@@ -81,6 +126,17 @@ def render_local_minimum_persistence():
                 type="text",
                 value=DEFAULT_LOC_MIN_PERS,
                 id="loc-min-pers-input",
+            ),
+            "  ",
+            html.I(
+                id="loc-min-pers-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Threshold value between 0 and 1 to find peaks in signal in a horizontal domain while estimating the height of a stripe; when --constrain-heights is set to 'False', it is not used (default: {DEFAULT_LOC_MIN_PERS}).",
+                target="loc-min-pers-icon",
+                placement="right",
+                trigger="hover",
             ),
         ],
         style={"marginTop": 40},
@@ -97,6 +153,17 @@ def render_local_trend_minimum():
                 id="loc-trend-input",
                 style={"width": 300},
             ),
+            "  ",
+            html.I(
+                id="loc-trend-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Threshold value between 0 and 1 to estimate the height of a stripe (default: {DEFAULT_LOC_TREND}); the higher this value, the shorter the stripe; it is always used when --constrain-heights is set to 'False', but could be necessary also when --constrain-heights is 'True' and no persistent maximum other than the global maximum is found.",
+                target="loc-trend-icon",
+                placement="right",
+                trigger="hover",
+            ),
         ],
         style={"marginTop": 40},
     )
@@ -111,6 +178,17 @@ def render_force():
                 value=DEFAULT_FORCE,
                 id="force-input",
                 style={"width": 300},
+            ),
+            "  ",
+            html.I(
+                id="force-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Overwrite existing file(s) (default: {DEFAULT_FORCE}).",
+                target="force-icon",
+                placement="right",
+                trigger="hover",
             ),
         ],
         style={"marginTop": 40},
@@ -127,6 +205,17 @@ def render_nrpoc():
                 id="nproc-input",
                 style={"width": 300},
             ),
+            "  ",
+            html.I(
+                id="nproc-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Maximum number of parallel processes to use (default: {DEFAULT_NPROC}).",
+                target="nproc-icon",
+                placement="right",
+                trigger="hover",
+            ),
         ],
         style={"marginTop": 40},
     )
@@ -140,6 +229,17 @@ def render_minimum_chromosome_size():
                 type="text",
                 value=DEFAULT_MIN_CHROM_SIZE,
                 id="min-chrom-size-input",
+            ),
+            "  ",
+            html.I(
+                id="min-chrom-size-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Minimum size, in bp, for a chromosome to be analysed (default: {DEFAULT_MIN_CHROM_SIZE}).",
+                target="min-chrom-size-icon",
+                placement="right",
+                trigger="hover",
             ),
         ],
         style={"marginTop": 40},
@@ -156,6 +256,17 @@ def render_verbosity():
                 id="verbosity-input",
                 style={"width": 300},
             ),
+            "  ",
+            html.I(
+                id="verbosity-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Set verbosity of output to the console (default: {DEFAULT_VERBOSITY}).",
+                target="verbosity-icon",
+                placement="right",
+                trigger="hover",
+            ),
         ],
         style={"marginTop": 40},
     )
@@ -171,20 +282,18 @@ def render_relative_change():
                 id="rel-change-input",
                 style={"width": 300},
             ),
-        ],
-        style={"marginTop": 40},
-    )
-
-
-def render_stripe_type():
-    return html.Div(
-        [
-            "stripe type ",
-            dcc.Input(
-                type="number",
-                value=0.5,
-                id="stripe-type-input",
-                style={"width": 300},
+            "  ",
+            html.I(
+                id="rel-change-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"Cutoff for the relative change (default: {DEFAULT_REL_CHANGE}).\n"
+                "Only used when highlighting architectural stripes.\n"
+                "The relative change is computed as the ratio between the average number of interactions found inside a stripe and the number of interactions in a neighborhood outside of the stripe.",
+                target="rel-change-icon",
+                placement="right",
+                trigger="hover",
             ),
         ],
         style={"marginTop": 40},

@@ -4,6 +4,7 @@
 
 import pathlib
 
+import dash_bootstrap_components as dbc
 import hictkpy as htk
 import numpy as np
 import plotly.graph_objects as go
@@ -16,7 +17,7 @@ from dash.exceptions import PreventUpdate
 from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger
 
-app = Dash(__name__)
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])
 
 
 app.layout = layout()
@@ -209,7 +210,6 @@ def call_stripes(
     # top_pers,
     # rel_change,
     # loc_trend,
-    # stripe_type,
     path,
 ):
     with ProcessSafeLogger(
@@ -241,10 +241,6 @@ def call_stripes(
             normalization=normalization,
         )
 
-
-# import webbrowser
-
-# webbrowser.open("http://127.0.0.1:8050/")
 
 if __name__ == "__main__":
     app.run(debug=True)
