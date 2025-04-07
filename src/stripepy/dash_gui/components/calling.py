@@ -1,13 +1,25 @@
 from dash import dcc, html
 
+DEFAULT_GEN_BELT = "5 000 000"
+DEFAULT_MAX_WIDTH = "100 000"
+DEFAULT_GLOB_PERS = "0.04"
+DEFAULT_CONSTRAIN_HEIGHTS = "False"
+DEFAULT_LOC_MIN_PERS = "0.33"
+DEFAULT_LOC_TREND = "0.25"
+DEFAULT_FORCE = "False"
+DEFAULT_NPROC = "1"
+DEFAULT_MIN_CHROM_SIZE = "2 000 000"
+DEFAULT_VERBOSITY = "info"
+DEFAULT_REL_CHANGE = "0.5"
+
 
 def render_genomic_belt():
     return html.Div(
         [
             "genomic belt ",
             dcc.Input(
-                type="number",
-                value=5_000_000,
+                type="text",
+                value=DEFAULT_GEN_BELT,
                 id="gen-belt-input",
                 style={"width": 300},
             ),
@@ -21,8 +33,8 @@ def render_max_width():
         [
             "max width ",
             dcc.Input(
-                type="number",
-                value=100_000,
+                type="text",
+                value=DEFAULT_MAX_WIDTH,
                 id="max-width-input",
                 style={"width": 300},
             ),
@@ -36,8 +48,8 @@ def render_global_minimum_persistence():
         [
             "global minimum persistence ",
             dcc.Input(
-                type="number",
-                value=0.04,
+                type="text",
+                value=DEFAULT_GLOB_PERS,
                 id="glob-pers-input",
                 style={"width": 300},
             ),
@@ -52,7 +64,7 @@ def render_constrain_heights():
             "constrain heights ",
             dcc.Dropdown(
                 options=["True", "False"],
-                value="False",
+                value=DEFAULT_CONSTRAIN_HEIGHTS,
                 id="constrain-heights-input",
                 style={"width": 300},
             ),
@@ -66,8 +78,8 @@ def render_local_minimum_persistence():
         [
             "local minimal persistence ",
             dcc.Input(
-                type="number",
-                value=0.33,
+                type="text",
+                value=DEFAULT_LOC_MIN_PERS,
                 id="loc-min-pers-input",
             ),
         ],
@@ -80,8 +92,8 @@ def render_local_trend_minimum():
         [
             "local trend minimum ",
             dcc.Input(
-                type="number",
-                value=0.25,
+                type="text",
+                value=DEFAULT_LOC_TREND,
                 id="loc-trend-input",
                 style={"width": 300},
             ),
@@ -96,7 +108,7 @@ def render_force():
             "force ",
             dcc.Dropdown(
                 options=["True", "False"],
-                value="False",
+                value=DEFAULT_FORCE,
                 id="force-input",
                 style={"width": 300},
             ),
@@ -110,8 +122,8 @@ def render_nrpoc():
         [
             "nproc",
             dcc.Input(
-                type="number",
-                value=1,
+                type="text",
+                value=DEFAULT_NPROC,
                 id="nproc-input",
                 style={"width": 300},
             ),
@@ -125,8 +137,8 @@ def render_minimum_chromosome_size():
         [
             "minimum chromosome size ",
             dcc.Input(
-                type="number",
-                value=2_000_000,
+                type="text",
+                value=DEFAULT_MIN_CHROM_SIZE,
                 id="min-chrom-size-input",
             ),
         ],
@@ -140,7 +152,7 @@ def render_verbosity():
             "verbosity ",
             dcc.Dropdown(
                 options=["debug", "info", "warning", "error", "critical"],
-                value="info",
+                value=DEFAULT_VERBOSITY,
                 id="verbosity-input",
                 style={"width": 300},
             ),
@@ -154,8 +166,8 @@ def render_relative_change():
         [
             "relative change ",
             dcc.Input(
-                type="number",
-                value=0.5,
+                type="text",
+                value=DEFAULT_REL_CHANGE,
                 id="rel-change-input",
                 style={"width": 300},
             ),
