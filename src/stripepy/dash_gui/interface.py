@@ -24,12 +24,16 @@ app.layout = layout()
 
 @app.callback(
     Output("resolution", "options"),
-    Output("resolution", "disabled"),
     Output("resolution", "value"),
+    Output("resolution", "disabled"),
     Output("submit-file", "disabled"),
     Input("look-for-file", "n_clicks"),
     State("file-path", "value"),
     prevent_initial_call=True,
+    running=[
+        (Output("file-path", "disabled"), True, False),
+        (Output("look-for-file", "disabled"), True, False),
+    ],
 )
 def look_for_file(n_clicks, file_path):
     global last_used_file
@@ -44,7 +48,7 @@ def look_for_file(n_clicks, file_path):
 
     mrf = htk.MultiResFile(file_path)
     resolutions = mrf.resolutions()
-    return resolutions, False, resolutions[0], False
+    return resolutions, resolutions[0], False, False
 
 
 @app.callback(
@@ -56,7 +60,12 @@ def look_for_file(n_clicks, file_path):
     State("file-path", "value"),
     State("resolution", "value"),
     prevent_initial_call=True,
-    running=[(Output("submit-file", "disabled"), True, False)],
+    running=[
+        (Output("file-path", "disabled"), True, False),
+        (Output("look-for-file", "disabled"), True, False),
+        (Output("resolution", "disabled"), True, False),
+        (Output("submit-file", "disabled"), True, False),
+    ],
 )
 def update_file(n_clicks, filename, resolution):
     global last_used_resolution
@@ -96,10 +105,10 @@ def update_file(n_clicks, filename, resolution):
         (Output("look-for-file", "disabled"), True, False),
         (Output("resolution", "disabled"), True, False),
         (Output("submit-file", "disabled"), True, False),
-        (Output("submit-chromosome", "disabled"), True, False),
         (Output("chromosome-name", "disabled"), True, False),
         (Output("color-map", "disabled"), True, False),
         (Output("normalization", "disabled"), True, False),
+        (Output("submit-chromosome", "disabled"), True, False),
     ],
 )
 def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution):
