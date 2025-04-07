@@ -1,15 +1,15 @@
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-DEFAULT_GEN_BELT = "5 000 000"
-DEFAULT_MAX_WIDTH = "100 000"
+DEFAULT_GEN_BELT = "5,000,000"
+DEFAULT_MAX_WIDTH = "100,000"
 DEFAULT_GLOB_PERS = "0.04"
 DEFAULT_CONSTRAIN_HEIGHTS = "False"
 DEFAULT_LOC_MIN_PERS = "0.33"
 DEFAULT_LOC_TREND = "0.25"
 DEFAULT_FORCE = "False"
 DEFAULT_NPROC = "1"
-DEFAULT_MIN_CHROM_SIZE = "2 000 000"
+DEFAULT_MIN_CHROM_SIZE = "2,000,000"
 DEFAULT_VERBOSITY = "info"
 DEFAULT_REL_CHANGE = "0.5"
 
@@ -114,7 +114,7 @@ def render_constrain_heights():
                 trigger="hover",
             ),
         ],
-        style={"marginTop": 40},
+        style={"marginTop": 40, "display": "flex", "alignItems": "center"},
     )
 
 
@@ -191,7 +191,7 @@ def render_force():
                 trigger="hover",
             ),
         ],
-        style={"marginTop": 40},
+        style={"marginTop": 40, "display": "flex", "alignItems": "center"},
     )
 
 
@@ -268,7 +268,7 @@ def render_verbosity():
                 trigger="hover",
             ),
         ],
-        style={"marginTop": 40},
+        style={"marginTop": 40, "display": "flex", "alignItems": "center"},
     )
 
 
