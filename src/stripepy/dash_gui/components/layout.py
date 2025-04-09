@@ -19,6 +19,7 @@ from .plotting import (
     render_color_map,
     render_filepath,
     render_normalization,
+    render_radio_items,
     render_resolution,
     render_submit_button,
 )
@@ -42,6 +43,7 @@ def layout():
                         [  # Right side of screen
                             render_filepath(),
                             render_resolution(),
+                            render_radio_items(),
                             render_chromosome_name(),
                             render_color_map(),
                             render_normalization(),

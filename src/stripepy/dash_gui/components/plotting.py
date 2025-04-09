@@ -61,6 +61,18 @@ def render_resolution():
     )
 
 
+def render_radio_items():
+    return html.Div(
+        [
+            dcc.RadioItems(
+                options=["Kb", "Mb", "Gb"],
+                value="Mb",
+                id="radioitems",
+            )
+        ],
+    )
+
+
 def render_chromosome_name():
     return html.Div(
         [

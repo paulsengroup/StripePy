@@ -9,6 +9,7 @@ import hictkpy as htk
 import numpy as np
 import plotly.graph_objects as go
 from colorscales import color_scale
+from components.axes import compute_x_axis_range
 from components.colorbar import colorbar
 from components.layout import layout
 from dash import Dash, Input, Output, State, html
@@ -104,6 +105,7 @@ def update_file(n_clicks, filename, resolution):
     State("normalization", "value"),
     State("file-path", "value"),
     State("resolution", "value"),
+    State("radioitems", "value"),
     prevent_initial_call=True,
     running=[
         (Output("file-path", "disabled"), True, False),
@@ -116,7 +118,7 @@ def update_file(n_clicks, filename, resolution):
         (Output("submit-chromosome", "disabled"), True, False),
     ],
 )
-def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution):
+def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution, radio_element):
     global last_used_chromosome_name
     global last_used_colorMap
     global last_used_normalization
@@ -158,7 +160,9 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
         )
     )
 
-    fig.update_yaxes(autorange="reversed")
+    tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution, radio_element)
+    fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
+    fig.update_yaxes(autorange="reversed", showgrid=False)
     fig.update_layout(plot_bgcolor="mediumslateblue")
     # NaN-values are transparent
 
