@@ -9,11 +9,12 @@ import hictkpy as htk
 import numpy as np
 import plotly.graph_objects as go
 from colorscales import color_scale
-from components.axes import compute_x_axis_range
+from components.axes import compute_x_axis_chroms, compute_x_axis_range
 from components.colorbar import colorbar
 from components.layout import layout
 from dash import Dash, Input, Output, State, html
 from dash.exceptions import PreventUpdate
+from plotly.subplots import make_subplots
 
 from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger
@@ -152,21 +153,67 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
 
     frame = np.where(np.isneginf(frame), under_lowest_real_value, frame)
 
-    fig = go.Figure(
-        data=go.Heatmap(
-            z=frame,
-            colorbar=colorbar(frame),
-            colorscale=colorMap,
+    if chromosome_name:
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=frame,
+                colorbar=colorbar(frame),
+                colorscale=colorMap,
+            )
         )
-    )
 
-    tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution, radio_element)
-    fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
-    fig.update_yaxes(autorange="reversed", showgrid=False)
-    fig.update_layout(plot_bgcolor="mediumslateblue")
-    # NaN-values are transparent
+        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution, radio_element)
+        fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
+        fig.update_yaxes(autorange="reversed", showgrid=False)
+        fig.update_layout(plot_bgcolor="mediumslateblue")
+        # NaN-values are transparent
+    else:
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.add_trace(
+            go.Heatmap(
+                z=frame,
+                colorbar=colorbar(frame),
+                colorscale=colorMap,
+            ),
+            secondary_y=False,
+        )
+        fig.add_trace(
+            go.Heatmap(
+                z=frame,
+                colorbar=colorbar(frame),
+                colorscale=colorMap,
+            ),
+            secondary_y=True,
+        )
+
+        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution, radio_element)
+        tickvals_chrom, ticktext_chrom = compute_x_axis_chroms(f)
+        fig.update_layout(
+            xaxis1=dict(tickvals=tickvals, ticktext=ticktext, showgrid=False, side="bottom"),
+            xaxis2=dict(tickvals=tickvals_chrom, ticktext=ticktext_chrom, showgrid=False, side="top"),
+            yaxis=dict(autorange="reversed", showgrid=False, visible=True),
+            yaxis2=dict(autorange="reversed", showgrid=False, visible=False, side="right"),
+            plot_bgcolor="mediumslateblue",
+        )
+        fig.data[1].update(xaxis="x2")
 
     return fig
+    """
+    elif not chromosome_name:
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=frame,
+                colorbar=colorbar(frame),
+                colorscale=colorMap,
+            )
+        )
+
+        tickvals, ticktext = compute_x_axis_chroms(f)
+        fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
+        fig.update_yaxes(autorange="reversed", showgrid=False)
+        fig.update_layout(plot_bgcolor="mediumslateblue")
+        # NaN-values are transparent
+    """
 
 
 @app.callback(

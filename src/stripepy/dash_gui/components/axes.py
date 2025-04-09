@@ -1,7 +1,5 @@
 import math
 
-import numpy as np
-
 
 def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnitude):
     magnitude_decision = {
@@ -36,19 +34,37 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnit
     span_end_bp = math.floor(span_end / magnitude_number)
     ticktext = [str(bps + span_start_bp) + desired_magnitude for bps in range(0, span_end_bp - span_start_bp, 1)]
 
+    bin_number = (span_end - span_start) / resolution + 1
     if len(tickvals) > 15:
         tickvals = _trim_list(tickvals)
         ticktext = _trim_list(ticktext)
+    elif len(tickvals) > bin_number:
+        tickvals = _trim_list(tickvals, bin_number)
+        ticktext = _trim_list(ticktext, bin_number)
+    return tickvals, ticktext
+
+
+def compute_x_axis_chroms(htk_object):
+    chromosomes = htk_object.chromosomes()
+
+    tickvals = []
+    ticktext = []
+    span_sum = 0
+    for chromosome_name, chromosome_length in chromosomes.items():
+        span_sum += chromosome_length
+        tickvals.append(span_sum / htk_object.resolution())
+        ticktext.append(chromosome_name)
+
     return tickvals, ticktext
 
 
 def _trim_list(list_long, max_number=15):
     original_length = len(list_long)
 
-    num_elements_to_pick = max_number - 2
+    num_elements_to_pick = max_number - 1
     step_size = math.ceil(original_length / num_elements_to_pick)
 
-    trimmed_list = [list_long.pop(0)]
+    trimmed_list = []
     for i in range(0, original_length, step_size):
         trimmed_list.append(list_long[i])
     trimmed_list.append(list_long[-1])

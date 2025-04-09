@@ -12,7 +12,7 @@ def render_filepath():
                     dcc.Input(
                         placeholder="File path",
                         type="text",
-                        value="C:\\Users\\grebk\\OneDrive\\Dokumenter\\Studier\\IFI\\Master\\4DNFIOTPSS3L.hic",
+                        value=None,
                         id="file-path",
                         style={"width": 300, "fontSize": 20},
                     ),
@@ -79,7 +79,8 @@ def render_chromosome_name():
             dcc.Input(
                 placeholder="[Chromosome name]:start_number-end_number",
                 type="text",
-                value="2L:10,000,000-20,000,000",
+                # value="2L:10,000,000-20,000,000",
+                value="",
                 id="chromosome-name",
                 disabled=True,
                 style={"width": 600, "fontSize": 20},
