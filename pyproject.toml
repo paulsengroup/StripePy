@@ -69,7 +69,7 @@ dependencies = [
 all = [
     "colorama >=0.4, <0.5",
     "matplotlib >=3.8, <4",
-    "rich >=13.9, <14",
+    "rich >=13.9, <15",
 ]
 
 gui = [
