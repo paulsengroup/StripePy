@@ -39,7 +39,7 @@ def layout():
                             html.Button(
                                 id="show-metadata",
                                 n_clicks=0,
-                                children="Metadata",
+                                children="Show metadata",
                                 type="button",
                             ),
                             html.Div(

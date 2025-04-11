@@ -306,5 +306,17 @@ def hide_show_metadata(n_clicks, hidden_state):
     return not (hidden_state)
 
 
+@app.callback(
+    Output("show-metadata", "children"),
+    Input("meta-info", "hidden"),
+)
+def change_metadata_button_name(hidden_state):
+    if hidden_state:
+        new_button_label = "Show metadata"
+    else:
+        new_button_label = "Hide metadata"
+    return new_button_label
+
+
 if __name__ == "__main__":
     app.run(debug=True)
