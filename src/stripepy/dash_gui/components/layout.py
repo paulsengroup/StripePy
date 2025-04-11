@@ -36,6 +36,9 @@ def layout():
                                 style={"width": "90vh", "height": "90vh"},
                                 id="HeatMap",
                             ),
+                            html.Div(
+                                id="meta-info",
+                            ),
                         ],
                         style={"display": "inline-block"},
                     ),
@@ -66,7 +69,6 @@ def layout():
                 ],
                 style={"display": "flex"},
             ),
-            html.Div(id="meta-info"),
             html.Div(id="callbacks-file", style={"display": "none"}),
         ]
     )
