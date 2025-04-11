@@ -36,7 +36,14 @@ def layout():
                                 style={"width": "90vh", "height": "90vh"},
                                 id="HeatMap",
                             ),
+                            html.Button(
+                                id="show-metadata",
+                                n_clicks=0,
+                                children="Metadata",
+                                type="button",
+                            ),
                             html.Div(
+                                hidden=True,
                                 id="meta-info",
                             ),
                         ],

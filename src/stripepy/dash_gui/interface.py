@@ -297,5 +297,14 @@ def call_stripes(
         )
 
 
+@app.callback(
+    Output("meta-info", "hidden"),
+    Input("show-metadata", "n_clicks"),
+    State("meta-info", "hidden"),
+)
+def hide_show_metadata(n_clicks, hidden_state):
+    return not (hidden_state)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
