@@ -57,12 +57,6 @@ def run(
     if logger is None:
         logger = structlog.get_logger().bind(step="IO")
 
-    logger.bind(step=(1, 1)).info("focusing on a neighborhood of the main diagonal")
-    matrix_proc = _band_extraction(matrix, resolution, genomic_belt)
-    nnz = matrix.nnz
-    delta = nnz - matrix_proc.nnz
-    logger.bind(step=(1, 1)).info("removed %.2f%% of the non-zero entries (%d/%d)", (delta / nnz) * 100, delta, nnz)
-
     # We need to extend the RoI to make sure we have all the data required to calculate the local pseudodistributions
     extension_window = genomic_belt // resolution
     if roi is None:
@@ -75,12 +69,12 @@ def run(
             ]
         }
 
-    roi_matrix_raw = _extract_region_of_interest(matrix_proc, extended_roi)
+    roi_matrix_raw = _extract_region_of_interest(matrix, extended_roi)
 
-    logger.bind(step=(1, 2)).info("applying log-transformation")
-    matrix_proc = _log_transform(matrix_proc)
+    logger.bind(step=(1, 1)).info("applying log-transformation")
+    matrix_proc = _log_transform(matrix)
 
-    logger.bind(step=(1, 3)).info("projecting interactions onto [1, 0]")
+    logger.bind(step=(1, 2)).info("projecting interactions onto [1, 0]")
     scaling_factor = matrix_proc.max()
     matrix_proc /= scaling_factor
 
@@ -110,40 +104,6 @@ def _log_transform(matrix: SparseMatrix) -> SparseMatrix:
     matrix.data[np.isnan(matrix.data)] = 0
     matrix.eliminate_zeros()
     return matrix.log1p()  # noqa
-
-
-def _band_extraction(
-    matrix: SparseMatrix,
-    resolution: int,
-    genomic_belt: int,
-) -> ss.csr_matrix:
-    """
-    Given an upper-triangular SparseMatrix format, do the following:
-
-      * Zero (i.e. drop) all values that lie outside the first genomic_belt // resolution diagonals
-
-    Parameters
-    ----------
-    matrix: SparseMatrix
-        the upper-triangular sparse matrix to be processed
-    resolution: int
-        the genomic resolution of the sparse matrix I
-    genomic_belt: int
-        the width of the genomic belt to be extracted
-
-    Returns
-    -------
-    ss.csr_matrix
-    """
-
-    assert resolution > 0
-    assert genomic_belt > 0
-    # assert ss.tril(matrix, k=-1).count_nonzero() == 0
-
-    matrix_belt = genomic_belt // resolution
-    if matrix_belt >= matrix.shape[0]:
-        return matrix
-    return ss.tril(matrix, k=matrix_belt, format="csr")
 
 
 def _extract_region_of_interest(
