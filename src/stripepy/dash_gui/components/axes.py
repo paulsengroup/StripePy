@@ -75,9 +75,9 @@ def compute_x_axis_chroms(htk_object):
     ticktext = []
     span_sum = 0
     for chromosome_name, chromosome_length in chromosomes.items():
-        span_sum += chromosome_length
         tickvals.append(span_sum / htk_object.resolution())
         ticktext.append(chromosome_name)
+        span_sum += chromosome_length
 
     return tickvals, ticktext
 
