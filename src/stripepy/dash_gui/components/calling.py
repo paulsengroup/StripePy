@@ -15,6 +15,7 @@ DEFAULT_REL_CHANGE = "0.5"
 
 
 def render_genomic_belt():
+    """Genomic belt DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "genomic belt ",
@@ -41,6 +42,7 @@ def render_genomic_belt():
 
 
 def render_max_width():
+    """Maximum width DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "max width ",
@@ -67,6 +69,7 @@ def render_max_width():
 
 
 def render_global_minimum_persistence():
+    """Global minimum persistence DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "global minimum persistence ",
@@ -93,6 +96,7 @@ def render_global_minimum_persistence():
 
 
 def render_constrain_heights():
+    """Height restriction DCC dropdown field and pop-up tooltip"""
     return html.Div(
         [
             "constrain heights ",
@@ -119,6 +123,7 @@ def render_constrain_heights():
 
 
 def render_local_minimum_persistence():
+    """Local minimum persistence DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "local minimal persistence ",
@@ -144,6 +149,7 @@ def render_local_minimum_persistence():
 
 
 def render_local_trend_minimum():
+    """Stripe height threshold DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "local trend minimum ",
@@ -170,6 +176,7 @@ def render_local_trend_minimum():
 
 
 def render_force():
+    """Force overwrite DCC dropdown field and pop-up tooltip"""
     return html.Div(
         [
             "force ",
@@ -196,6 +203,7 @@ def render_force():
 
 
 def render_nrpoc():
+    """Parallellization count DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "nproc",
@@ -222,6 +230,7 @@ def render_nrpoc():
 
 
 def render_minimum_chromosome_size():
+    """Minimum chromosome size DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "minimum chromosome size ",
@@ -247,6 +256,7 @@ def render_minimum_chromosome_size():
 
 
 def render_verbosity():
+    """Verbosity DCC dropdown field and pop-up tooltip"""
     return html.Div(
         [
             "verbosity ",
@@ -273,6 +283,7 @@ def render_verbosity():
 
 
 def render_relative_change():
+    """Relative change DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "relative change ",
@@ -301,6 +312,7 @@ def render_relative_change():
 
 
 def render_stripe_calling_button():
+    """Button that activates the stripe calling process"""
     return html.Button(
         n_clicks=0,
         children="call stripes",

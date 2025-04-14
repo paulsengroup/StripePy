@@ -26,6 +26,13 @@ from .plotting import (
 
 
 def layout():
+    """
+    Contains the web page content in HTML form.
+
+    Returns
+    -------
+    An HTML div containing every other component of the web page.
+    """
     return html.Div(
         [
             html.Div(

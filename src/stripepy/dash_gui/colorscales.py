@@ -21,6 +21,15 @@ nmeth = tuple(map(tuple, nmeth.tolist()))
 
 
 def color_scale(name):
+    """
+    Provide colorscales to interface.py.
+    Choose between cooltools colors and default plotly colors.
+
+    Returns
+    -------
+    List of tuples. Each tuple consists of a floating number and an rgb string on the form 'rgb(255, 255, 255)'.
+    If no match between input string and stored values, falls back to default plotly colors.
+    """
     if name is None:
         name = "fruit_punch "
     scales = {

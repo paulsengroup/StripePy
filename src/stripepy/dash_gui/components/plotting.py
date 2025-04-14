@@ -4,6 +4,7 @@ from dash import dcc, html
 
 
 def render_filepath():
+    """Text input for path to local file, pop-up tooltip and activation button"""
     return html.Div(
         [
             "File path",
@@ -40,6 +41,7 @@ def render_filepath():
 
 
 def render_resolution():
+    """Dropdown menu for resolution options and activation button"""
     return html.Div(
         [
             "Resolution",
@@ -62,6 +64,7 @@ def render_resolution():
 
 
 def render_radio_items():
+    """Options list for SI suffix on lower X axis"""
     return html.Div(
         [
             dcc.RadioItems(
@@ -74,6 +77,7 @@ def render_radio_items():
 
 
 def render_chromosome_name():
+    """Text input for square restriction of matrix and pop-up tooltip"""
     return html.Div(
         [
             dcc.Input(
@@ -103,6 +107,7 @@ def render_chromosome_name():
 
 
 def render_color_map():
+    """Dropdown menu of color options and pop-up tooltip"""
     return html.Div(
         [
             dcc.Dropdown(
@@ -141,6 +146,7 @@ def render_color_map():
 
 
 def render_normalization():
+    """Dropdown menu of normalization techniques and pop-up tooltip"""
     return html.Div(
         [
             dcc.Dropdown(
@@ -170,6 +176,7 @@ def render_normalization():
 
 
 def render_submit_button():
+    """Activation button for plotting"""
     return html.Button(
         n_clicks=0,
         children="Submit",

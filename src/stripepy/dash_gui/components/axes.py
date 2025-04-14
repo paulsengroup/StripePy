@@ -2,6 +2,18 @@ import math
 
 
 def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnitude):
+    """
+    Calculate the ticks on the bottom X axis.
+    Provides ticks with bp values, with the preferred SI suffix.
+    len(tickvals) is equal to len(tickvalues).
+
+    Returns
+    -------
+    tickvals
+        list of integers, corresponding to locations along the X axis
+    ticktext
+        list of strings, containing the text for each tick defined in tickvals.
+    """
     magnitude_decision = {
         "Kb": 10**3,
         "Mb": 10**6,
@@ -45,6 +57,18 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnit
 
 
 def compute_x_axis_chroms(htk_object):
+    """
+    Calculate the ticks on the top X axis.
+    Provides ticks with chromosome names.
+    len(tickvals) is equal to len(tickvalues).
+
+    Returns
+    -------
+    tickvals
+        list of integers, corresponding to locations along the X axis
+    ticktext
+        list of strings, containing the name of each chromosome that ends at that location.
+    """
     chromosomes = htk_object.chromosomes()
 
     tickvals = []

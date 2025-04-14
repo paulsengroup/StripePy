@@ -4,6 +4,14 @@ import numpy as np
 
 
 def colorbar(matrix):
+    """
+    Specifies the plot's colorbar.
+
+    Returns
+    -------
+    colorbar:
+        a JSON parsable dictionary containing the parameters specifying the colorbar
+    """
     find_normal_values = matrix[np.isfinite(matrix)]
     max_float = np.nanmax(find_normal_values)
     min_float = np.nanmin(find_normal_values)
