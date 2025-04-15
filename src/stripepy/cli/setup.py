@@ -501,6 +501,20 @@ def _make_stripepy_view_subcommand(main_parser) -> argparse.ArgumentParser:
     )
 
     sc.add_argument(
+        "--with-biodescriptors",
+        action="store_true",
+        default=False,
+        help="Include the stripe biodescriptors in the output.",
+    )
+
+    sc.add_argument(
+        "--with-header",
+        action="store_true",
+        default=False,
+        help="Include column names in the output.",
+    )
+
+    sc.add_argument(
         "--transform",
         type=str,
         choices={"transpose_to_ut", "transpose_to_lt", None},
