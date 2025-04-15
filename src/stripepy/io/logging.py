@@ -10,6 +10,7 @@ import importlib.util
 import multiprocessing as mp
 import pathlib
 import platform
+import sys
 from typing import Dict, List, Optional
 
 import hictkpy
@@ -229,6 +230,8 @@ def _configure_logger_columns(
 
     if level_styles is None:
         level_to_color = structlog.dev.ConsoleRenderer().get_default_level_styles(colors)
+        if not colors or not sys.stderr.isatty():
+            level_to_color = {lvl: "" for lvl in level_to_color}
     else:
         level_to_color = level_styles
 
@@ -243,7 +246,7 @@ def _configure_logger_columns(
     level_width = 0 if not pad_level else None
 
     styles: structlog.Styles
-    if colors:
+    if colors and sys.stderr.isatty():
         if platform.system() == "Windows":
             # Colorama must be init'd on Windows, but must NOT be
             # init'd on other OSes, because it can break colors.
