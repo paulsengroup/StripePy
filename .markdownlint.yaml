@@ -7,6 +7,7 @@ default: true
 MD010:
   ignore_code_languages:
     - console
+    - txt
 
 MD013:
   line_length: 180
