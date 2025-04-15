@@ -5,6 +5,7 @@
 import contextlib
 import io
 import pathlib
+from typing import List
 
 import pandas as pd
 import pytest
@@ -31,28 +32,99 @@ class TestStripePyView:
                 )
 
     @staticmethod
-    def _test_view(testfile: pathlib.Path, num_rows: int):
-        args = ["view", str(testfile)]
+    def _test_view(testfile: pathlib.Path, cols: List[str], num_rows: int):
+        args = ["view", str(testfile), "--with-header", "--with-biodescriptors"]
         buff = io.StringIO()
         with contextlib.redirect_stdout(buff):
             main(args)
 
         buff.seek(0)
-        cols = ["chrom1", "start1", "end1", "chrom2", "start2", "end2"]
-        df = pd.read_table(buff, names=cols)
 
-        assert len(df.columns) == len(cols)
-        assert len(df) == len(df[~df.isnull().values])
+        df = pd.read_table(buff)
+
+        null_mask = df[["chrom1", "start1", "end1", "chrom2", "start2", "end2"]].isnull().values
+
+        assert df.columns.tolist() == cols
+        assert len(df) == len(df[~null_mask])
         assert len(df) == num_rows
 
     @staticmethod
     def test_view_v1():
-        TestStripePyView._test_view(testdir / "data" / "results_4DNFI9GMP2J8_v1.hdf5", 18625)
+        cols = [
+            "chrom1",
+            "start1",
+            "end1",
+            "chrom2",
+            "start2",
+            "end2",
+            "top_persistence",
+            "inner_mean",
+            "outer_mean",
+            "rel_change",
+            "inner_std",
+        ]
+        TestStripePyView._test_view(
+            testdir / "data" / "results_4DNFI9GMP2J8_v1.hdf5",
+            cols=cols,
+            num_rows=18625,
+        )
 
     @staticmethod
     def test_view_v2():
-        TestStripePyView._test_view(testdir / "data" / "results_4DNFI9GMP2J8_v2.hdf5", 18625)
+        cols = [
+            "chrom1",
+            "start1",
+            "end1",
+            "chrom2",
+            "start2",
+            "end2",
+            "top_persistence",
+            "inner_mean",
+            "inner_std",
+            "outer_lmean",
+            "outer_rmean",
+            "outer_mean",
+            "min",
+            "q1",
+            "q2",
+            "q3",
+            "max",
+            "rel_change",
+        ]
+        TestStripePyView._test_view(
+            testdir / "data" / "results_4DNFI9GMP2J8_v2.hdf5",
+            cols=cols,
+            num_rows=18625,
+        )
 
     @staticmethod
     def test_view_v3():
-        TestStripePyView._test_view(testdir / "data" / "results_4DNFI9GMP2J8_v3.hdf5", 18379)
+        cols = [
+            "chrom1",
+            "start1",
+            "end1",
+            "chrom2",
+            "start2",
+            "end2",
+            "top_persistence",
+            "inner_mean",
+            "inner_std",
+            "outer_lsum",
+            "outer_lsize",
+            "outer_rsum",
+            "outer_rsize",
+            "min",
+            "q1",
+            "q2",
+            "q3",
+            "max",
+            "outer_lmean",
+            "outer_rmean",
+            "outer_mean",
+            "rel_change",
+        ]
+        TestStripePyView._test_view(
+            testdir / "data" / "results_4DNFI9GMP2J8_v3.hdf5",
+            cols=cols,
+            num_rows=18379,
+        )
