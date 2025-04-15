@@ -145,8 +145,12 @@ def _extract_standardized_local_1d_pseudodistribution(
     else:
         i0, i1 = max(seed_site - max_height, 0), seed_site
 
+    stripe_height = abs(i1 - i0)
+
     j0, j1 = left_bound, right_bound
-    if isinstance(matrix, ss.csc_matrix):
+
+    # When stripes are very tall, it is always better to slice by columns first (even if the matrix is in CSR format)
+    if isinstance(matrix, ss.csc_matrix) or stripe_height > 1000:
         submatrix = matrix[:, j0:j1].tocsr()[i0:i1, :].tocsc()
     elif isinstance(matrix, ss.csr_matrix):
         submatrix = matrix[i0:i1, :].tocsc()[:, j0:j1]
