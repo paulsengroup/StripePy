@@ -100,7 +100,7 @@ def make_cli():
     cli.add_argument(
         "--glob-pers-min",
         type=_probability,
-        default=0.04,
+        default=0.03,
         help="Threshold value between 0 and 1 to filter persistence maxima points and identify loci of interest, "
         "aka seeds. The value used for the StripeBench benchmark is here set as default.",
     )
