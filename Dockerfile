@@ -71,11 +71,18 @@ COPY --from=tester "$src_dir/LICENCE" /opt/stripepy/share/licenses/stripepy/LICE
 WORKDIR /data
 ENTRYPOINT ["/opt/stripepy/bin/stripepy"]
 ENV PATH="$PATH:/opt/stripepy/bin"
-# Allow caching of bytecode
+
+# Populate bytecode cache
 ENV PYTHONDONTWRITEBYTECODE=
 
-RUN stripepy --help
-RUN stripepy --version
+RUN stripepy --help \
+&& stripepy call --help \
+&& stripepy download --help \
+&& stripepy view --help \
+&& stripepy plot cm --help \
+&& stripepy plot pd --help \
+&& stripepy plot hist --help \
+&& stripepy --version
 
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 LABEL org.opencontainers.image.authors='Andrea Raffo <andrea.raffo@ibv.uio.no>,Roberto Rossini <roberros@uio.no>'
