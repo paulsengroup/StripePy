@@ -787,7 +787,7 @@ class ResultFile(object):
         self._h5.attrs["format-url"] = "https://github.com/paulsengroup/StripePy"
         self._h5.attrs["format-version"] = self._version
         self._h5.attrs["generated-by"] = f"StripePy v{version('stripepy-hic')}"
-        self._h5.attrs["metadata"] = json.dumps(metadata, indent=2)
+        self._h5.attrs["metadata"] = json.dumps(metadata, sort_keys=True, indent=2)
         self._h5.attrs["normalization"] = normalization
 
     def _init_chromosomes(self, chroms: Dict[str, int]):
