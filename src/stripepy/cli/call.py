@@ -42,6 +42,7 @@ def run(
     max_width: int,
     glob_pers_min: float,
     constrain_heights: bool,
+    k: int,
     loc_pers_min: float,
     loc_trend_min: float,
     force: bool,
@@ -236,6 +237,7 @@ def run(
                 result=result,
                 lt_matrix=lt_matrix,
                 ut_matrix=ut_matrix,
+                k=k,
                 tpool=tpool,
                 pool=pool,
                 logger=logger,
@@ -570,6 +572,7 @@ def _run_step_4(
     result: Result,
     lt_matrix: Optional[SparseMatrix],
     ut_matrix: Optional[SparseMatrix],
+    k: int,
     tpool: Union[ProcessPoolWrapper, concurrent.futures.ThreadPoolExecutor],
     pool: ProcessPoolWrapper,
     logger,
@@ -590,8 +593,8 @@ def _run_step_4(
         executor = pool.map
 
     params = (
-        (result.get("stripes", "lower"), lt_matrix, "lower", executor, logger),
-        (result.get("stripes", "upper"), ut_matrix, "upper", executor, logger),
+        (result.get("stripes", "lower"), lt_matrix, "lower", k, executor, logger),
+        (result.get("stripes", "upper"), ut_matrix, "upper", k, executor, logger),
     )
 
     (_, lt_stripes), (_, ut_stripes) = list(tpool.map(_run_step_4_helper, params))

@@ -71,7 +71,7 @@ def _positive_float(arg) -> float:
     raise argparse.ArgumentTypeError("Not a positive float")
 
 
-def _positive_int(arg) -> float:
+def _positive_int(arg) -> int:
     if (n := int(arg)) > 0:
         return n
 
@@ -166,6 +166,15 @@ def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
         action="store_true",
         default=False,
         help="Use peaks in signal to constrain the stripe height (default: %(default)s).",
+    )
+
+    sc.add_argument(
+        "-k",
+        "--k-neighbour",
+        type=_positive_int,
+        dest="k",
+        default=3,
+        help="k for the k-neighbour, i.e., number of bins adjacent to the stripe boundaries on both sides (default: %(default)s).",
     )
 
     sc.add_argument(

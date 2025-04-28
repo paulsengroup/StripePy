@@ -15,9 +15,9 @@ def run(
     stripes: List[Stripe],
     matrix: Optional[SparseMatrix],
     location: str,
+    k: int,
     map_=map,
     logger=None,
-    window: int = 3,
 ) -> Tuple[str, List[Stripe]]:
     """
     Compute the biodescriptors for the stripes identified by the previous steps.
@@ -35,7 +35,7 @@ def run(
         a callable that behaves like the built-in map function
     logger:
         logger
-    window: int
+    k: int
         the window size used to compute the biodescriptors
 
     Returns
@@ -46,7 +46,7 @@ def run(
         a copy of the stripes given as input with their biodescriptors computed.
     """
     assert location in {"lower", "upper"}
-    assert window >= 3
+    assert k > 0
 
     if logger is None:
         logger = structlog.get_logger().bind(step=(4,))
@@ -64,7 +64,7 @@ def run(
             functools.partial(
                 _step_4_helper,
                 matrix=matrix,
-                window=window,
+                k=k,
                 location=location,
             ),
             stripes,
@@ -85,7 +85,7 @@ def run(
 def _step_4_helper(
     stripe: Stripe,  # noqa
     matrix: Optional[SparseMatrix],
-    window: int,
+    k: int,
     location: str,
 ) -> Stripe:
     """
@@ -95,6 +95,6 @@ def _step_4_helper(
     if matrix is None:
         matrix = get_shared_state(location).get()
 
-    stripe.compute_biodescriptors(matrix, window=window)
+    stripe.compute_biodescriptors(matrix, window=k)
 
     return stripe
