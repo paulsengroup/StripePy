@@ -23,7 +23,7 @@ from stripepy.utils import pretty_format_elapsed_time
 def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str, str]]:
     assert not math.isnan(max_size)
 
-    record_id = "14921616"
+    record_id = "15300426"
 
     datasets = {
         "4DNFI3RFZLZ5": {
@@ -83,7 +83,7 @@ def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str,
         },
         "__results_v3": {
             "url": f"https://zenodo.org/records/{record_id}/files/results_4DNFI9GMP2J8_v3.hdf5?download=1",
-            "md5": "0e618f61f35579968105e84bf50a2598",
+            "md5": "47c6b3ec62b53397d44cd1813caf678b",
             "filename": "results_4DNFI9GMP2J8_v3.hdf5",
             "assembly": "hg38",
             "format": "stripepy",
