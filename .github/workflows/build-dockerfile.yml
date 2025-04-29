@@ -51,7 +51,7 @@ permissions:
 jobs:
   cache-test-datasets:
     name: Cache test dataset
-    uses: paulsengroup/StripePy/.github/workflows/cache-test-datasets.yml@b0222beb3c2fae990f0f24a74b2bbcec4580118f
+    uses: paulsengroup/StripePy/.github/workflows/cache-test-datasets.yml@0c78cb7f9da6a066fcea9c32890bcbef7c57cfbc
 
   build-dockerfile:
     name: Build Dockerfile
