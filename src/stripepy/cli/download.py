@@ -23,7 +23,7 @@ from stripepy.utils import pretty_format_elapsed_time
 def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str, str]]:
     assert not math.isnan(max_size)
 
-    record_id = "15300426"
+    record_id = "15301784"
 
     datasets = {
         "4DNFI3RFZLZ5": {
@@ -59,7 +59,7 @@ def _get_datasets(max_size: float, include_private: bool) -> Dict[str, Dict[str,
     private_datasets = {
         "__results_tables": {
             "url": f"https://zenodo.org/records/{record_id}/files/stripepy-call-result-tables.tar.xz?download=1",
-            "md5": "52c4154c9e974a3130b3ecaa7b729827",
+            "md5": "04ef7694cbb68739f205c5030681c199",
             "filename": "stripepy-call-result-tables.tar.xz",
             "assembly": "hg38",
             "format": "tar",
