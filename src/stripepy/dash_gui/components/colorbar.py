@@ -29,6 +29,6 @@ def _colorbar(max_float, min_float):
         exponentformat="e",
         tickmode="array",
         tickvals=tickvals,
-        ticktext=[str(int(val)) for val in tickvals],
+        ticktext=[str(int(np.e**val)) for val in tickvals],
         separatethousands=True,
     )

@@ -146,6 +146,8 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
 
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
+    to_string_vector = np.vectorize(str)
+    inv_log_frame_string = to_string_vector(frame)
 
     np.log(frame, out=frame, where=np.isnan(frame) == False)
     under_lowest_real_value = np.min(frame[np.isfinite(frame)]) - abs(np.min(frame[np.isfinite(frame)]))
@@ -159,6 +161,8 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
                 z=frame,
                 colorbar=colorbar(frame),
                 colorscale=colorMap,
+                customdata=inv_log_frame_string,
+                hovertemplate="%{customdata}<extra></extra>",
             )
         )
 
@@ -182,6 +186,11 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
                 z=frame,
                 colorbar=colorbar(frame),
                 colorscale=colorMap,
+                customdata=inv_log_frame_string,
+                hovertemplate="%{customdata}<extra></extra>",
+                hoverlabel={
+                    "bgcolor": "green",
+                },
             ),
             secondary_y=True,
         )
@@ -198,22 +207,6 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
         fig.data[1].update(xaxis="x2")
 
     return fig
-    """
-    elif not chromosome_name:
-        fig = go.Figure(
-            data=go.Heatmap(
-                z=frame,
-                colorbar=colorbar(frame),
-                colorscale=colorMap,
-            )
-        )
-
-        tickvals, ticktext = compute_x_axis_chroms(f)
-        fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
-        fig.update_yaxes(autorange="reversed", showgrid=False)
-        fig.update_layout(plot_bgcolor="mediumslateblue")
-        # NaN-values are transparent
-    """
 
 
 @app.callback(
