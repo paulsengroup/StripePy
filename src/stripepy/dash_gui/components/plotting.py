@@ -150,7 +150,6 @@ def render_normalization():
     return html.Div(
         [
             dcc.Dropdown(
-                options=["KR", "VC", "VC_SQRT"],
                 placeholder="Normalization",
                 value="KR",
                 id="normalization",

@@ -56,6 +56,7 @@ def look_for_file(n_clicks, file_path):
 
 @app.callback(
     Output("meta-info", "children"),
+    Output("normalization", "options"),
     Output("chromosome-name", "disabled"),
     Output("color-map", "disabled"),
     Output("submit-chromosome", "disabled"),
@@ -95,7 +96,9 @@ def update_file(n_clicks, filename, resolution):
     metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
     metaInfo = html.Div([html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes])
 
-    return metaInfo, False, False, False, False, False, False, False
+    avail_normalizations = f.avail_normalizations()
+
+    return metaInfo, avail_normalizations, False, False, False, False, False, False, False
 
 
 @app.callback(
