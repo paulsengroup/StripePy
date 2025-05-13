@@ -49,7 +49,10 @@ def look_for_file(n_clicks, file_path):
 
     mrf = htk.MultiResFile(file_path)
     resolutions = mrf.resolutions()
-    return resolutions, resolutions[0], False, False
+
+    # Pick the resolution closest to 25kb
+    resolution_value = np.sort(np.absolute(np.subtract(resolutions, 25_000)))[0]
+    return resolutions, resolution_value + 25_000, False, False
 
 
 @app.callback(
