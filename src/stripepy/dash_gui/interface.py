@@ -40,12 +40,10 @@ app.layout = layout()
 )
 def look_for_file(n_clicks, file_path):
     global last_used_file
-    try:
-        if file_path == last_used_file:
-            raise PreventUpdate
-        else:
-            pass
-    except NameError:
+    last_used_file = ""
+    if file_path == last_used_file:
+        raise PreventUpdate
+    else:
         pass
     last_used_file = file_path
 
