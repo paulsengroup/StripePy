@@ -63,6 +63,20 @@ def render_resolution():
     )
 
 
+def render_radio_log_scale():
+    """Lets user choose between log scale and normal"""
+    return html.Div(
+        [
+            dcc.RadioItems(
+                options=["log scale", "raw scale"],
+                value="log scale",
+                id="radio-log",
+            ),
+            html.Br(),
+        ],
+    )
+
+
 def render_radio_items():
     """Options list for SI suffix on lower X axis"""
     return html.Div(

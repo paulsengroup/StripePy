@@ -108,6 +108,7 @@ def update_file(n_clicks, filename, resolution):
     State("file-path", "value"),
     State("resolution", "value"),
     State("radioitems", "value"),
+    State("radio-log", "value"),
     prevent_initial_call=True,
     running=[
         (Output("file-path", "disabled"), True, False),
@@ -120,7 +121,7 @@ def update_file(n_clicks, filename, resolution):
         (Output("submit-chromosome", "disabled"), True, False),
     ],
 )
-def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution, radio_element):
+def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution, radio_element, scale_type):
     global last_used_chromosome_name
     global last_used_colorMap
     global last_used_normalization
@@ -150,7 +151,8 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     to_string_vector = np.vectorize(str)
     inv_log_frame_string = to_string_vector(frame)
 
-    np.log(frame, out=frame, where=np.isnan(frame) == False)
+    if scale_type == "log scale":
+        np.log(frame, out=frame, where=np.isnan(frame) == False)
     under_lowest_real_value = np.min(frame[np.isfinite(frame)]) - abs(np.min(frame[np.isfinite(frame)]))
     # isfinite() dicounts nan, inf and -inf
 
@@ -160,7 +162,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
         fig = go.Figure(
             data=go.Heatmap(
                 z=frame,
-                colorbar=colorbar(frame),
+                colorbar=colorbar(frame, scale_type),
                 colorscale=colorMap,
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
@@ -177,7 +179,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
         fig.add_trace(
             go.Heatmap(
                 z=frame,
-                colorbar=colorbar(frame),
+                colorbar=colorbar(frame, scale_type),
                 colorscale=colorMap,
             ),
             secondary_y=False,
@@ -185,7 +187,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
         fig.add_trace(
             go.Heatmap(
                 z=frame,
-                colorbar=colorbar(frame),
+                colorbar=colorbar(frame, scale_type),
                 colorscale=colorMap,
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
