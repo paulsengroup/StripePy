@@ -168,6 +168,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
 
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
+    frame = frame.astype(np.float32)
     to_string_vector = np.vectorize(str)
     inv_log_frame_string = to_string_vector(frame)
 
