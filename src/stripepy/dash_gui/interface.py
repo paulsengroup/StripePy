@@ -51,8 +51,24 @@ def look_for_file(n_clicks, file_path):
     resolutions = mrf.resolutions()
 
     # Pick the resolution closest to 25kb
-    resolution_value = np.sort(np.absolute(np.subtract(resolutions, 25_000)))[0]
-    return resolutions, resolution_value + 25_000, False, False
+    resolution_value = pick_closest(resolutions, 25000)
+    return resolutions, resolution_value, False, False
+
+
+def pick_closest(array, target_res):
+    if target_res in array:
+        return target_res
+
+    last = array[0]
+    for head in array:
+        if last < target_res and head > target_res:
+            if abs(int(last) - target_res) < abs(int(head) - target_res):
+                # last value checked is closer to target value than the current checked value
+                return last
+            else:
+                return head
+        else:
+            last = head
 
 
 @app.callback(
