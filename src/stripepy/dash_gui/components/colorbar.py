@@ -22,13 +22,10 @@ def colorbar(matrix, scale_type):
 
 
 def _colorbar(max_float, min_float):
-    max_int = round(max_float)
-    tickvals_array = np.array([math.log(val, max_int) for val in range(1, max_int)]) * max_float
-    np.append(tickvals_array, max_float)
-    tickvals_set = set(map(int, tickvals_array))
-    tickvals = list(tickvals_set)
+    max_int = math.floor(max_float)
+    tickvals = np.linspace(1, max_int, num=10)
 
-    ticktext = [str(int(np.e**val)) for val in tickvals]
+    ticktext = [str(round_to_even(np.e**val)) for val in tickvals]
     ticktext.append(np.e**max_float)
 
     return dict(
@@ -41,7 +38,7 @@ def _colorbar(max_float, min_float):
 
 
 def _colorbar_normal_scale(max_float):
-    max_int = round(max_float)
+    max_int = math.floor(max_float)
     tickvals_array = np.linspace(1, max_int, num=10)
     tickvals_set = set(map(int, tickvals_array))
     tickvals = list(tickvals_set)
@@ -50,6 +47,12 @@ def _colorbar_normal_scale(max_float):
         title="Counts",
         tickmode="array",
         tickvals=tickvals,
-        ticktext=[str(int(val)) for val in tickvals],
+        ticktext=[str(round_to_even(val)) for val in tickvals],
         separatethousands=True,
     )
+
+
+def round_to_even(floating):
+    rounded = round(floating)
+    to_even = round(rounded / 2) * 2
+    return to_even
