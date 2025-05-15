@@ -74,6 +74,7 @@ def pick_closest(array, target_res):
 @app.callback(
     Output("meta-info", "children"),
     Output("normalization", "options"),
+    Output("normalization", "value"),
     Output("chromosome-name", "disabled"),
     Output("color-map", "disabled"),
     Output("submit-chromosome", "disabled"),
@@ -115,7 +116,7 @@ def update_file(n_clicks, filename, resolution):
 
     avail_normalizations = f.avail_normalizations()
 
-    return metaInfo, avail_normalizations, False, False, False, False, False, False, False
+    return metaInfo, avail_normalizations, avail_normalizations[0], False, False, False, False, False, False, False
 
 
 @app.callback(

@@ -165,7 +165,6 @@ def render_normalization():
         [
             dcc.Dropdown(
                 placeholder="Normalization",
-                value="KR",
                 id="normalization",
                 disabled=True,
                 style={"width": 300, "fontSize": 20},
