@@ -56,10 +56,10 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution):
     ticktext = [str(bps + span_start_bp) + desired_magnitude for bps in range(0, span_end_bp - span_start_bp, 1)]
 
     bin_number = (span_end - span_start) / resolution + 1
-    if len(tickvals) > 15:
+    if len(tickvals) > 12:
         tickvals = _trim_list(tickvals)
         ticktext = _trim_list(ticktext)
-    elif len(tickvals) > bin_number:
+    if len(tickvals) > bin_number:
         tickvals = _trim_list(tickvals, bin_number)
         ticktext = _trim_list(ticktext, bin_number)
     return tickvals, ticktext
