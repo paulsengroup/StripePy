@@ -115,6 +115,7 @@ def update_file(n_clicks, filename, resolution):
     metaInfo = html.Div([html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes])
 
     avail_normalizations = f.avail_normalizations()
+    avail_normalizations.append("No normalization")
 
     return metaInfo, avail_normalizations, avail_normalizations[0], False, False, False, False, False, False, False
 
@@ -165,6 +166,8 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
     last_used_resolution = resolution
 
     colorMap = color_scale(colorMap)
+    if normalization == "No normalization":
+        normalization = None
 
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
