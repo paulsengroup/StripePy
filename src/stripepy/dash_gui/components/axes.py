@@ -1,7 +1,9 @@
 import math
 
+import numpy as np
 
-def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnitude):
+
+def compute_x_axis_range(chromosome_name, htk_object, resolution):
     """
     Calculate the ticks on the bottom X axis.
     Provides ticks with bp values, with the preferred SI suffix.
@@ -14,12 +16,6 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnit
     ticktext
         list of strings, containing the text for each tick defined in tickvals.
     """
-    magnitude_decision = {
-        "Kb": 10**3,
-        "Mb": 10**6,
-        "Gb": 10**9,
-    }
-    magnitude_number = magnitude_decision[desired_magnitude]
 
     if chromosome_name:  # XX:Y,000-Z,000
         _, _, spans = chromosome_name.partition(":")
@@ -40,10 +36,23 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution, desired_magnit
         span_start = 0
         span_end = htk_object.nbins() * resolution
 
+    magnitude_iter = 0
+    while (data_magnitude := np.log10(span_end)) > magnitude_iter + 2:
+        magnitude_iter += 3
+
+    magnitude_number = 10**magnitude_iter
+
     tickvals = [(bins) / resolution for bins in range(0, span_end - span_start, magnitude_number)]
 
+    magnitude_decision = {
+        0: "",
+        10**3: "kb",
+        10**6: "Mb",
+        10**9: "Gb",
+    }
     span_start_bp = math.ceil(span_start / magnitude_number)
     span_end_bp = math.floor(span_end / magnitude_number)
+    desired_magnitude = magnitude_decision[magnitude_number]
     ticktext = [str(bps + span_start_bp) + desired_magnitude for bps in range(0, span_end_bp - span_start_bp, 1)]
 
     bin_number = (span_end - span_start) / resolution + 1

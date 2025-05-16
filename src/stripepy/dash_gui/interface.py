@@ -128,7 +128,6 @@ def update_file(n_clicks, filename, resolution):
     State("normalization", "value"),
     State("file-path", "value"),
     State("resolution", "value"),
-    State("radioitems", "value"),
     State("radio-log", "value"),
     prevent_initial_call=True,
     running=[
@@ -142,7 +141,7 @@ def update_file(n_clicks, filename, resolution):
         (Output("submit-chromosome", "disabled"), True, False),
     ],
 )
-def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution, radio_element, scale_type):
+def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution, scale_type):
     global last_used_chromosome_name
     global last_used_colorMap
     global last_used_normalization
@@ -193,7 +192,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
             )
         )
 
-        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution, radio_element)
+        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
         fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
         fig.update_yaxes(autorange="reversed", showgrid=False)
         fig.update_layout(plot_bgcolor="mediumslateblue")
@@ -222,7 +221,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
             secondary_y=True,
         )
 
-        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution, radio_element)
+        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
         tickvals_chrom, ticktext_chrom = compute_x_axis_chroms(f)
         fig.update_layout(
             xaxis1=dict(tickvals=tickvals, ticktext=ticktext, showgrid=False, side="bottom"),

@@ -68,24 +68,11 @@ def render_radio_log_scale():
     return html.Div(
         [
             dcc.RadioItems(
-                options=["log scale", "raw scale"],
+                options=["log scale", "linear scale"],
                 value="log scale",
                 id="radio-log",
             ),
             html.Br(),
-        ],
-    )
-
-
-def render_radio_items():
-    """Options list for SI suffix on lower X axis"""
-    return html.Div(
-        [
-            dcc.RadioItems(
-                options=["Kb", "Mb", "Gb"],
-                value="Mb",
-                id="radioitems",
-            )
         ],
     )
 
