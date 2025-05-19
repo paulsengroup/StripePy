@@ -55,6 +55,8 @@ def layout():
                             ),
                         ],
                         style={"display": "inline-block"},
+                        hidden=True,
+                        id="data",
                     ),
                     html.Div(
                         [  # Right side of screen

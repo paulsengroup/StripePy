@@ -122,6 +122,7 @@ def update_file(n_clicks, filename, resolution):
 
 @app.callback(
     Output("HeatMap", "figure"),
+    Output("data", "hidden"),
     Input("submit-chromosome", "n_clicks"),
     State("chromosome-name", "value"),
     State("color-map", "value"),
@@ -232,7 +233,7 @@ def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, re
         )
         fig.data[1].update(xaxis="x2")
 
-    return fig
+    return fig, False
 
 
 @app.callback(
