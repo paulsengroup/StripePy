@@ -7,6 +7,10 @@ def render_filepath():
     """Text input for path to local file, pop-up tooltip and activation button"""
     return html.Div(
         [
+            "Find file on PC",
+            html.Div(
+                [html.Button(id="filepath-dialog", n_clicks=0, children="Navigate")],
+            ),
             "File path",
             html.Div(
                 [

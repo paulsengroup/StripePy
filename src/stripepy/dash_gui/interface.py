@@ -5,7 +5,12 @@
 import pathlib
 
 import dash_bootstrap_components as dbc
-from callbacks import look_for_file_callback, update_file_callback, update_plot_callback
+from callbacks import (
+    look_for_file_callback,
+    open_file_dialog_callback,
+    update_file_callback,
+    update_plot_callback,
+)
 from components.layout import layout
 from dash import Dash, Input, Output, State
 
@@ -16,6 +21,23 @@ app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_
 
 
 app.layout = layout()
+
+
+@app.callback(
+    Output("file-path", "value"),
+    Output("look-for-file", "n_clicks"),
+    Input("filepath-dialog", "n_clicks"),
+    State("look-for-file", "n_clicks"),
+    prevent_initial_call=True,
+    running=[
+        (Output("file-path", "disabled"), True, False),
+        (Output("look-for-file", "disabled"), True, False),
+        (Output("resolution", "disabled"), True, False),
+        (Output("submit-file", "disabled"), True, False),
+    ],
+)
+def open_file_dialog(n_clicks, look_for_file_n_clicks):
+    return open_file_dialog_callback(n_clicks, look_for_file_n_clicks)
 
 
 @app.callback(

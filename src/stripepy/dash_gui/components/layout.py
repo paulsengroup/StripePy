@@ -50,6 +50,18 @@ def layout():
                                 type="button",
                             ),
                             html.Div(
+                                [
+                                    html.Div(
+                                        [
+                                            html.Div([], id="files-list"),
+                                        ],
+                                        id="picked-files",
+                                    ),
+                                    html.Div(
+                                        [],
+                                        id="chromosomes",
+                                    ),
+                                ],
                                 hidden=True,
                                 id="meta-info",
                             ),

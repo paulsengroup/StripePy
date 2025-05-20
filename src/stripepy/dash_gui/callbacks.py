@@ -1,3 +1,7 @@
+from pathlib import Path
+from tkinter import *
+from tkinter import filedialog
+
 import hictkpy as htk
 import numpy as np
 import plotly.graph_objects as go
@@ -7,6 +11,14 @@ from components.colorbar import colorbar
 from dash import html
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
+
+
+def open_file_dialog_callback(n_clicks, look_for_file_n_clicks):
+    root = Tk()
+    root.filename = filedialog.askopenfilename(
+        initialdir="C:\\", title="Select file", filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*"))
+    )
+    return root.filename, look_for_file_n_clicks + 1
 
 
 def look_for_file_callback(file_path):
@@ -19,7 +31,7 @@ def look_for_file_callback(file_path):
     last_used_file = file_path
 
     mrf = htk.MultiResFile(file_path)
-    resolutions = mrf.resolutions()
+    resolutions = mrf.resolutions().tolist()
 
     # Pick the resolution closest to 25kb
     resolution_value = _pick_closest(resolutions, 25000)
