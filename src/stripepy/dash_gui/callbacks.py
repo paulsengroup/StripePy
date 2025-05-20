@@ -21,7 +21,7 @@ def open_file_dialog_callback(n_clicks, look_for_file_n_clicks):
     return root.filename, look_for_file_n_clicks + 1
 
 
-def look_for_file_callback(file_path, files_list):
+def look_for_file_callback(file_path):
     file_path = Path(file_path)
     global last_used_file
     last_used_file = ""
@@ -37,15 +37,7 @@ def look_for_file_callback(file_path, files_list):
     # Pick the resolution closest to 25kb
     resolution_value = _pick_closest(resolutions, 25000)
 
-    file_path = str(file_path)
-    try:
-        if file_path not in files_list:
-            files_list.append(file_path)
-    except TypeError:
-        files_list = [file_path]
-    saved_paths = [file for file in files_list]
-
-    return resolutions, resolution_value, saved_paths, False, False
+    return resolutions, resolution_value, False, False
 
 
 def _pick_closest(array, target_res):
@@ -93,7 +85,8 @@ def update_file_callback(filename, resolution):
     return metaInfo, avail_normalizations, avail_normalizations[0], False, False, False, False, False, False, False
 
 
-def update_plot_callback(chromosome_name, colorMap, normalization, filepath, resolution, scale_type):
+def update_plot_callback(chromosome_name, colorMap, normalization, filepath, resolution, scale_type, files_list):
+    filepath = Path(filepath)
     global last_used_chromosome_name
     global last_used_colorMap
     global last_used_normalization
@@ -184,4 +177,25 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
         )
         fig.data[1].update(xaxis="x2")
 
-    return fig, False
+    # file_path = str(file_path)
+    filepath_assembled_string = f"{filepath};{resolution};{chromosome_name};{normalization}"
+    try:
+        if filepath_assembled_string not in [values for dicts in files_list for values in dicts.values()]:
+            files_list.append(
+                {
+                    "label": f"res={resolution}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
+                    "value": f"{filepath};{resolution};{chromosome_name};{normalization}",
+                }
+            )
+            # files_list.append(filepath)
+    except TypeError:
+        files_list = [
+            {
+                "label": f"res={resolution}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
+                "value": f"{filepath};{resolution};{chromosome_name};{normalization}",
+            }
+        ]
+        # files_list = [filepath]
+    saved_paths = [file for file in files_list]
+
+    return fig, files_list, False
