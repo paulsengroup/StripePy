@@ -53,7 +53,8 @@ def layout():
                                 [
                                     html.Div(
                                         [
-                                            html.Div([], id="files-list"),
+                                            dcc.RadioItems(id="files-list"),
+                                            html.Button(n_clicks=0, children="Choose saved file", id="pick-from-saved"),
                                         ],
                                         id="picked-files",
                                     ),

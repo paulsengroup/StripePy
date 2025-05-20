@@ -24,7 +24,7 @@ app.layout = layout()
 
 
 @app.callback(
-    Output("file-path", "value"),
+    Output("file-path", "value", allow_duplicate=True),
     Output("look-for-file", "n_clicks"),
     Input("filepath-dialog", "n_clicks"),
     State("look-for-file", "n_clicks"),
@@ -43,22 +43,37 @@ def open_file_dialog(n_clicks, look_for_file_n_clicks):
 @app.callback(
     Output("resolution", "options"),
     Output("resolution", "value"),
+    Output("files-list", "options"),
     Output("resolution", "disabled"),
     Output("submit-file", "disabled"),
     Input("look-for-file", "n_clicks"),
     State("file-path", "value"),
+    State("files-list", "options"),
     prevent_initial_call=True,
     running=[
         (Output("file-path", "disabled"), True, False),
         (Output("look-for-file", "disabled"), True, False),
     ],
 )
-def look_for_file(n_clicks, file_path):
-    return look_for_file_callback(file_path)
+def look_for_file(n_clicks, file_path, files_list):
+    return look_for_file_callback(file_path, files_list)
 
 
 @app.callback(
-    Output("meta-info", "children"),
+    Output("file-path", "value", allow_duplicate=True),
+    Output("submit-file", "n_clicks"),
+    Output("chromosome-name", "value"),
+    Input("pick-from-saved", "n_clicks"),
+    State("files-list", "value"),
+    State("submit-file", "n_clicks"),
+    prevent_initial_call=True,
+)
+def pick_saved(n_clicks, filepath, resolution_n_clicks):
+    return filepath, resolution_n_clicks + 1, ""
+
+
+@app.callback(
+    Output("chromosomes", "children"),
     Output("normalization", "options"),
     Output("normalization", "value"),
     Output("chromosome-name", "disabled"),

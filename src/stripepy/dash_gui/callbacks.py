@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from colorscales import color_scale
 from components.axes import compute_x_axis_chroms, compute_x_axis_range
 from components.colorbar import colorbar
-from dash import html
+from dash import dcc, html
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 
@@ -21,7 +21,8 @@ def open_file_dialog_callback(n_clicks, look_for_file_n_clicks):
     return root.filename, look_for_file_n_clicks + 1
 
 
-def look_for_file_callback(file_path):
+def look_for_file_callback(file_path, files_list):
+    file_path = Path(file_path)
     global last_used_file
     last_used_file = ""
     if file_path == last_used_file:
@@ -35,7 +36,16 @@ def look_for_file_callback(file_path):
 
     # Pick the resolution closest to 25kb
     resolution_value = _pick_closest(resolutions, 25000)
-    return resolutions, resolution_value, False, False
+
+    file_path = str(file_path)
+    try:
+        if file_path not in files_list:
+            files_list.append(file_path)
+    except TypeError:
+        files_list = [file_path]
+    saved_paths = [file for file in files_list]
+
+    return resolutions, resolution_value, saved_paths, False, False
 
 
 def _pick_closest(array, target_res):
@@ -73,7 +83,9 @@ def update_file_callback(filename, resolution):
     f = htk.File(path, bin_size)
 
     metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
-    metaInfo = html.Div([html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes])
+    metaInfo = html.Div(
+        [html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes], id="chromosomes"
+    )
 
     avail_normalizations = f.avail_normalizations()
     avail_normalizations.append("No normalization")
