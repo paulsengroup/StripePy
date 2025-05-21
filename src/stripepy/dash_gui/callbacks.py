@@ -1,3 +1,4 @@
+import pathlib
 from pathlib import Path
 from tkinter import *
 from tkinter import filedialog
@@ -11,6 +12,9 @@ from components.colorbar import colorbar
 from dash import dcc, html
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
+
+from stripepy.cli import call
+from stripepy.io import ProcessSafeLogger
 
 
 def open_file_dialog_callback(n_clicks, look_for_file_n_clicks):
@@ -199,3 +203,49 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
     saved_paths = [file for file in files_list]
 
     return fig, files_list, False
+
+
+def call_stripes_callback(
+    chromosome_name,
+    resolution,
+    gen_belt,
+    max_width,
+    glob_pers,
+    constrain_heights,
+    loc_pers_min,
+    loc_trend_min,
+    force,
+    nproc,
+    min_chrom_size,
+    verbosity,
+    normalization,
+    path,
+):
+    with ProcessSafeLogger(
+        verbosity,
+        path=pathlib.Path("./tmp/log_file"),
+        force=force,
+        matrix_file=path,
+        print_welcome_message=True,
+        progress_bar_type="call",
+    ) as main_logger:
+        call.run(
+            chromosome_name,
+            resolution,
+            pathlib.Path("./tmp/called_stripes"),  # output file
+            gen_belt,
+            max_width,
+            glob_pers,  # glob_pers_min, or maybe loc_pers_min?
+            constrain_heights,  # constrain heights
+            loc_pers_min,  # loc_pers_min
+            loc_trend_min,
+            force,  # force
+            nproc,  # nproc
+            min_chrom_size,  # min_chrom_size
+            verbosity,
+            main_logger,  # main_logger,
+            # roi,
+            log_file=pathlib.Path("./tmp/log_file"),  # log_file,
+            # plot_dir,
+            normalization=normalization,
+        )
