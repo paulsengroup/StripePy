@@ -25,15 +25,12 @@ def open_file_dialog_callback(n_clicks, look_for_file_n_clicks):
     return root.filename, look_for_file_n_clicks + 1
 
 
-def look_for_file_callback(file_path):
+def look_for_file_callback(file_path, last_used_path):
     file_path = Path(file_path)
-    global last_used_file
-    last_used_file = ""
-    if file_path == last_used_file:
+    if file_path == last_used_path:
         raise PreventUpdate
     else:
         pass
-    last_used_file = file_path
 
     mrf = htk.MultiResFile(file_path)
     resolutions = mrf.resolutions().tolist()
@@ -60,17 +57,14 @@ def _pick_closest(array, target_res):
             last = head
 
 
-def update_file_callback(filename, resolution):
-    global last_used_resolution
+def update_file_callback(filename, resolution, last_used_path, last_used_resolution):
     try:
-        if filename == last_used_file and resolution == last_used_resolution:
+        if filename == last_used_path and resolution == last_used_resolution:
             raise PreventUpdate
         else:
             pass
     except NameError:
         pass
-    last_used_file = filename
-    last_used_resolution = resolution
 
     path = filename
     bin_size = resolution
@@ -89,31 +83,36 @@ def update_file_callback(filename, resolution):
     return metaInfo, avail_normalizations, avail_normalizations[0], False, False, False, False, False, False, False
 
 
-def update_plot_callback(chromosome_name, colorMap, normalization, filepath, resolution, scale_type, files_list):
+def update_plot_callback(
+    chromosome_name,
+    colorMap,
+    normalization,
+    filepath,
+    resolution,
+    scale_type,
+    files_list,
+    last_used_path,
+    last_used_resolution,
+    last_used_region,
+    last_used_color_map,
+    last_used_normalization,
+):
     filepath = Path(filepath)
-    global last_used_chromosome_name
-    global last_used_colorMap
-    global last_used_normalization
     try:
         if (
-            chromosome_name == last_used_chromosome_name
-            and colorMap == last_used_colorMap
-            and normalization == last_used_normalization
-            and last_used_file == filepath
-            and last_used_resolution == resolution
+            filepath == Path(last_used_path)
+            and resolution == last_used_resolution
+            and last_used_region == chromosome_name
+            and last_used_color_map == colorMap
+            and last_used_normalization == normalization
         ):
             raise PreventUpdate
         else:
             pass
     except NameError:
         pass
-    last_used_chromosome_name = chromosome_name
-    last_used_colorMap = colorMap
-    last_used_normalization = normalization
-    last_used_file = filepath
-    last_used_resolution = resolution
 
-    colorMap = color_scale(colorMap)
+    colorMap_code = color_scale(colorMap)
     if normalization == "No normalization":
         normalization = None
 
@@ -135,7 +134,7 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
             data=go.Heatmap(
                 z=frame,
                 colorbar=colorbar(frame, scale_type),
-                colorscale=colorMap,
+                colorscale=colorMap_code,
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
             )
@@ -152,7 +151,7 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
             go.Heatmap(
                 z=frame,
                 colorbar=colorbar(frame, scale_type),
-                colorscale=colorMap,
+                colorscale=colorMap_code,
             ),
             secondary_y=False,
         )
@@ -160,7 +159,7 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
             go.Heatmap(
                 z=frame,
                 colorbar=colorbar(frame, scale_type),
-                colorscale=colorMap,
+                colorscale=colorMap_code,
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
                 hoverlabel={
@@ -181,7 +180,6 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
         )
         fig.data[1].update(xaxis="x2")
 
-    # file_path = str(file_path)
     filepath_assembled_string = f"{filepath};{resolution};{chromosome_name};{normalization}"
     try:
         if filepath_assembled_string not in [values for dicts in files_list for values in dicts.values()]:
@@ -191,7 +189,6 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
                     "value": f"{filepath};{resolution};{chromosome_name};{normalization}",
                 }
             )
-            # files_list.append(filepath)
     except TypeError:
         files_list = [
             {
@@ -199,10 +196,8 @@ def update_plot_callback(chromosome_name, colorMap, normalization, filepath, res
                 "value": f"{filepath};{resolution};{chromosome_name};{normalization}",
             }
         ]
-        # files_list = [filepath]
-    saved_paths = [file for file in files_list]
 
-    return fig, files_list, False
+    return fig, files_list, False, str(filepath), resolution, chromosome_name, colorMap, normalization
 
 
 def call_stripes_callback(

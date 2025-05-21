@@ -43,14 +43,15 @@ def open_file_dialog(n_clicks, look_for_file_n_clicks):
     Output("submit-file", "disabled"),
     Input("look-for-file", "n_clicks"),
     State("file-path", "value"),
+    State("last-used-path", "children"),
     prevent_initial_call=True,
     running=[
         (Output("file-path", "disabled"), True, False),
         (Output("look-for-file", "disabled"), True, False),
     ],
 )
-def look_for_file(n_clicks, file_path):
-    return look_for_file_callback(file_path)
+def look_for_file(n_clicks, file_path, last_used_path):
+    return look_for_file_callback(file_path, last_used_path)
 
 
 @app.callback(
@@ -85,6 +86,8 @@ def pick_saved(n_clicks, saved_string, resolution_n_clicks, update_plot_n_clicks
     Input("submit-file", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
+    State("last-used-path", "children"),
+    State("last-used-resolution", "children"),
     prevent_initial_call=True,
     running=[
         (Output("file-path", "disabled"), True, False),
@@ -93,14 +96,19 @@ def pick_saved(n_clicks, saved_string, resolution_n_clicks, update_plot_n_clicks
         (Output("submit-file", "disabled"), True, False),
     ],
 )
-def update_file(n_clicks, filename, resolution):
-    return update_file_callback(filename, resolution)
+def update_file(n_clicks, filename, resolution, last_used_path, last_used_resolution):
+    return update_file_callback(filename, resolution, last_used_path, last_used_resolution)
 
 
 @app.callback(
     Output("HeatMap", "figure"),
     Output("files-list", "options"),
     Output("data", "hidden"),
+    Output("last-used-path", "children"),
+    Output("last-used-resolution", "children"),
+    Output("last-used-region", "children"),
+    Output("last-used-color-map", "children"),
+    Output("last-used-normalization", "children"),
     Input("submit-chromosome", "n_clicks"),
     State("chromosome-name", "value"),
     State("color-map", "value"),
@@ -109,6 +117,11 @@ def update_file(n_clicks, filename, resolution):
     State("resolution", "value"),
     State("radio-log", "value"),
     State("files-list", "options"),
+    State("last-used-path", "children"),
+    State("last-used-resolution", "children"),
+    State("last-used-region", "children"),
+    State("last-used-color-map", "children"),
+    State("last-used-normalization", "children"),
     prevent_initial_call=True,
     running=[
         (Output("file-path", "disabled"), True, False),
@@ -121,8 +134,35 @@ def update_file(n_clicks, filename, resolution):
         (Output("submit-chromosome", "disabled"), True, False),
     ],
 )
-def update_plot(n_clicks, chromosome_name, colorMap, normalization, filepath, resolution, scale_type, files_list):
-    return update_plot_callback(chromosome_name, colorMap, normalization, filepath, resolution, scale_type, files_list)
+def update_plot(
+    n_clicks,
+    chromosome_name,
+    colorMap,
+    normalization,
+    filepath,
+    resolution,
+    scale_type,
+    files_list,
+    last_used_path,
+    last_used_resolution,
+    last_used_region,
+    last_used_color_map,
+    last_used_normalization,
+):
+    return update_plot_callback(
+        chromosome_name,
+        colorMap,
+        normalization,
+        filepath,
+        resolution,
+        scale_type,
+        files_list,
+        last_used_path,
+        last_used_resolution,
+        last_used_region,
+        last_used_color_map,
+        last_used_normalization,
+    )
 
 
 @app.callback(

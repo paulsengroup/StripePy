@@ -99,5 +99,16 @@ def layout():
                 style={"display": "flex"},
             ),
             html.Div(id="callbacks-file", style={"display": "none"}),
+            html.Div(
+                [
+                    html.P("", id="last-used-path"),
+                    html.P("", id="last-used-resolution"),
+                    html.P("", id="last-used-region"),
+                    html.P("", id="last-used-color-map"),
+                    html.P("", id="last-used-normalization"),
+                ],
+                id="last-used-values",
+                hidden=True,
+            ),
         ]
     )
