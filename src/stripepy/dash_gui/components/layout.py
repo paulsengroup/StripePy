@@ -14,6 +14,7 @@ from .calling import (
     render_stripe_calling_button,
     render_verbosity,
 )
+from .metadata import render_hidden, render_metadata
 from .plotting import (
     render_chromosome_name,
     render_color_map,
@@ -43,29 +44,7 @@ def layout():
                                 style={"width": "90vh", "height": "90vh"},
                                 id="HeatMap",
                             ),
-                            html.Button(
-                                id="show-metadata",
-                                n_clicks=0,
-                                children="Show metadata",
-                                type="button",
-                            ),
-                            html.Div(
-                                [
-                                    html.Div(
-                                        [
-                                            dcc.RadioItems(id="files-list"),
-                                            html.Button(n_clicks=0, children="Choose saved file", id="pick-from-saved"),
-                                        ],
-                                        id="picked-files",
-                                    ),
-                                    html.Div(
-                                        [],
-                                        id="chromosomes",
-                                    ),
-                                ],
-                                hidden=True,
-                                id="meta-info",
-                            ),
+                            render_metadata(),
                         ],
                         style={"display": "inline-block"},
                         hidden=True,
@@ -99,16 +78,6 @@ def layout():
                 style={"display": "flex"},
             ),
             html.Div(id="callbacks-file", style={"display": "none"}),
-            html.Div(
-                [
-                    html.P("", id="last-used-path"),
-                    html.P("", id="last-used-resolution"),
-                    html.P("", id="last-used-region"),
-                    html.P("", id="last-used-color-map"),
-                    html.P("", id="last-used-normalization"),
-                ],
-                id="last-used-values",
-                hidden=True,
-            ),
+            render_hidden(),
         ]
     )
