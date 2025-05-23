@@ -24,7 +24,6 @@ def render_metadata():
                         id="chromosomes",
                     ),
                 ],
-                hidden=True,
                 id="meta-info",
             ),
         ],

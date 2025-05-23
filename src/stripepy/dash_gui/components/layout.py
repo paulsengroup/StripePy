@@ -40,9 +40,15 @@ def layout():
                 [
                     html.Div(
                         [
-                            dcc.Graph(
-                                style={"width": "90vh", "height": "90vh"},
-                                id="HeatMap",
+                            html.Div(
+                                [
+                                    dcc.Graph(
+                                        style={"width": "90vh", "height": "90vh"},
+                                        id="HeatMap",
+                                    ),
+                                ],
+                                hidden=True,
+                                id="heat-map",
                             ),
                             render_metadata(),
                         ],

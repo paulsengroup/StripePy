@@ -81,7 +81,19 @@ def update_file_callback(filename, resolution, last_used_path, last_used_resolut
     avail_normalizations = f.avail_normalizations()
     avail_normalizations.append("No normalization")
 
-    return metaInfo, avail_normalizations, avail_normalizations[0], False, False, False, False, False, False, False
+    return (
+        metaInfo,
+        avail_normalizations,
+        avail_normalizations[0],
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+    )
 
 
 def update_plot_callback(

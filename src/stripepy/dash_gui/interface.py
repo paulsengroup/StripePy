@@ -74,6 +74,7 @@ def pick_saved(n_clicks, saved_string, resolution_n_clicks, update_plot_n_clicks
     Output("chromosome-name-icon", "hidden"),
     Output("color-map-icon", "hidden"),
     Output("normalization-icon", "hidden"),
+    Output("data", "hidden"),
     Input("submit-file", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
@@ -92,7 +93,7 @@ def update_file(n_clicks, filename, resolution, last_used_path, last_used_resolu
 @app.callback(
     Output("HeatMap", "figure"),
     Output("files-list", "options"),
-    Output("data", "hidden"),
+    Output("heat-map", "hidden"),
     Output("last-used-path", "children"),
     Output("last-used-resolution", "children"),
     Output("last-used-region", "children"),
