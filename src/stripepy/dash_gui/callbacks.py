@@ -17,12 +17,13 @@ from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger
 
 
-def open_file_dialog_callback(n_clicks, look_for_file_n_clicks):
+def open_file_dialog_callback():
     root = Tk()
     root.filename = filedialog.askopenfilename(
         initialdir="C:\\", title="Select file", filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*"))
     )
-    return root.filename, look_for_file_n_clicks + 1
+    root.destroy()
+    return root.filename
 
 
 def look_for_file_callback(file_path, last_used_path):

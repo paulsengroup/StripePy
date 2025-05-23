@@ -21,19 +21,15 @@ app.layout = layout()
 
 @app.callback(
     Output("file-path", "value", allow_duplicate=True),
-    Output("look-for-file", "n_clicks"),
     Input("filepath-dialog", "n_clicks"),
-    State("look-for-file", "n_clicks"),
     prevent_initial_call=True,
     running=[
-        (Output("file-path", "disabled"), True, False),
-        (Output("look-for-file", "disabled"), True, False),
         (Output("resolution", "disabled"), True, False),
         (Output("submit-file", "disabled"), True, False),
     ],
 )
-def open_file_dialog(n_clicks, look_for_file_n_clicks):
-    return open_file_dialog_callback(n_clicks, look_for_file_n_clicks)
+def open_file_dialog(n_clicks):
+    return open_file_dialog_callback()
 
 
 @app.callback(
@@ -41,16 +37,11 @@ def open_file_dialog(n_clicks, look_for_file_n_clicks):
     Output("resolution", "value", allow_duplicate=True),
     Output("resolution", "disabled"),
     Output("submit-file", "disabled"),
-    Input("look-for-file", "n_clicks"),
-    State("file-path", "value"),
+    Input("file-path", "value"),
     State("last-used-path", "children"),
     prevent_initial_call=True,
-    running=[
-        (Output("file-path", "disabled"), True, False),
-        (Output("look-for-file", "disabled"), True, False),
-    ],
 )
-def look_for_file(n_clicks, file_path, last_used_path):
+def look_for_file(file_path, last_used_path):
     return look_for_file_callback(file_path, last_used_path)
 
 
@@ -90,8 +81,6 @@ def pick_saved(n_clicks, saved_string, resolution_n_clicks, update_plot_n_clicks
     State("last-used-resolution", "children"),
     prevent_initial_call=True,
     running=[
-        (Output("file-path", "disabled"), True, False),
-        (Output("look-for-file", "disabled"), True, False),
         (Output("resolution", "disabled"), True, False),
         (Output("submit-file", "disabled"), True, False),
     ],
@@ -124,8 +113,6 @@ def update_file(n_clicks, filename, resolution, last_used_path, last_used_resolu
     State("last-used-normalization", "children"),
     prevent_initial_call=True,
     running=[
-        (Output("file-path", "disabled"), True, False),
-        (Output("look-for-file", "disabled"), True, False),
         (Output("resolution", "disabled"), True, False),
         (Output("submit-file", "disabled"), True, False),
         (Output("chromosome-name", "disabled"), True, False),
