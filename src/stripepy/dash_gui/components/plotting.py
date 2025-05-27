@@ -51,6 +51,13 @@ def render_resolution():
                 id="resolution",
                 style={"width": 300, "fontSize": 20},
             ),
+        ],
+    )
+
+
+def render_resolution_button():
+    return html.Div(
+        [
             html.Button(
                 id="submit-file",
                 n_clicks=0,
