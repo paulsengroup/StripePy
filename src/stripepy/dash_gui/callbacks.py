@@ -101,6 +101,15 @@ def look_for_normalizations_under_current_resolution_callback(resolution, path):
     return avail_normalizations, avail_normalizations[0]
 
 
+def populate_empty_normalization_list_callback(array):
+    if not isinstance(array, list):
+        return ["No normalization options available"], "Error"
+    elif len(array) == 0:
+        return ["No normalization options available"], "Error"
+    else:
+        return array, array[0]
+
+
 def update_plot_callback(
     chromosome_name,
     colorMap,
