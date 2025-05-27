@@ -37,12 +37,14 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution):
         span_end = htk_object.nbins() * resolution
 
     magnitude_iter = 0
-    while (data_magnitude := np.log10(span_end)) > magnitude_iter + 2:
+    while np.log10(span_end) > magnitude_iter + 3:
         magnitude_iter += 3
 
     magnitude_number = 10**magnitude_iter
 
-    tickvals = [(bins) / resolution for bins in range(0, span_end - span_start, magnitude_number)]
+    tickvals = np.linspace(0, span_end - span_start, num=11)
+    tickvals /= resolution
+    tickvals = tickvals.tolist()
 
     magnitude_decision = {
         0: "",
@@ -50,10 +52,8 @@ def compute_x_axis_range(chromosome_name, htk_object, resolution):
         10**6: "Mb",
         10**9: "Gb",
     }
-    span_start_bp = math.ceil(span_start / magnitude_number)
-    span_end_bp = math.floor(span_end / magnitude_number)
     desired_magnitude = magnitude_decision[magnitude_number]
-    ticktext = [str(bps + span_start_bp) + desired_magnitude for bps in range(0, span_end_bp - span_start_bp, 1)]
+    ticktext = [str(round(bps * resolution / magnitude_number, 2)) + desired_magnitude for bps in tickvals]
 
     bin_number = (span_end - span_start) / resolution + 1
     if len(tickvals) > 12:
