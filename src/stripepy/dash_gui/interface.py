@@ -56,6 +56,7 @@ def look_for_file(file_path, last_used_path):
 @app.callback(
     Output("file-path", "value", allow_duplicate=True),
     Output("resolution", "value", allow_duplicate=True),
+    Output("radio-log", "value"),
     Output("chromosome-name", "value"),
     Output("normalization", "value", allow_duplicate=True),
     Output("submit-chromosome", "n_clicks"),
@@ -65,8 +66,8 @@ def look_for_file(file_path, last_used_path):
     prevent_initial_call=True,
 )
 def pick_saved(n_clicks, saved_string, update_plot_n_clicks):
-    filepath, resolution, chrom_name, normalization = saved_string.split(";")
-    return filepath, int(resolution), chrom_name, normalization, update_plot_n_clicks + 1
+    filepath, resolution, scale_type, chrom_name, normalization = saved_string.split(";")
+    return filepath, int(resolution), scale_type, chrom_name, normalization, update_plot_n_clicks + 1
 
 
 @app.callback(
@@ -99,6 +100,7 @@ def populate_empty_normalization_list(array):
     Output("heat-map", "hidden"),
     Output("last-used-path", "children"),
     Output("last-used-resolution", "children"),
+    Output("last-used-scale-type", "children"),
     Output("last-used-region", "children"),
     Output("last-used-color-map", "children"),
     Output("last-used-normalization", "children"),
@@ -112,6 +114,7 @@ def populate_empty_normalization_list(array):
     State("files-list", "options"),
     State("last-used-path", "children"),
     State("last-used-resolution", "children"),
+    State("last-used-scale-type", "children"),
     State("last-used-region", "children"),
     State("last-used-color-map", "children"),
     State("last-used-normalization", "children"),
@@ -135,6 +138,7 @@ def update_plot(
     files_list,
     last_used_path,
     last_used_resolution,
+    last_used_scale_type,
     last_used_region,
     last_used_color_map,
     last_used_normalization,
@@ -149,6 +153,7 @@ def update_plot(
         files_list,
         last_used_path,
         last_used_resolution,
+        last_used_scale_type,
         last_used_region,
         last_used_color_map,
         last_used_normalization,

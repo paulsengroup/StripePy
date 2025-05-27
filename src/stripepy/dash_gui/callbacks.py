@@ -120,6 +120,7 @@ def update_plot_callback(
     files_list,
     last_used_path,
     last_used_resolution,
+    last_used_scale_type,
     last_used_region,
     last_used_color_map,
     last_used_normalization,
@@ -130,6 +131,7 @@ def update_plot_callback(
             filepath == Path(last_used_path)
             and resolution == last_used_resolution
             and last_used_region == chromosome_name
+            and last_used_scale_type == scale_type
             and last_used_color_map == colorMap
             and last_used_normalization == normalization
         ):
@@ -209,24 +211,24 @@ def update_plot_callback(
         )
         fig.data[1].update(xaxis="x2")
 
-    filepath_assembled_string = f"{filepath};{resolution};{chromosome_name};{normalization}"
+    filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}"
     try:
         if filepath_assembled_string not in [values for dicts in files_list for values in dicts.values()]:
             files_list.append(
                 {
-                    "label": f"res={resolution}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
-                    "value": f"{filepath};{resolution};{chromosome_name};{normalization}",
+                    "label": f"res={resolution}, scaletype={scale_type}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
+                    "value": f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}",
                 }
             )
     except TypeError:
         files_list = [
             {
-                "label": f"res={resolution}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
-                "value": f"{filepath};{resolution};{chromosome_name};{normalization}",
+                "label": f"res={resolution}, scaletype={scale_type}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
+                "value": f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}",
             }
         ]
 
-    return fig, files_list, False, str(filepath), resolution, chromosome_name, colorMap, normalization
+    return fig, files_list, False, str(filepath), resolution, scale_type, chromosome_name, colorMap, normalization
 
 
 def call_stripes_callback(

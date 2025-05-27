@@ -35,6 +35,7 @@ def render_hidden():
         [
             html.P("", id="last-used-path"),
             html.P("", id="last-used-resolution"),
+            html.P("", id="last-used-scale-type"),
             html.P("", id="last-used-region"),
             html.P("", id="last-used-color-map"),
             html.P("", id="last-used-normalization"),
