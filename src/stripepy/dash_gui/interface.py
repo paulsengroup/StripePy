@@ -121,6 +121,7 @@ def populate_empty_normalization_list(array):
     prevent_initial_call=True,
     running=[
         (Output("resolution", "disabled"), True, False),
+        (Output("radio-log", "disabled"), True, False),
         (Output("chromosome-name", "disabled"), True, False),
         (Output("color-map", "disabled"), True, False),
         (Output("normalization", "disabled"), True, False),
