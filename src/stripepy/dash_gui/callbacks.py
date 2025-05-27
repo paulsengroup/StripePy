@@ -33,13 +33,43 @@ def look_for_file_callback(file_path, last_used_path):
     else:
         pass
 
-    mrf = htk.MultiResFile(file_path)
-    resolutions = mrf.resolutions().tolist()
+    file_is_multi_res = _is_multi_res(file_path)
+    if file_is_multi_res:
+        temp_f = htk.MultiResFile(file_path)
+        resolutions = temp_f.resolutions().tolist()
 
-    # Pick the resolution closest to 25kb
-    resolution_value = _pick_closest(resolutions, 25000)
+        # Pick the resolution closest to 25kb
+        resolution_value = _pick_closest(resolutions, 25000)
+        f = htk.File(file_path, resolution_value)
+    else:
+        f = htk.File(file_path)
+        resolutions = [f.resolution()]
+        resolution_value = resolutions
 
-    return resolutions, resolution_value, False, False
+    metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
+    metaInfo = html.Div(
+        [html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes], id="chromosomes"
+    )
+
+    avail_normalizations = f.avail_normalizations()
+    avail_normalizations.append("No normalization")
+
+    return (
+        resolutions,
+        resolution_value,
+        metaInfo,
+        avail_normalizations,
+        avail_normalizations[0],
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+    )
 
 
 def _pick_closest(array, target_res):
@@ -58,6 +88,13 @@ def _pick_closest(array, target_res):
             last = head
 
 
+def _is_multi_res(path):
+    if htk.is_cooler(path):
+        return False
+    else:
+        return True
+
+
 def update_file_callback(filename, resolution, last_used_path, last_used_resolution):
     try:
         if filename == last_used_path and resolution == last_used_resolution:
@@ -72,26 +109,12 @@ def update_file_callback(filename, resolution, last_used_path, last_used_resolut
 
     f = open_matrix_file_checked(path, bin_size)
 
-    metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
-    metaInfo = html.Div(
-        [html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes], id="chromosomes"
-    )
-
     avail_normalizations = f.avail_normalizations()
     avail_normalizations.append("No normalization")
 
     return (
-        metaInfo,
         avail_normalizations,
         avail_normalizations[0],
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
     )
 
 

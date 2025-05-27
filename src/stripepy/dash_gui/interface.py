@@ -25,7 +25,6 @@ app.layout = layout()
     prevent_initial_call=True,
     running=[
         (Output("resolution", "disabled"), True, False),
-        (Output("submit-file", "disabled"), True, False),
     ],
 )
 def open_file_dialog(n_clicks):
@@ -35,8 +34,18 @@ def open_file_dialog(n_clicks):
 @app.callback(
     Output("resolution", "options"),
     Output("resolution", "value", allow_duplicate=True),
+    Output("chromosomes", "children"),
+    Output("normalization", "options", allow_duplicate=True),
+    Output("normalization", "value", allow_duplicate=True),
+    Output("chromosome-name-icon", "hidden"),
+    Output("color-map-icon", "hidden"),
+    Output("normalization-icon", "hidden"),
     Output("resolution", "disabled"),
-    Output("submit-file", "disabled"),
+    Output("chromosome-name", "disabled"),
+    Output("color-map", "disabled"),
+    Output("submit-chromosome", "disabled"),
+    Output("normalization", "disabled"),
+    Output("data", "hidden"),
     Input("file-path", "value"),
     State("last-used-path", "children"),
     prevent_initial_call=True,
@@ -50,31 +59,21 @@ def look_for_file(file_path, last_used_path):
     Output("resolution", "value", allow_duplicate=True),
     Output("chromosome-name", "value"),
     Output("normalization", "value", allow_duplicate=True),
-    Output("submit-file", "n_clicks"),
     Output("submit-chromosome", "n_clicks"),
     Input("pick-from-saved", "n_clicks"),
     State("files-list", "value"),
-    State("submit-file", "n_clicks"),
     State("submit-chromosome", "n_clicks"),
     prevent_initial_call=True,
 )
-def pick_saved(n_clicks, saved_string, resolution_n_clicks, update_plot_n_clicks):
+def pick_saved(n_clicks, saved_string, update_plot_n_clicks):
     filepath, resolution, chrom_name, normalization = saved_string.split(";")
-    return filepath, int(resolution), chrom_name, normalization, resolution_n_clicks + 1, update_plot_n_clicks + 1
+    return filepath, int(resolution), chrom_name, normalization, update_plot_n_clicks + 1
 
 
+"""
 @app.callback(
-    Output("chromosomes", "children"),
-    Output("normalization", "options"),
+    Output("normalization", "options", allow_duplicate=True),
     Output("normalization", "value", allow_duplicate=True),
-    Output("chromosome-name", "disabled"),
-    Output("color-map", "disabled"),
-    Output("submit-chromosome", "disabled"),
-    Output("normalization", "disabled"),
-    Output("chromosome-name-icon", "hidden"),
-    Output("color-map-icon", "hidden"),
-    Output("normalization-icon", "hidden"),
-    Output("data", "hidden"),
     Input("submit-file", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
@@ -88,6 +87,7 @@ def pick_saved(n_clicks, saved_string, resolution_n_clicks, update_plot_n_clicks
 )
 def update_file(n_clicks, filename, resolution, last_used_path, last_used_resolution):
     return update_file_callback(filename, resolution, last_used_path, last_used_resolution)
+"""
 
 
 @app.callback(
@@ -115,7 +115,6 @@ def update_file(n_clicks, filename, resolution, last_used_path, last_used_resolu
     prevent_initial_call=True,
     running=[
         (Output("resolution", "disabled"), True, False),
-        (Output("submit-file", "disabled"), True, False),
         (Output("chromosome-name", "disabled"), True, False),
         (Output("color-map", "disabled"), True, False),
         (Output("normalization", "disabled"), True, False),
