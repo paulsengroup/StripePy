@@ -27,11 +27,11 @@ def open_file_dialog_callback():
 
 
 def look_for_file_callback(file_path, last_used_path):
-    file_path = Path(file_path)
     if file_path == last_used_path:
         raise PreventUpdate
     else:
         pass
+    file_path = Path(file_path)
 
     f, resolutions, resolution_value = _pick_resolution_and_array(file_path)
 
