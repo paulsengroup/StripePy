@@ -6,8 +6,8 @@ import dash_bootstrap_components as dbc
 from callbacks import (
     call_stripes_callback,
     look_for_file_callback,
+    look_for_normalizations_under_current_resolution_callback,
     open_file_dialog_callback,
-    update_file_callback,
     update_plot_callback,
 )
 from components.layout import layout
@@ -35,8 +35,6 @@ def open_file_dialog(n_clicks):
     Output("resolution", "options"),
     Output("resolution", "value", allow_duplicate=True),
     Output("chromosomes", "children"),
-    Output("normalization", "options", allow_duplicate=True),
-    Output("normalization", "value", allow_duplicate=True),
     Output("chromosome-name-icon", "hidden"),
     Output("color-map-icon", "hidden"),
     Output("normalization-icon", "hidden"),
@@ -70,24 +68,18 @@ def pick_saved(n_clicks, saved_string, update_plot_n_clicks):
     return filepath, int(resolution), chrom_name, normalization, update_plot_n_clicks + 1
 
 
-"""
 @app.callback(
     Output("normalization", "options", allow_duplicate=True),
     Output("normalization", "value", allow_duplicate=True),
-    Input("submit-file", "n_clicks"),
+    Input("resolution", "value"),
     State("file-path", "value"),
-    State("resolution", "value"),
-    State("last-used-path", "children"),
-    State("last-used-resolution", "children"),
     prevent_initial_call=True,
     running=[
-        (Output("resolution", "disabled"), True, False),
-        (Output("submit-file", "disabled"), True, False),
+        (Output("normalization", "disabled"), True, False),
     ],
 )
-def update_file(n_clicks, filename, resolution, last_used_path, last_used_resolution):
-    return update_file_callback(filename, resolution, last_used_path, last_used_resolution)
-"""
+def look_for_normalizations_under_current_resolution(resolution, path):
+    return look_for_normalizations_under_current_resolution_callback(resolution, path)
 
 
 @app.callback(

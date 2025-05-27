@@ -33,33 +33,17 @@ def look_for_file_callback(file_path, last_used_path):
     else:
         pass
 
-    file_is_multi_res = _is_multi_res(file_path)
-    if file_is_multi_res:
-        temp_f = htk.MultiResFile(file_path)
-        resolutions = temp_f.resolutions().tolist()
-
-        # Pick the resolution closest to 25kb
-        resolution_value = _pick_closest(resolutions, 25000)
-        f = htk.File(file_path, resolution_value)
-    else:
-        f = htk.File(file_path)
-        resolutions = [f.resolution()]
-        resolution_value = resolutions
+    f, resolutions, resolution_value = _pick_resolution_and_array(file_path)
 
     metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
     metaInfo = html.Div(
         [html.P("Chromosomes", style={"fontSize": 24, "fontWeight": "bold"}), metaInfo_chromosomes], id="chromosomes"
     )
 
-    avail_normalizations = f.avail_normalizations()
-    avail_normalizations.append("No normalization")
-
     return (
         resolutions,
         resolution_value,
         metaInfo,
-        avail_normalizations,
-        avail_normalizations[0],
         False,
         False,
         False,
@@ -95,27 +79,26 @@ def _is_multi_res(path):
         return True
 
 
-def update_file_callback(filename, resolution, last_used_path, last_used_resolution):
-    try:
-        if filename == last_used_path and resolution == last_used_resolution:
-            raise PreventUpdate
-        else:
-            pass
-    except NameError:
-        pass
+def _pick_resolution_and_array(path):
+    file_is_multi_res = _is_multi_res(path)
+    if file_is_multi_res:
+        temp_f = htk.MultiResFile(path)
+        resolutions = temp_f.resolutions().tolist()
 
-    path = filename
-    bin_size = resolution
+        # Pick the resolution closest to 25kb
+        resolution_value = _pick_closest(resolutions, 25000)
+        f = htk.File(path, resolution_value)
+    else:
+        f = htk.File(path)
+        resolutions = [f.resolution()]
+        resolution_value = resolutions
+    return f, resolutions, resolution_value
 
-    f = open_matrix_file_checked(path, bin_size)
 
+def look_for_normalizations_under_current_resolution_callback(resolution, path):
+    f = open_matrix_file_checked(path, resolution)
     avail_normalizations = f.avail_normalizations()
-    avail_normalizations.append("No normalization")
-
-    return (
-        avail_normalizations,
-        avail_normalizations[0],
-    )
+    return avail_normalizations, avail_normalizations[0]
 
 
 def update_plot_callback(

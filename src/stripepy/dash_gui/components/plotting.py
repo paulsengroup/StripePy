@@ -55,21 +55,6 @@ def render_resolution():
     )
 
 
-def render_resolution_button():
-    return html.Div(
-        [
-            html.Button(
-                id="submit-file",
-                n_clicks=0,
-                children="Submit",
-                disabled=True,
-                style={"marginBottom": 50},
-            ),
-            html.Br(),
-        ],
-    )
-
-
 def render_radio_log_scale():
     """Lets user choose between log scale and normal"""
     return html.Div(
