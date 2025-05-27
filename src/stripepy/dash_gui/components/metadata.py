@@ -7,7 +7,7 @@ def render_metadata():
             html.Button(
                 id="show-metadata",
                 n_clicks=0,
-                children="Show metadata",
+                children="Hide metadata",
                 type="button",
             ),
             html.Div(

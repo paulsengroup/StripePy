@@ -225,6 +225,7 @@ def call_stripes(
     Output("meta-info", "hidden"),
     Input("show-metadata", "n_clicks"),
     State("meta-info", "hidden"),
+    prevent_initial_call=True,
 )
 def hide_show_metadata(n_clicks, hidden_state):
     return not (hidden_state)
