@@ -14,7 +14,7 @@ from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 
 from stripepy.cli import call
-from stripepy.io import ProcessSafeLogger
+from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 
 
 def open_file_dialog_callback():
@@ -70,8 +70,7 @@ def update_file_callback(filename, resolution, last_used_path, last_used_resolut
     path = filename
     bin_size = resolution
 
-    global f
-    f = htk.File(path, bin_size)
+    f = open_matrix_file_checked(path, bin_size)
 
     metaInfo_chromosomes = html.Div([html.P((chromosome, ":", name)) for chromosome, name in f.chromosomes().items()])
     metaInfo = html.Div(
@@ -128,6 +127,8 @@ def update_plot_callback(
     colorMap_code = color_scale(colorMap)
     if normalization == "No normalization":
         normalization = None
+
+    f = open_matrix_file_checked(filepath, resolution)
 
     sel = f.fetch(chromosome_name, normalization=normalization)
     frame = sel.to_numpy()
