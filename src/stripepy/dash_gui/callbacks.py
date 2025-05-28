@@ -185,8 +185,10 @@ def update_plot_callback(
                 z=frame,
                 colorbar=colorbar(frame, scale_type),
                 colorscale=colorMap_code,
-            ),
-            secondary_y=False,
+                name="First matrix",
+                xaxis="x1",
+                yaxis="y1",
+            )
         )
         fig.add_trace(
             go.Heatmap(
@@ -198,8 +200,10 @@ def update_plot_callback(
                 hoverlabel={
                     "bgcolor": "green",
                 },
-            ),
-            secondary_y=True,
+                name="Second matrix",
+                xaxis="x2",
+                yaxis="y2",
+            )
         )
 
         tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
@@ -211,7 +215,6 @@ def update_plot_callback(
             yaxis2=dict(autorange="reversed", showgrid=False, visible=False, side="right"),
             plot_bgcolor="mediumslateblue",
         )
-        fig.data[1].update(xaxis="x2")
 
     filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}"
     try:
