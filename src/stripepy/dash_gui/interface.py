@@ -8,6 +8,7 @@ from callbacks import (
     look_for_file_callback,
     look_for_normalizations_under_current_resolution_callback,
     open_file_dialog_callback,
+    open_hdf5_file_dialog_callback,
     populate_empty_normalization_list_callback,
     update_plot_callback,
 )
@@ -104,6 +105,7 @@ def populate_empty_normalization_list(array):
     Output("last-used-region", "children"),
     Output("last-used-color-map", "children"),
     Output("last-used-normalization", "children"),
+    Output("last-used-hdf5", "children"),
     Input("submit-chromosome", "n_clicks"),
     State("chromosome-name", "value"),
     State("color-map", "value"),
@@ -112,12 +114,14 @@ def populate_empty_normalization_list(array):
     State("resolution", "value"),
     State("radio-log", "value"),
     State("files-list", "options"),
+    State("stripes-filepath", "value"),
     State("last-used-path", "children"),
     State("last-used-resolution", "children"),
     State("last-used-scale-type", "children"),
     State("last-used-region", "children"),
     State("last-used-color-map", "children"),
     State("last-used-normalization", "children"),
+    State("last-used-hdf5", "children"),
     prevent_initial_call=True,
     running=[
         (Output("resolution", "disabled"), True, False),
@@ -137,12 +141,14 @@ def update_plot(
     resolution,
     scale_type,
     files_list,
+    hdf5,
     last_used_path,
     last_used_resolution,
     last_used_scale_type,
     last_used_region,
     last_used_color_map,
     last_used_normalization,
+    last_used_stripes,
 ):
     return update_plot_callback(
         chromosome_name,
@@ -152,12 +158,14 @@ def update_plot(
         resolution,
         scale_type,
         files_list,
+        hdf5,
         last_used_path,
         last_used_resolution,
         last_used_scale_type,
         last_used_region,
         last_used_color_map,
         last_used_normalization,
+        last_used_stripes,
     )
 
 
@@ -250,6 +258,24 @@ def change_metadata_button_name(hidden_state):
     else:
         new_button_label = "Hide metadata"
     return new_button_label
+
+
+@app.callback(
+    Output("stripes-filepath", "value", allow_duplicate=True),
+    Input("find-hdf5", "n_clicks"),
+    prevent_initial_call=True,
+)
+def open_hdf5_file_dialog(n_clicks):
+    return open_hdf5_file_dialog_callback()
+
+
+@app.callback(
+    Output("stripes-filepath", "value", allow_duplicate=True),
+    Input("delete-stripe-file", "n_clicks"),
+    prevent_initial_call=True,
+)
+def delete_stripe_file(n_clicks):
+    return ""
 
 
 if __name__ == "__main__":

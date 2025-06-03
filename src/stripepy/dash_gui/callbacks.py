@@ -12,6 +12,7 @@ from components.colorbar import colorbar
 from dash import dcc, html
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
+from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
 
 from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
@@ -20,7 +21,7 @@ from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 def open_file_dialog_callback():
     root = Tk()
     root.filename = filedialog.askopenfilename(
-        initialdir="C:\\", title="Select file", filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*"))
+        initialdir=".", title="Select file", filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*"))
     )
     root.destroy()
     return root.filename
@@ -119,12 +120,14 @@ def update_plot_callback(
     resolution,
     scale_type,
     files_list,
+    stripes_filepath,
     last_used_path,
     last_used_resolution,
     last_used_scale_type,
     last_used_region,
     last_used_color_map,
     last_used_normalization,
+    last_used_stripes,
 ):
     filepath = Path(filepath)
     try:
@@ -135,6 +138,7 @@ def update_plot_callback(
             and last_used_scale_type == scale_type
             and last_used_color_map == colorMap
             and last_used_normalization == normalization
+            and last_used_stripes == stripes_filepath
         ):
             raise PreventUpdate
         else:
@@ -162,14 +166,23 @@ def update_plot_callback(
 
     frame = np.where(np.isneginf(frame), under_lowest_real_value, frame)
 
+    access_data_string = stripes_filepath
+
     if chromosome_name:
-        fig = go.Figure(
-            data=go.Heatmap(
+        fig = go.Figure()
+        fig.add_trace(
+            go.Heatmap(
                 z=frame,
                 colorbar=colorbar(frame, scale_type),
                 colorscale=colorMap_code,
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
+                hoverlabel={
+                    "bgcolor": "green",
+                },
+                name="First matrix",
+                xaxis="x1",
+                yaxis="y1",
             )
         )
 
@@ -178,8 +191,13 @@ def update_plot_callback(
         fig.update_yaxes(autorange="reversed", showgrid=False)
         fig.update_layout(plot_bgcolor="mediumslateblue")
         # NaN-values are transparent
+        traces_x_axis, traces_y_axis = "x1", "y1"
+        if access_data_string:
+            fig = add_stripes_chrom_restriction(
+                f, fig, chromosome_name, access_data_string, resolution, (traces_x_axis, traces_y_axis)
+            )
     else:
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig = go.Figure()
         fig.add_trace(
             go.Heatmap(
                 z=frame,
@@ -215,6 +233,11 @@ def update_plot_callback(
             yaxis2=dict(autorange="reversed", showgrid=False, visible=False, side="right"),
             plot_bgcolor="mediumslateblue",
         )
+        traces_x_axis, traces_y_axis = "x2", "y2"
+        if access_data_string:
+            fig = add_stripes_whole_chrom(f, fig, access_data_string, resolution, layers=(traces_x_axis, traces_y_axis))
+
+    fig.layout.update(showlegend=False)
 
     filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}"
     try:
@@ -233,7 +256,27 @@ def update_plot_callback(
             }
         ]
 
-    return fig, files_list, False, str(filepath), resolution, scale_type, chromosome_name, colorMap, normalization
+    return (
+        fig,
+        files_list,
+        False,
+        str(filepath),
+        resolution,
+        scale_type,
+        chromosome_name,
+        colorMap,
+        normalization,
+        stripes_filepath,
+    )
+
+
+def open_hdf5_file_dialog_callback():
+    root = Tk()
+    root.filename = filedialog.askopenfilename(
+        initialdir=".", title="Select file", filetypes=(("HDF5-files", "*.hdf5"), ("all files", "*.*"))
+    )
+    root.destroy()
+    return root.filename
 
 
 def call_stripes_callback(

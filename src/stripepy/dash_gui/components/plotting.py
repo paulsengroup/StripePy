@@ -76,7 +76,6 @@ def render_chromosome_name():
             dcc.Input(
                 placeholder="[Chromosome name]:start_number-end_number",
                 type="text",
-                # value="2L:10,000,000-20,000,000",
                 value="",
                 id="chromosome-name",
                 disabled=True,
@@ -163,6 +162,33 @@ def render_normalization():
             html.Br(),
         ],
         style={"display": "flex", "alignItems": "center"},
+    )
+
+
+def render_find_stripes_file():
+    """Find relevant HDF5 file on PC"""
+    return html.Div(
+        [
+            html.Div([html.Button(id="find-hdf5", n_clicks=0, children="Navigate")]),
+            "File path",
+            html.Div(
+                [
+                    dcc.Input(
+                        placeholder="",
+                        type="text",
+                        value="",
+                        disabled=True,
+                        id="stripes-filepath",
+                        style={},
+                    ),
+                    html.Button(
+                        id="delete-stripe-file",
+                        n_clicks=0,
+                        className="fa-solid fa-xmark",
+                    ),
+                ],
+            ),
+        ],
     )
 
 

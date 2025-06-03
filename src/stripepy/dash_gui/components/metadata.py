@@ -39,6 +39,7 @@ def render_hidden():
             html.P("", id="last-used-region"),
             html.P("", id="last-used-color-map"),
             html.P("", id="last-used-normalization"),
+            html.P("", id="last-used-hdf5"),
         ],
         id="last-used-values",
         hidden=True,
