@@ -170,6 +170,8 @@ def update_plot(
 
 
 @app.callback(
+    Output("stripes-filepath", "value"),
+    Output("created-stripes-map", "n_clicks", allow_duplicate=True),
     Input("start-calling", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
@@ -228,6 +230,7 @@ def call_stripes(
     # top_pers,
     # rel_change,
     # loc_trend,
+    press_hidden_button,
 ):
     return call_stripes_callback(
         path,
@@ -258,6 +261,16 @@ def _string_to_int(string):
     if "." in string:
         return float(string)
     return int(string)
+
+
+@app.callback(
+    Output("submit-chromosome", "n_clicks", allow_duplicate=True),
+    Input("created-stripes-map", "n_clicks"),
+    State("submit-chromosome", "n_clicks"),
+    prevent_initial_call=True,
+)
+def create_stripes_file_immediate_plotting(n_clicks, button_to_click):
+    return button_to_click + 1
 
 
 @app.callback(
