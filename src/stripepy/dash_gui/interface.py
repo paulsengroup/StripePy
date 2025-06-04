@@ -9,6 +9,7 @@ from callbacks import (
     look_for_normalizations_under_current_resolution_callback,
     open_file_dialog_callback,
     open_hdf5_file_dialog_callback,
+    pick_saved_callback,
     populate_empty_normalization_list_callback,
     update_plot_callback,
 )
@@ -67,8 +68,7 @@ def look_for_file(file_path, last_used_path):
     prevent_initial_call=True,
 )
 def pick_saved(n_clicks, saved_string, update_plot_n_clicks):
-    filepath, resolution, scale_type, chrom_name, normalization = saved_string.split(";")
-    return filepath, int(resolution), scale_type, chrom_name, normalization, update_plot_n_clicks + 1
+    return pick_saved_callback(saved_string, update_plot_n_clicks)
 
 
 @app.callback(
