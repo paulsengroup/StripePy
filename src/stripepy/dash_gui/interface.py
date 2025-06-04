@@ -25,19 +25,21 @@ app.layout = layout()
 @app.callback(
     Output("file-path", "value", allow_duplicate=True),
     Input("filepath-dialog", "n_clicks"),
+    State("last-used-file-directory", "children"),
     prevent_initial_call=True,
     running=[
         (Output("resolution", "disabled"), True, False),
     ],
 )
-def open_file_dialog(n_clicks):
-    return open_file_dialog_callback()
+def open_file_dialog(n_clicks, base_directory):
+    return open_file_dialog_callback(base_directory)
 
 
 @app.callback(
     Output("resolution", "options"),
     Output("resolution", "value", allow_duplicate=True),
     Output("chromosomes", "children"),
+    Output("last-used-file-directory", "children"),
     Output("chromosome-name-icon", "hidden"),
     Output("color-map-icon", "hidden"),
     Output("normalization-icon", "hidden"),
