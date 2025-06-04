@@ -98,6 +98,7 @@ def _pick_resolution_and_array(path):
 def look_for_normalizations_under_current_resolution_callback(resolution, path):
     f = open_matrix_file_checked(path, resolution)
     avail_normalizations = f.avail_normalizations()
+    avail_normalizations.append("No normalization")
     return avail_normalizations, avail_normalizations[0]
 
 
@@ -142,7 +143,8 @@ def update_plot_callback(
         pass
 
     colorMap_code = color_scale(colorMap)
-    if normalization == "No normalization":
+    # "No normalization" is stored in dropdown menu; "None" is stored in saved files.
+    if normalization == "No normalization" or normalization == "None":
         normalization = None
 
     f = open_matrix_file_checked(filepath, resolution)
