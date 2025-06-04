@@ -41,6 +41,7 @@ def render_hidden():
             html.P("", id="last-used-normalization"),
             html.P("", id="last-used-hdf5"),
             html.Button(id="created-stripes-map", n_clicks=0),
+            html.P("", id="last-used-file-directory"),
         ],
         id="last-used-values",
         hidden=True,

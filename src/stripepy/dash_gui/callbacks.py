@@ -18,10 +18,16 @@ from stripepy.cli import call
 from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 
 
-def open_file_dialog_callback():
+def open_file_dialog_callback(base_directory):
+    if base_directory == "":
+        go_to_directory = "."
+    else:
+        go_to_directory = base_directory
     root = Tk()
     root.filename = filedialog.askopenfilename(
-        initialdir=".", title="Select file", filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*"))
+        initialdir=go_to_directory,
+        title="Select file",
+        filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*")),
     )
     root.destroy()
     return root.filename
@@ -45,6 +51,7 @@ def look_for_file_callback(file_path, last_used_path):
         resolutions,
         resolution_value,
         metaInfo,
+        str(file_path.parent),
         False,
         False,
         False,

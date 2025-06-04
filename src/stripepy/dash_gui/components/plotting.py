@@ -20,7 +20,7 @@ def render_filepath():
                         value=None,
                         disabled=True,
                         id="file-path",
-                        style={"width": 300, "fontSize": 20},
+                        style={"width": 800, "fontSize": 20},
                     ),
                     "  ",
                     html.I(
