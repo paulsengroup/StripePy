@@ -25,6 +25,7 @@ def render_metadata():
                     ),
                 ],
                 id="meta-info",
+                style={"overflow": "scroll", "max-height": 500},
             ),
         ],
     )
