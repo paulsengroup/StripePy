@@ -304,12 +304,12 @@ def call_stripes_callback(
 ):
     path = Path(path)
     filename = path.stem
-    output_file = f"./tmp/{filename}.{resolution}.hdf5"
+    output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
     try:
         with ProcessSafeLogger(
-            level="debug",  # verbosity
-            path=Path("./tmp/log_file"),
-            force=False,
+            level="info",  # verbosity
+            path=Path(f"./tmp/{filename}/{resolution}/log_file"),
+            force=True,
             matrix_file=Path(path),
             print_welcome_message=True,
             progress_bar_type="call",
@@ -324,14 +324,14 @@ def call_stripes_callback(
                 constrain_heights,
                 loc_pers_min,
                 loc_trend_min,
-                False,  # force
+                True,  # force
                 nproc,
                 min_chrom_size,
-                "debug",  # verbosity
+                "info",  # verbosity
                 main_logger,  # main_logger,
                 None,  # roi,
-                Path("./tmp/log_file"),  # log_file,
-                Path("./tmp/plot_dir"),  # plot_dir,
+                Path(f"./tmp/{filename}/{resolution}/log_file"),  # log_file,
+                Path(f"./tmp/{filename}/{resolution}/plot_dir"),  # plot_dir,
                 normalization,
             )
     except FileExistsError as e:
