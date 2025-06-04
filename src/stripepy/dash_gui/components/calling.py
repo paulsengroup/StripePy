@@ -7,10 +7,10 @@ DEFAULT_GLOB_PERS = "0.04"
 DEFAULT_CONSTRAIN_HEIGHTS = "False"
 DEFAULT_LOC_MIN_PERS = "0.33"
 DEFAULT_LOC_TREND = "0.25"
-DEFAULT_FORCE = "False"
+# DEFAULT_FORCE = "False"
 DEFAULT_NPROC = "1"
 DEFAULT_MIN_CHROM_SIZE = "2,000,000"
-DEFAULT_VERBOSITY = "info"
+# DEFAULT_VERBOSITY = "info"
 DEFAULT_REL_CHANGE = "0.5"
 
 
@@ -175,8 +175,9 @@ def render_local_trend_minimum():
     )
 
 
+"""
 def render_force():
-    """Force overwrite DCC dropdown field and pop-up tooltip"""
+    """ """Force overwrite DCC dropdown field and pop-up tooltip""" """
     return html.Div(
         [
             "force ",
@@ -200,6 +201,7 @@ def render_force():
         ],
         style={"marginTop": 40, "display": "flex", "alignItems": "center"},
     )
+"""
 
 
 def render_nrpoc():
@@ -255,8 +257,9 @@ def render_minimum_chromosome_size():
     )
 
 
+"""
 def render_verbosity():
-    """Verbosity DCC dropdown field and pop-up tooltip"""
+    """ """Verbosity DCC dropdown field and pop-up tooltip""" """
     return html.Div(
         [
             "verbosity ",
@@ -280,6 +283,7 @@ def render_verbosity():
         ],
         style={"marginTop": 40, "display": "flex", "alignItems": "center"},
     )
+"""
 
 
 def render_relative_change():

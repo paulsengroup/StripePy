@@ -171,7 +171,7 @@ def update_plot(
 
 @app.callback(
     Input("start-calling", "n_clicks"),
-    State("chromosome-name", "value"),
+    State("file-path", "value"),
     State("resolution", "value"),
     State("gen-belt-input", "value"),
     State("max-width-input", "value"),
@@ -190,19 +190,29 @@ def update_plot(
     State("normalization", "value"),
     # State("rel-change-input", "value"),
     # State("stripe-type-input", "value"),
-    State("file-path", "value"),
+    State("created-stripes-map", "n_clicks"),
     prevent_initial_call=True,
     running=[
+        (Output("resolution", "disabled"), True, False),
+        (Output("gen-belt-input", "disabled"), True, False),
+        (Output("max-width-input", "disabled"), True, False),
+        (Output("glob-pers-input", "disabled"), True, False),
+        (Output("constrain-heights-input", "disabled"), True, False),
+        (Output("loc-min-pers-input", "disabled"), True, False),
+        (Output("loc-trend-input", "disabled"), True, False),
+        (Output("nproc-input", "disabled"), True, False),
+        (Output("min-chrom-size-input", "disabled"), True, False),
+        (Output("normalization", "disabled"), True, False),
         (Output("start-calling", "disabled"), True, False),
     ],
 )
 def call_stripes(
     n_clicks,
-    chromosome_name,
+    path,
     resolution,
     gen_belt,
     max_width,
-    glob_pers,
+    glob_pers_min,
     constrain_heights,
     loc_pers_min,
     loc_trend_min,
@@ -218,24 +228,36 @@ def call_stripes(
     # top_pers,
     # rel_change,
     # loc_trend,
-    path,
 ):
     return call_stripes_callback(
-        chromosome_name,
+        path,
         resolution,
-        gen_belt,
-        max_width,
-        glob_pers,
-        constrain_heights,
-        loc_pers_min,
-        loc_trend_min,
+        _string_to_int(gen_belt),
+        _string_to_int(max_width),
+        _string_to_int(glob_pers_min),
+        bool(constrain_heights),
+        _string_to_int(loc_pers_min),
+        _string_to_int(loc_trend_min),
         # force,
-        nproc,
-        min_chrom_size,
+        _string_to_int(nproc),
+        _string_to_int(min_chrom_size),
         # verbosity,
         normalization,
-        path,
+        press_hidden_button,
     )
+
+
+def _string_to_int(string):
+    assert isinstance(string, str)
+    if isinstance(string, int):
+        return string
+    if isinstance(string, float):
+        return string
+    if "," in string:
+        string = string.replace(",", "")
+    if "." in string:
+        return float(string)
+    return int(string)
 
 
 @app.callback(
