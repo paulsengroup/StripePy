@@ -96,6 +96,13 @@ def _pick_resolution_and_array(path):
     return f, resolutions, resolution_value
 
 
+def pick_saved_callback(saved_string, update_plot_n_clicks):
+    if saved_string is None:
+        raise PreventUpdate
+    filepath, resolution, scale_type, chrom_name, normalization = saved_string.split(";")
+    return filepath, int(resolution), scale_type, chrom_name, normalization, update_plot_n_clicks + 1
+
+
 def look_for_normalizations_under_current_resolution_callback(resolution, path):
     f = open_matrix_file_checked(path, resolution)
     avail_normalizations = f.avail_normalizations()
