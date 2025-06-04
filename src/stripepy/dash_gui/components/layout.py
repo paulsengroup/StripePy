@@ -2,7 +2,6 @@ from dash import dcc, html
 
 from .calling import (
     render_constrain_heights,
-    render_force,
     render_genomic_belt,
     render_global_minimum_persistence,
     render_local_minimum_persistence,
@@ -12,7 +11,6 @@ from .calling import (
     render_nrpoc,
     render_relative_change,
     render_stripe_calling_button,
-    render_verbosity,
 )
 from .metadata import render_hidden, render_metadata
 from .plotting import (
@@ -73,10 +71,8 @@ def layout():
                             render_constrain_heights(),
                             render_local_minimum_persistence(),
                             render_local_trend_minimum(),
-                            render_force(),
                             render_nrpoc(),
                             render_minimum_chromosome_size(),
-                            render_verbosity(),
                             render_relative_change(),
                             render_stripe_calling_button(),
                         ],

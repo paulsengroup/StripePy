@@ -179,7 +179,7 @@ def render_find_stripes_file():
                         value="",
                         disabled=True,
                         id="stripes-filepath",
-                        style={},
+                        style={"width": 700},
                     ),
                     html.Button(
                         id="delete-stripe-file",

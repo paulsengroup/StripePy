@@ -287,46 +287,51 @@ def open_hdf5_file_dialog_callback():
 
 
 def call_stripes_callback(
-    chromosome_name,
+    path,
     resolution,
     gen_belt,
     max_width,
-    glob_pers,
+    glob_pers_min,
     constrain_heights,
     loc_pers_min,
     loc_trend_min,
-    force,
+    # force,
     nproc,
     min_chrom_size,
-    verbosity,
+    # verbosity,
     normalization,
-    path,
 ):
-    with ProcessSafeLogger(
-        verbosity,
-        path=pathlib.Path("./tmp/log_file"),
-        force=force,
-        matrix_file=path,
-        print_welcome_message=True,
-        progress_bar_type="call",
-    ) as main_logger:
-        call.run(
-            chromosome_name,
-            resolution,
-            pathlib.Path("./tmp/called_stripes"),  # output file
-            gen_belt,
-            max_width,
-            glob_pers,  # glob_pers_min, or maybe loc_pers_min?
-            constrain_heights,  # constrain heights
-            loc_pers_min,  # loc_pers_min
-            loc_trend_min,
-            force,  # force
-            nproc,  # nproc
-            min_chrom_size,  # min_chrom_size
-            verbosity,
-            main_logger,  # main_logger,
-            # roi,
-            log_file=pathlib.Path("./tmp/log_file"),  # log_file,
-            # plot_dir,
-            normalization=normalization,
-        )
+    path = Path(path)
+    filename = path.stem
+    output_file = f"./tmp/{filename}.{resolution}.hdf5"
+    try:
+        with ProcessSafeLogger(
+            level="debug",  # verbosity
+            path=Path("./tmp/log_file"),
+            force=False,
+            matrix_file=Path(path),
+            print_welcome_message=True,
+            progress_bar_type="call",
+        ) as main_logger:
+            call.run(
+                Path(path),
+                resolution,
+                Path(output_file),  # output file
+                gen_belt,
+                max_width,
+                glob_pers_min,
+                constrain_heights,
+                loc_pers_min,
+                loc_trend_min,
+                False,  # force
+                nproc,
+                min_chrom_size,
+                "debug",  # verbosity
+                main_logger,  # main_logger,
+                None,  # roi,
+                Path("./tmp/log_file"),  # log_file,
+                Path("./tmp/plot_dir"),  # plot_dir,
+                normalization,
+            )
+    except FileExistsError as e:
+        pass
