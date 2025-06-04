@@ -40,6 +40,7 @@ def render_hidden():
             html.P("", id="last-used-color-map"),
             html.P("", id="last-used-normalization"),
             html.P("", id="last-used-hdf5"),
+            html.Button(id="created-stripes-map", n_clicks=0),
         ],
         id="last-used-values",
         hidden=True,

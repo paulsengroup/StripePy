@@ -300,6 +300,7 @@ def call_stripes_callback(
     min_chrom_size,
     # verbosity,
     normalization,
+    press_hidden_button,
 ):
     path = Path(path)
     filename = path.stem
@@ -335,3 +336,4 @@ def call_stripes_callback(
             )
     except FileExistsError as e:
         pass
+    return str(output_file), press_hidden_button + 1
