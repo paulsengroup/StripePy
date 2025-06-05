@@ -8,12 +8,12 @@ set -eu
 set -o pipefail
 
 if [ $# -ne 1 ]; then
-  2>&1 echo "Usage: $0 stripepy:latest"
+  1>&2 echo "Usage: $0 stripepy:latest"
   exit 1
 fi
 
 for cmd in curl docker md5sum; do
-  if ! command -v "$cmd" 2>&1 > /dev/null; then
+  if ! command -v "$cmd" > /dev/null 2>&1; then
     1>&2 echo "Unable to find $cmd in your PATH"
     1>&2 echo 'Please install curl, docker, and md5sum before running this script'
     exit 1

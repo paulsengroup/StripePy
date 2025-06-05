@@ -29,7 +29,7 @@ def run(
     return 0
 
 
-def _read_stripes(f: ResultFile, chrom: str) -> pd.DataFrame:
+def _read_stripes(f: ResultFile, chrom: str) -> Optional[pd.DataFrame]:
     try:
         bio_lt = f.get(chrom, "bio_descriptors", "LT")[["rel_change"]]
         bio_ut = f.get(chrom, "bio_descriptors", "UT")[["rel_change"]]
@@ -44,7 +44,10 @@ def _read_stripes(f: ResultFile, chrom: str) -> pd.DataFrame:
 
         return pd.concat([df1, df2]).set_index("seed").sort_index(kind="stable")
     except Exception as e:
-        raise RuntimeError(f'failed to read stripes for chromosome "{chrom}": {e}')
+        missing_chrom_err_msg = "Unable to synchronously open object (component not found)"
+        if f.format_version > 1 or missing_chrom_err_msg not in str(e):
+            raise RuntimeError(f'failed to read stripes for chromosome "{chrom}": {e}')
+        return None
 
 
 def _stripes_to_bedpe(
@@ -85,6 +88,8 @@ def _stripes_to_bedpe(
 
 def _dump_stripes(f: ResultFile, chrom: str, size: int, resolution: int, cutoff: float, transpose_policy: str):
     df = _read_stripes(f, chrom)
+    if df is None:
+        return
     df = df[df["rel_change"] >= cutoff]
     df = _stripes_to_bedpe(df, chrom, size, resolution, transpose_policy)
 

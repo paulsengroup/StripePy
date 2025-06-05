@@ -247,11 +247,16 @@ def _download_progress_reporter(
     progress_bar_task_id,
     total,
 ):
-    bytes_downloaded = min(chunk_no * max_chunk_size, total)
-    progress_bar.update(
-        task_id=progress_bar_task_id,
-        advance=min(max_chunk_size, total - bytes_downloaded),
-    )
+    try:
+        bytes_downloaded = min(chunk_no * max_chunk_size, total)
+        progress_bar.update(
+            task_id=progress_bar_task_id,
+            advance=min(max_chunk_size, total - bytes_downloaded),
+        )
+    except Exception:  # noqa
+        # There are rare scenarios where some of the params can be None, leading to all kinds of problems.
+        # When this is the case, simply ignore any errors related to updating the progress bar and keep downloading.
+        pass
 
 
 def _download_and_checksum(

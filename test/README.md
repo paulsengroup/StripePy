@@ -10,7 +10,7 @@ The instructions in this README assume that StripePy and pytest have been instal
 
 The provided commands should work on any UNIX system. To run the test suites on Windows simply replace `venv/bin/` with `venv\Scripts\`.
 
-### Downloading test files
+## Downloading test files
 
 ```bash
 venv/bin/stripepy download --unit-test
