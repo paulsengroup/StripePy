@@ -5,6 +5,7 @@ DEFAULT_GEN_BELT = "5,000,000"
 DEFAULT_MAX_WIDTH = "100,000"
 DEFAULT_GLOB_PERS = "0.04"
 DEFAULT_CONSTRAIN_HEIGHTS = "False"
+DEFAULT_K_NEIGHBOURS = "3"
 DEFAULT_LOC_MIN_PERS = "0.33"
 DEFAULT_LOC_TREND = "0.25"
 # DEFAULT_FORCE = "False"
@@ -122,6 +123,27 @@ def render_constrain_heights():
     )
 
 
+def render_k_neighbours():
+    return html.Div(
+        [
+            "k neighbours ",
+            dcc.Input(type="text", value=DEFAULT_K_NEIGHBOURS, id="k-neighbours-input"),
+            "  ",
+            html.I(
+                id="k-neighbours-icon",
+                className="fa-solid fa-circle-question",
+            ),
+            dbc.Tooltip(
+                f"k for the k-neighbour, i.e., number of bins adjacent to the stripe boundaries on both sides (default: {DEFAULT_K_NEIGHBOURS}).",
+                target="k-neighbours-icon",
+                placement="right",
+                trigger="hover",
+            ),
+        ],
+        style={"marginTop": 40},
+    )
+
+
 def render_local_minimum_persistence():
     """Local minimum persistence DCC input field and pop-up tooltip"""
     return html.Div(
@@ -205,7 +227,7 @@ def render_force():
 
 
 def render_nrpoc():
-    """Parallellization count DCC input field and pop-up tooltip"""
+    """Parallelization count DCC input field and pop-up tooltip"""
     return html.Div(
         [
             "nproc",

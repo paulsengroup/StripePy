@@ -300,6 +300,7 @@ def call_stripes_callback(
     max_width,
     glob_pers_min,
     constrain_heights,
+    k,
     loc_pers_min,
     loc_trend_min,
     # force,
@@ -329,6 +330,7 @@ def call_stripes_callback(
                 max_width,
                 glob_pers_min,
                 constrain_heights,
+                k,  # k
                 loc_pers_min,
                 loc_trend_min,
                 True,  # force
