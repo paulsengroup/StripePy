@@ -314,35 +314,29 @@ def call_stripes_callback(
     filename = path.stem
     output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
     try:
-        with ProcessSafeLogger(
-            level="info",  # verbosity
-            path=Path(f"./tmp/{filename}/{resolution}/log_file"),
-            force=True,
-            matrix_file=Path(path),
-            print_welcome_message=True,
-            progress_bar_type="call",
-        ) as main_logger:
-            call.run(
-                Path(path),
-                resolution,
-                Path(output_file),  # output file
-                gen_belt,
-                max_width,
-                glob_pers_min,
-                constrain_heights,
-                k,  # k
-                loc_pers_min,
-                loc_trend_min,
-                True,  # force
-                nproc,
-                min_chrom_size,
-                "info",  # verbosity
-                main_logger,  # main_logger,
-                None,  # roi,
-                Path(f"./tmp/{filename}/{resolution}/log_file"),  # log_file,
-                Path(f"./tmp/{filename}/{resolution}/plot_dir"),  # plot_dir,
-                normalization,
-            )
+        chroms = open_matrix_file_checked(path, resolution, None).chromosomes(include_ALL=False)
+
+        call.run(
+            Path(path),
+            resolution,
+            Path(output_file),  # output file
+            gen_belt,
+            max_width,
+            glob_pers_min,
+            constrain_heights,
+            k,  # k
+            loc_pers_min,
+            loc_trend_min,
+            True,  # force
+            nproc,
+            min_chrom_size,
+            "info",  # verbosity
+            None,  # main_logger,
+            None,  # roi,
+            Path(f"./tmp/{filename}/{resolution}/log_file"),  # log_file,
+            Path(f"./tmp/{filename}/{resolution}/plot_dir"),  # plot_dir,
+            normalization,
+        )
     except FileExistsError as e:
         pass
     return str(output_file), press_hidden_button + 1
