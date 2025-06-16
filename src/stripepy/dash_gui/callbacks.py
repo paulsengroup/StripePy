@@ -432,6 +432,19 @@ def call_stripes_callback(
                             pool=pool,
                             logger=None,  # logger
                         )
+    return (
+        str(path),
+        normalization,
+        gen_belt,
+        max_width,
+        glob_pers_min,
+        constrain_heights,
+        k,
+        loc_pers_min,
+        loc_trend_min,
+        nproc,
+        press_hidden_button + 1,
+    )
 
 
 def _fetch_interactions(
