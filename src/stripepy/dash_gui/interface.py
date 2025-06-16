@@ -186,6 +186,7 @@ def update_plot(
     Input("start-calling", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
+    State("chromosome-name", "value"),
     State("gen-belt-input", "value"),
     State("max-width-input", "value"),
     State("glob-pers-input", "value"),
@@ -234,6 +235,7 @@ def call_stripes(
     n_clicks,
     path,
     resolution,
+    chrom_name,
     gen_belt,
     max_width,
     glob_pers_min,
@@ -254,10 +256,20 @@ def call_stripes(
     # rel_change,
     # loc_trend,
     press_hidden_button,
+    last_used_normalization,
+    last_used_gen_belt,
+    last_used_max_width,
+    last_used_glob_pers_min,
+    last_used_constrain_heights,
+    last_used_k,
+    last_used_loc_pers_min,
+    last_used_loc_trend_min,
+    last_used_nproc,
 ):
     return call_stripes_callback(
         path,
         resolution,
+        chrom_name,
         _string_to_int(gen_belt),
         _string_to_int(max_width),
         _string_to_int(glob_pers_min),
@@ -271,6 +283,15 @@ def call_stripes(
         # verbosity,
         normalization,
         press_hidden_button,
+        last_used_normalization,
+        _string_to_int(last_used_gen_belt),
+        _string_to_int(last_used_max_width),
+        _string_to_int(last_used_glob_pers_min),
+        _string_to_bool(last_used_constrain_heights),
+        _string_to_int(last_used_k),
+        _string_to_int(last_used_loc_pers_min),
+        _string_to_int(last_used_loc_trend_min),
+        _string_to_int(last_used_nproc),
     )
 
 
@@ -285,6 +306,13 @@ def _string_to_int(string):
     if "." in string:
         return float(string)
     return int(string)
+
+
+def _string_to_bool(string):
+    assert isinstance(string, str)
+    if string == "":
+        return ""
+    return bool(string)
 
 
 @app.callback(

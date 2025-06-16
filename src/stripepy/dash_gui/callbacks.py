@@ -1,3 +1,5 @@
+import concurrent.futures
+import contextlib
 import pathlib
 from pathlib import Path
 from tkinter import *
@@ -14,7 +16,10 @@ from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
 
+from stripepy.algorithms import step1
 from stripepy.cli import call
+from stripepy.cli.call import *
+from stripepy.data_structures import IOManager, ProcessPoolWrapper
 from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 
 
@@ -296,6 +301,7 @@ def open_hdf5_file_dialog_callback():
 def call_stripes_callback(
     path,
     resolution,
+    chrom_name,
     gen_belt,
     max_width,
     glob_pers_min,
@@ -309,34 +315,161 @@ def call_stripes_callback(
     # verbosity,
     normalization,
     press_hidden_button,
+    last_used_normalization,
+    last_used_gen_belt,
+    last_used_max_width,
+    last_used_glob_pers_min,
+    last_used_constrain_heights,
+    last_used_k,
+    last_used_loc_pers_min,
+    last_used_loc_trend_min,
+    last_used_nproc,
 ):
+    f = open_matrix_file_checked(path, resolution)
+    chroms = f.chromosomes(include_ALL=False)
     path = Path(path)
     filename = path.stem
     output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
-    try:
-        chroms = open_matrix_file_checked(path, resolution, None).chromosomes(include_ALL=False)
 
-        call.run(
-            Path(path),
-            resolution,
-            Path(output_file),  # output file
-            gen_belt,
-            max_width,
-            glob_pers_min,
-            constrain_heights,
-            k,  # k
-            loc_pers_min,
-            loc_trend_min,
-            True,  # force
-            nproc,
-            min_chrom_size,
-            "info",  # verbosity
-            None,  # main_logger,
-            None,  # roi,
-            Path(f"./tmp/{filename}/{resolution}/log_file"),  # log_file,
-            Path(f"./tmp/{filename}/{resolution}/plot_dir"),  # plot_dir,
-            normalization,
-        )
-    except FileExistsError as e:
-        pass
-    return str(output_file), press_hidden_button + 1
+    functions_sequence = _where_to_start_calling_sequence(
+        (normalization, gen_belt, glob_pers_min, max_width, loc_trend_min, k),
+        (
+            last_used_normalization,
+            last_used_gen_belt,
+            last_used_glob_pers_min,
+            last_used_max_width,
+            last_used_loc_trend_min,
+            last_used_k,
+        ),
+    )
+    chrom, _, region = chrom_name.partition(":")
+    start_segment, _, end_segment = region.partition("-")
+    function_scope = "NONE"
+    if start_segment and end_segment:
+        function_scope = "START_AND_END_SEGMENT"
+    elif start_segment:
+        function_scope = "END_SEGMENT_ONLY"
+    elif chrom:
+        function_scope = "SINGLE_CHROM"
+    elif not chrom and not region:
+        function_scope = "WHOLE_GENOME"
+    if functions_sequence[-1] and function_scope != "WHOLE_GENOME":
+        function_scope = "SINGLE_CHROM"
+    if len(functions_sequence) == 1:
+        raise PreventUpdate
+    else:
+        with contextlib.ExitStack() as ctx:
+            # Set up the pool of worker processes
+            pool = ctx.enter_context(
+                ProcessPoolWrapper(
+                    nproc=nproc,
+                    main_logger=None,
+                    init_mpl=False,  # roi is not None,
+                    lazy_pool_initialization=True,
+                    logger=None,
+                )
+            )
+
+            # Set up the pool of worker threads
+            tpool = ctx.enter_context(
+                concurrent.futures.ThreadPoolExecutor(max_workers=min(nproc, 2)),
+            )
+            tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
+            for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
+                if skip:
+                    continue
+                for function in functions_sequence:
+                    if isinstance(function, bool):
+                        break
+                    if function == step1.run:
+                        if pool.ready:
+                            # Signal that matrices should be fetched from the shared global state
+                            lt_matrix = None
+                            ut_matrix = None
+                        else:
+                            ut_matrix = _fetch_interactions(
+                                i,
+                                tasks,
+                                pool,
+                                path,
+                                normalization,
+                                chroms,
+                                resolution,
+                                gen_belt,
+                            )
+                            lt_matrix = ut_matrix.T
+                    if function == call._run_step_2:
+                        result = function(
+                            chrom_name=chrom_name,
+                            chrom_size=chrom_size,
+                            lt_matrix=lt_matrix,
+                            ut_matrix=ut_matrix,
+                            min_persistence=glob_pers_min,
+                            pool=pool,
+                            logger=None,  # logger
+                        )
+                    if function == call._run_step_3:
+                        result = function(
+                            result=result,
+                            lt_matrix=lt_matrix,
+                            ut_matrix=ut_matrix,
+                            resolution=resolution,
+                            genomic_belt=gen_belt,
+                            max_width=max_width,
+                            loc_pers_min=loc_pers_min,
+                            loc_trend_min=loc_trend_min,
+                            tpool=tpool,
+                            pool=pool,
+                            logger=None,  # logger
+                        )
+                    if function == call._run_step_4:
+                        result = function(
+                            result=result,
+                            lt_matrix=lt_matrix,
+                            ut_matrix=ut_matrix,
+                            k=k,
+                            tpool=tpool,
+                            pool=pool,
+                            logger=None,  # logger
+                        )
+
+
+def _fetch_interactions(
+    i,
+    tasks,
+    pool,
+    path,
+    normalization,
+    chroms,
+    resolution,
+    gen_belt,
+):
+    chrom_name, _, _ = tasks[i]
+    ut_matrix, roi_matrix_raw, roi_matrix_proc = IOManager._fetch(
+        path, resolution, normalization, gen_belt, chrom_name, None
+    )
+    if i == 0:
+        max_nnz = call._estimate_max_nnz(chrom_name, ut_matrix, chroms)
+        pool.rebind_shared_matrices(chrom_name, ut_matrix, None, max_nnz)
+    else:
+        pool.rebind_shared_matrices(chrom_name, ut_matrix, None)
+    return ut_matrix
+
+
+def _where_to_start_calling_sequence(input_params, state_params):
+    functions_list = [step1.run, call._run_step_2, call._run_step_3, call._run_step_4]
+    for index, input_ in enumerate(input_params):
+        if input_ != state_params[index]:
+            if index == 0:  # normalization
+                return (*functions_list, True)
+            if index == 1:  # genomic belt
+                return (*functions_list, True)
+            if index == 2:  # global persistence minimum
+                return (*functions_list[1:], True)
+            if index == 3:  # max width
+                return (*functions_list[2:], False)
+            if index == 4:  # local trend minimum
+                return (*functions_list[2:], False)
+            if index == 5:  # k neighbours
+                return (*functions_list[3:], False)
+    return False
