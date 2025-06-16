@@ -16,7 +16,7 @@ from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
 
-from stripepy.algorithms import step1
+from stripepy.algorithms import step1, step2, step3, step4
 from stripepy.cli import call
 from stripepy.cli.call import *
 from stripepy.data_structures import IOManager, ProcessPoolWrapper
@@ -398,16 +398,13 @@ def call_stripes_callback(
                                 gen_belt,
                             )
                             lt_matrix = ut_matrix.T
-                    if function == call._run_step_2:
-                        result = function(
-                            chrom_name=chrom_name,
-                            chrom_size=chrom_size,
-                            lt_matrix=lt_matrix,
-                            ut_matrix=ut_matrix,
-                            min_persistence=glob_pers_min,
-                            pool=pool,
-                            logger=None,  # logger
+                    if function == call._run_step_2_helper:
+                        params = (
+                            (chrom_name, chrom_size, lt_matrix, glob_pers_min, "lower"),
+                            (chrom_name, chrom_size, ut_matrix, glob_pers_min, "upper"),
                         )
+                        tasks_ = pool.map(function, params)
+                        result = call._merge_results(tasks_)
                     if function == call._run_step_3:
                         result = function(
                             result=result,
@@ -470,7 +467,7 @@ def _fetch_interactions(
 
 
 def _where_to_start_calling_sequence(input_params, state_params):
-    functions_list = [step1.run, call._run_step_2, call._run_step_3, call._run_step_4]
+    functions_list = [step1.run, call._run_step_2_helper, step3.run, step4.run]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
             if index == 0:  # normalization
