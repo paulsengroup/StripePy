@@ -323,6 +323,8 @@ def call_stripes_callback(
     last_used_nproc,
     fig,
 ):
+    if not isinstance(fig, go.Figure):
+        fig = go.Figure(fig)
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
     path = Path(path)
