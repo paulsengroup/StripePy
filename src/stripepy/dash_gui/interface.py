@@ -98,7 +98,7 @@ def populate_empty_normalization_list(array):
 
 
 @app.callback(
-    Output("HeatMap", "figure"),
+    Output("HeatMap", "figure", allow_duplicate=True),
     Output("files-list", "options"),
     Output("heat-map", "hidden"),
     Output("last-used-path", "children"),
@@ -172,7 +172,6 @@ def update_plot(
 
 
 @app.callback(
-    Output("stripes-filepath", "value", allow_duplicate=True),
     Output("last-used-normalization", "children", allow_duplicate=True),
     Output("last-used-gen-belt", "children"),
     Output("last-used-max-width", "children"),
@@ -182,7 +181,7 @@ def update_plot(
     Output("last-used-loc-pers-min", "children"),
     Output("last-used-loc-trend-min", "children"),
     Output("last-used-nproc", "children"),
-    Output("created-stripes-map", "n_clicks", allow_duplicate=True),
+    Output("HeatMap", "figure", allow_duplicate=True),
     Input("start-calling", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
@@ -194,18 +193,9 @@ def update_plot(
     State("k-neighbours-input", "value"),
     State("loc-min-pers-input", "value"),
     State("loc-trend-input", "value"),
-    # State("force-input", "value"),
     State("nproc-input", "value"),
     State("min-chrom-size-input", "value"),
-    # State("verbosity-input", "value"),
-    # State("main-logger-value", "value"),
-    # State("roi-input", "value"),
-    # State("log-file-input", "value"),
-    # State("plot-dir-input", "value"),
     State("normalization", "value"),
-    # State("rel-change-input", "value"),
-    # State("stripe-type-input", "value"),
-    State("created-stripes-map", "n_clicks"),
     State("last-used-normalization", "children"),
     State("last-used-gen-belt", "children"),
     State("last-used-max-width", "children"),
@@ -215,6 +205,7 @@ def update_plot(
     State("last-used-loc-pers-min", "children"),
     State("last-used-loc-trend-min", "children"),
     State("last-used-nproc", "children"),
+    State("HeatMap", "figure"),
     prevent_initial_call=True,
     running=[
         (Output("resolution", "disabled"), True, False),
