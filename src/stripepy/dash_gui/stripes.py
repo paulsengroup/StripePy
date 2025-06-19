@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from stripepy.data_structures import ResultFile
 
 
-def add_stripes_chrom_restriction(f, fig, chromosome_name, data_string, resolution, layers):
+def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, layers):
     chromosome_name, _, spans = chromosome_name.partition(":")
     pre_span_length = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
@@ -18,69 +18,73 @@ def add_stripes_chrom_restriction(f, fig, chromosome_name, data_string, resoluti
         end_limit = int(end_limit.replace(",", ""))
         fig = extract_stripes_part_of_chromosome(
             fig,
-            data_string,
-            chromosome_name,
+            result,
             resolution,
             layers,
             pre_span_length + pre_span_in_chromosome,
             int(end_limit),
         )
     else:
-        fig = extract_stripes_whole_chromosome(fig, data_string, chromosome_name, resolution, layers, 0)
+        fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_span_length)
     return fig
 
 
-def add_stripes_whole_chrom(f, fig, data_string, resolution, layers):
+def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name):
     pre_chrom_span = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
-        fig = extract_stripes_whole_chromosome(fig, data_string, chrom_name, resolution, layers, pre_chrom_span)
+        if chrom_name == chromosome_name:
+            fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, pre_span_lengths)
         pre_chrom_span += pre_span_lengths
     return fig
 
 
-def extract_stripes_whole_chromosome(fig, data_string, chrom_name, resolution, layers, margin):
-    with ResultFile(data_string) as h5:
-        geo_frame_LT = h5.get(chrom_name, "geo_descriptors", "LT")
-        bio_frame_LT = h5.get(chrom_name, "bio_descriptors", "LT")
-        geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
-        for rows in geo_frame_LT.iterrows():
-            array = _get_correct_cols(rows)
-            x_values, y_values = _get_square(array)
-            fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers))
+def extract_stripes_whole_chromosome(fig, result, resolution, layers, margin, end_position):
+    geo_frame_LT = result.get_stripe_geo_descriptors("LT")
+    bio_frame_LT = result.get_stripe_bio_descriptors("LT")
+    geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
+    for rows in geo_frame_LT.iterrows():
+        array = _get_correct_cells(rows)
+        x_values, y_values = _get_square(array)
+        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers))
 
-        geo_frame_UT = h5.get(chrom_name, "geo_descriptors", "UT")
-        bio_frame_UT = h5.get(chrom_name, "bio_descriptors", "UT")
-        geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
-        for rows in geo_frame_UT.iterrows():
-            array = _get_correct_cols(rows)
-            x_values, y_values = _get_square(array)
+    geo_frame_UT = result.get_stripe_geo_descriptors("UT")
+    bio_frame_UT = result.get_stripe_bio_descriptors("UT")
+    geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
+    ENTERED_FRAME = False
+    for rows in geo_frame_UT.iterrows():
+        array = _get_correct_cells(rows)
+        x_values, y_values = _get_square(array)
+        if _is_within(x_values, y_values, (margin, end_position)):
+            ENTERED_FRAME = True
             fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers))
+        if not _is_within(x_values, y_values, (margin, end_position)):
+            if ENTERED_FRAME == True:
+                break
     return fig
 
 
-def extract_stripes_part_of_chromosome(fig, data_string, chrom_name, resolution, layers, margin, end_limit):
-    with ResultFile(data_string) as h5:
-        geo_frame_LT = h5.get(chrom_name, "geo_descriptors", "LT")
-        bio_frame_LT = h5.get(chrom_name, "bio_descriptors", "LT")
-        geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
-        for rows in geo_frame_LT.iterrows():
-            array = _get_correct_cols(rows)
-            x_values, y_values = _get_square(array)
-            if _is_within(x_values, y_values, (margin, end_limit), resolution):
-                fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers))
-            else:
-                continue
+def extract_stripes_part_of_chromosome(fig, result, resolution, layers, margin, end_limit):
+    geo_frame_LT = result.get_stripe_geo_descriptors("LT")
+    bio_frame_LT = result.get_stripe_bio_descriptors("LT")
+    geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
+    for rows in geo_frame_LT.iterrows():
+        array = _get_correct_cells(rows)
+        x_values, y_values = _get_square(array)
+        if _is_within(x_values, y_values, (margin, end_limit)):
+            fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers))
+        else:
+            continue
 
-        geo_frame_UT = h5.get(chrom_name, "geo_descriptors", "UT")
-        bio_frame_UT = h5.get(chrom_name, "bio_descriptors", "UT")
-        geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
-        for rows in geo_frame_UT.iterrows():
-            array = _get_correct_cols(rows)
-            x_values, y_values = _get_square(array)
-            if _is_within(x_values, y_values, (margin, end_limit), resolution):
-                fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers))
-            else:
-                continue
+    geo_frame_UT = result.get_stripe_geo_descriptors("UT")
+    bio_frame_UT = result.get_stripe_bio_descriptors("UT")
+    geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
+    for rows in geo_frame_UT.iterrows():
+        array = _get_correct_cells(rows)
+        x_values, y_values = _get_square(array)
+        if _is_within(x_values, y_values, (margin, end_limit)):
+            fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers))
+        else:
+            continue
     return fig
 
 
@@ -90,18 +94,19 @@ def _get_square(array):
     return x_array, y_array
 
 
-def _get_correct_cols(row):
-    return np.array([row[1][2], row[1][3], row[1][4], row[1][5]])
+def _get_correct_cells(df_row):
+    series = df_row[1]
+    return series[2:]
 
 
-def _is_within(col_values, row_values, borders, resolution):
-    if col_values[0] < borders[0] / resolution:
+def _is_within(col_values, row_values, borders):
+    if col_values[0] < borders[0] and col_values[1] < borders[0]:
         return False
-    elif col_values[1] > borders[1] / resolution:
+    elif col_values[0] > borders[1] and col_values[1] > borders[1]:
         return False
-    elif row_values[0] < borders[0] / resolution:
+    elif row_values[0] < borders[0] and row_values[1] < borders[0]:
         return False
-    elif row_values[2] > borders[1] / resolution:
+    elif row_values[0] > borders[1] and row_values[1] > borders[1]:
         return False
     else:
         return True

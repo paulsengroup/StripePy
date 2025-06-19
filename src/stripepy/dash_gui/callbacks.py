@@ -309,12 +309,9 @@ def call_stripes_callback(
     k,
     loc_pers_min,
     loc_trend_min,
-    # force,
     nproc,
     min_chrom_size,
-    # verbosity,
     normalization,
-    press_hidden_button,
     last_used_normalization,
     last_used_gen_belt,
     last_used_max_width,
@@ -347,136 +344,150 @@ def call_stripes_callback(
     function_scope = "NONE"
     if start_segment and end_segment:
         function_scope = "START_AND_END_SEGMENT"
+        traces_x_axis, traces_y_axis = "x1", "y1"
     elif start_segment:
         function_scope = "END_SEGMENT_ONLY"
+        traces_x_axis, traces_y_axis = "x1", "y1"
     elif chrom:
         function_scope = "SINGLE_CHROM"
+        traces_x_axis, traces_y_axis = "x1", "y1"
     elif not chrom and not region:
         function_scope = "WHOLE_GENOME"
+        traces_x_axis, traces_y_axis = "x2", "y2"
     if functions_sequence[-1] and function_scope != "WHOLE_GENOME":
         function_scope = "SINGLE_CHROM"
-    if len(functions_sequence) == 1:
-        raise PreventUpdate
-    else:
-        with contextlib.ExitStack() as ctx:
-            # Set up the pool of worker processes
-            pool = ctx.enter_context(
-                ProcessPoolWrapper(
-                    nproc=nproc,
-                    main_logger=None,
-                    init_mpl=False,  # roi is not None,
-                    lazy_pool_initialization=True,
-                    logger=None,
-                )
+        traces_x_axis, traces_y_axis = "x1", "y1"
+    with contextlib.ExitStack() as ctx:
+        # Set up the pool of worker processes
+        pool = ctx.enter_context(
+            ProcessPoolWrapper(
+                nproc=nproc,
+                main_logger=None,
+                init_mpl=False,  # roi is not None,
+                lazy_pool_initialization=True,
+                logger=None,
             )
+        )
 
-            # Set up the pool of worker threads
-            tpool = ctx.enter_context(
-                concurrent.futures.ThreadPoolExecutor(max_workers=min(nproc, 2)),
-            )
+        # Set up the pool of worker threads
+        tpool = ctx.enter_context(
+            concurrent.futures.ThreadPoolExecutor(max_workers=min(nproc, 2)),
+        )
+        if (
+            function_scope == "START_AND_END_SEGMENT"
+            or function_scope == "END_SEGMENT_ONLY"
+            or function_scope == "SINGLE_CHROM"
+        ):
+            tasks = call._plan_tasks({chrom: chroms[chrom]}, min_chrom_size, None)
+        else:
             tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
-            for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
-                if skip:
-                    continue
-                for function in functions_sequence:
-                    if isinstance(function, bool):
-                        break
-                    if function == step1.run:
-                        if pool.ready:
-                            # Signal that matrices should be fetched from the shared global state
-                            lt_matrix = None
-                            ut_matrix = None
-                        else:
-                            ut_matrix = _fetch_interactions(
-                                i,
-                                tasks,
-                                pool,
-                                path,
-                                normalization,
-                                chroms,
-                                resolution,
-                                gen_belt,
-                            )
-                            lt_matrix = ut_matrix.T
-                    if function == call._run_step_2_helper:
-                        params = (
-                            (chrom_name, chrom_size, lt_matrix, glob_pers_min, "lower"),
-                            (chrom_name, chrom_size, ut_matrix, glob_pers_min, "upper"),
+        for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
+            if skip:
+                continue
+            for function in functions_sequence:
+                if isinstance(function, bool):
+                    break
+                if function == step1.run:
+                    print("Running step 1")
+                    if pool.ready:
+                        # Signal that matrices should be fetched from the shared global state
+                        lt_matrix = None
+                        ut_matrix = None
+                    else:
+                        ut_matrix = _fetch_interactions(
+                            i,
+                            tasks,
+                            pool,
+                            path,
+                            normalization,
+                            chroms,
+                            resolution,
+                            gen_belt,
                         )
-                        tasks_ = pool.map(function, params)
-                        result = call._merge_results(tasks_)
-                    if function == call._run_step_3:
-                        if pool.ready:
-                            executor = pool.get_mapper(chunksize=50)
-                        else:
-                            executor = pool.map
-                        params = (
-                            (
-                                result,
-                                lt_matrix,
-                                resolution,
-                                gen_belt,
-                                max_width,
-                                loc_pers_min,
-                                loc_trend_min,
-                                "lower",
-                                executor,
-                                None,
-                            ),
-                            (
-                                result,
-                                ut_matrix,
-                                resolution,
-                                gen_belt,
-                                max_width,
-                                loc_pers_min,
-                                loc_trend_min,
-                                "upper",
-                                executor,
-                                None,
-                            ),
-                        )
-                        tasks_ = pool.map(function, params)
-                        result = call._merge_results(tasks_)
-
-                        result = function(
-                            result=result,
-                            lt_matrix=lt_matrix,
-                            ut_matrix=ut_matrix,
-                            resolution=resolution,
-                            genomic_belt=gen_belt,
-                            max_width=max_width,
-                            loc_pers_min=loc_pers_min,
-                            loc_trend_min=loc_trend_min,
-                            tpool=tpool,
-                            pool=pool,
-                            logger=None,  # logger
-                        )
-                    if function == call._run_step_4:
-                        if pool.ready:
-                            executor = pool.get_mapper(chunksize=50)
-                        else:
-                            executor = pool.map
-                        params = (
-                            (result.get("stripes", "lower"), lt_matrix, "lower", k, executor, None),
-                            (result.get("stripes", "upper"), ut_matrix, "upper", k, executor, None),
-                        )
-                        (_, lt_stripes), (_, ut_stripes) = list(tpool.map(function, params))
-                        result.set("stripes", lt_stripes, "LT", force=True)
-                        result.set("stripes", ut_stripes, "UT", force=True)
+                        lt_matrix = ut_matrix.T
+                if function == call._run_step_2_helper:
+                    print("Running step 2")
+                    params = (
+                        (chromosome_name, chrom_size, lt_matrix, glob_pers_min, "lower"),
+                        (chromosome_name, chrom_size, ut_matrix, glob_pers_min, "upper"),
+                    )
+                    tasks_ = pool.map(function, params)
+                    result = call._merge_results(tasks_)
+                if function == call._run_step_3_helper:
+                    print("Running step 3")
+                    if pool.ready:
+                        executor = pool.get_mapper(chunksize=50)
+                    else:
+                        executor = pool.map
+                    params = (
+                        (
+                            result,
+                            lt_matrix,
+                            resolution,
+                            gen_belt,
+                            max_width,
+                            loc_pers_min,
+                            loc_trend_min,
+                            "lower",
+                            executor,
+                            None,
+                        ),
+                        (
+                            result,
+                            ut_matrix,
+                            resolution,
+                            gen_belt,
+                            max_width,
+                            loc_pers_min,
+                            loc_trend_min,
+                            "upper",
+                            executor,
+                            None,
+                        ),
+                    )
+                    tasks_ = pool.map(function, params)
+                    result = call._merge_results(tasks_)
+                if function == call._run_step_4_helper:
+                    print("Running step 4")
+                    if pool.ready:
+                        executor = pool.get_mapper(chunksize=50)
+                    else:
+                        executor = pool.map
+                    params = (
+                        (result.get("stripes", "lower"), lt_matrix, "lower", k, executor, None),
+                        (result.get("stripes", "upper"), ut_matrix, "upper", k, executor, None),
+                    )
+                    (_, lt_stripes), (_, ut_stripes) = list(tpool.map(function, params))
+                    result.set("stripes", lt_stripes, "LT", force=True)
+                    result.set("stripes", ut_stripes, "UT", force=True)
+    ####
+    #### Add stripes as traces
+    ####
+    if result.empty:
+        raise PreventUpdate  # TODO: add message telling user no stripes were found
+    if function_scope == "START_AND_END_SEGMENT":
+        fig = add_stripes_chrom_restriction(f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis))
+    elif function_scope == "END_SEGMENT_ONLY":
+        fig = add_stripes_chrom_restriction_at_end(
+            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
+        )
+    elif function_scope == "SINGLE_CHROM":
+        fig = add_stripes_whole_chrom(f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom)
+    elif function_scope == "WHOLE_GENOME":
+        for chrom in chroms:
+            fig = add_stripes_whole_chrom(f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom)
 
     return (
-        str(path),
         normalization,
-        gen_belt,
-        max_width,
-        glob_pers_min,
-        constrain_heights,
-        k,
-        loc_pers_min,
-        loc_trend_min,
-        nproc,
-        press_hidden_button + 1,
+        str(gen_belt),
+        str(max_width),
+        str(glob_pers_min),
+        str(constrain_heights),
+        str(k),
+        str(loc_pers_min),
+        str(loc_trend_min),
+        str(nproc),
+        fig,
     )
 
 
