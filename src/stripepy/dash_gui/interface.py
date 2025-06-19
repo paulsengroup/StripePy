@@ -243,19 +243,9 @@ def call_stripes(
     k,
     loc_pers_min,
     loc_trend_min,
-    # force,
     nproc,
     min_chrom_size,
-    # verbosity,
-    # main_logger,
-    # roi,
-    # log_file,
-    # plot_dir
     normalization,
-    # top_pers,
-    # rel_change,
-    # loc_trend,
-    press_hidden_button,
     last_used_normalization,
     last_used_gen_belt,
     last_used_max_width,
@@ -265,6 +255,7 @@ def call_stripes(
     last_used_loc_pers_min,
     last_used_loc_trend_min,
     last_used_nproc,
+    fig,
 ):
     return call_stripes_callback(
         path,
@@ -277,12 +268,9 @@ def call_stripes(
         _string_to_int(k),
         _string_to_int(loc_pers_min),
         _string_to_int(loc_trend_min),
-        # force,
         _string_to_int(nproc),
         _string_to_int(min_chrom_size),
-        # verbosity,
         normalization,
-        press_hidden_button,
         last_used_normalization,
         _string_to_int(last_used_gen_belt),
         _string_to_int(last_used_max_width),
@@ -292,6 +280,7 @@ def call_stripes(
         _string_to_int(last_used_loc_pers_min),
         _string_to_int(last_used_loc_trend_min),
         _string_to_int(last_used_nproc),
+        fig,
     )
 
 
@@ -313,16 +302,6 @@ def _string_to_bool(string):
     if string == "":
         return ""
     return bool(string)
-
-
-@app.callback(
-    Output("submit-chromosome", "n_clicks", allow_duplicate=True),
-    Input("created-stripes-map", "n_clicks"),
-    State("submit-chromosome", "n_clicks"),
-    prevent_initial_call=True,
-)
-def create_stripes_file_immediate_plotting(n_clicks, button_to_click):
-    return button_to_click + 1
 
 
 @app.callback(
