@@ -342,6 +342,8 @@ def call_stripes_callback(
             last_used_k,
         ),
     )
+    if not functions_sequence:
+        raise PreventUpdate
     chrom, _, region = chrom_name.partition(":")
     start_segment, _, end_segment = region.partition("-")
     function_scope = "NONE"
