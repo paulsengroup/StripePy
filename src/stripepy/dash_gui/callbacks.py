@@ -453,15 +453,18 @@ def call_stripes_callback(
                             logger=None,  # logger
                         )
                     if function == call._run_step_4:
-                        result = function(
-                            result=result,
-                            lt_matrix=lt_matrix,
-                            ut_matrix=ut_matrix,
-                            k=k,
-                            tpool=tpool,
-                            pool=pool,
-                            logger=None,  # logger
+                        if pool.ready:
+                            executor = pool.get_mapper(chunksize=50)
+                        else:
+                            executor = pool.map
+                        params = (
+                            (result.get("stripes", "lower"), lt_matrix, "lower", k, executor, None),
+                            (result.get("stripes", "upper"), ut_matrix, "upper", k, executor, None),
                         )
+                        (_, lt_stripes), (_, ut_stripes) = list(tpool.map(function, params))
+                        result.set("stripes", lt_stripes, "LT", force=True)
+                        result.set("stripes", ut_stripes, "UT", force=True)
+
     return (
         str(path),
         normalization,
@@ -500,7 +503,7 @@ def _fetch_interactions(
 
 
 def _where_to_start_calling_sequence(input_params, state_params):
-    functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, step4.run]
+    functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, call._run_step_4_helper]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
             if index == 0:  # normalization
