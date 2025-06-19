@@ -406,6 +406,39 @@ def call_stripes_callback(
                         tasks_ = pool.map(function, params)
                         result = call._merge_results(tasks_)
                     if function == call._run_step_3:
+                        if pool.ready:
+                            executor = pool.get_mapper(chunksize=50)
+                        else:
+                            executor = pool.map
+                        params = (
+                            (
+                                result,
+                                lt_matrix,
+                                resolution,
+                                gen_belt,
+                                max_width,
+                                loc_pers_min,
+                                loc_trend_min,
+                                "lower",
+                                executor,
+                                None,
+                            ),
+                            (
+                                result,
+                                ut_matrix,
+                                resolution,
+                                gen_belt,
+                                max_width,
+                                loc_pers_min,
+                                loc_trend_min,
+                                "upper",
+                                executor,
+                                None,
+                            ),
+                        )
+                        tasks_ = pool.map(function, params)
+                        result = call._merge_results(tasks_)
+
                         result = function(
                             result=result,
                             lt_matrix=lt_matrix,
@@ -467,7 +500,7 @@ def _fetch_interactions(
 
 
 def _where_to_start_calling_sequence(input_params, state_params):
-    functions_list = [step1.run, call._run_step_2_helper, step3.run, step4.run]
+    functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, step4.run]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
             if index == 0:  # normalization
