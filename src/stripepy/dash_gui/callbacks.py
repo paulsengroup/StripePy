@@ -321,6 +321,7 @@ def call_stripes_callback(
     last_used_loc_pers_min,
     last_used_loc_trend_min,
     last_used_nproc,
+    fig,
 ):
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
