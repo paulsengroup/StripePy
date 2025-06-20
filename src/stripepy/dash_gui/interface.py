@@ -306,8 +306,8 @@ def _string_to_int(string):
 def _string_to_bool(string):
     assert isinstance(string, str)
     if string == "":
-        return ""
-    return bool(string)
+        return False
+    return eval(string)
 
 
 @app.callback(
