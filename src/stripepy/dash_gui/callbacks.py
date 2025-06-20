@@ -301,7 +301,9 @@ def open_hdf5_file_dialog_callback():
 def call_stripes_callback(
     path,
     resolution,
+    scale_type,
     chrom_name,
+    normalization,
     gen_belt,
     max_width,
     glob_pers_min,
@@ -311,7 +313,10 @@ def call_stripes_callback(
     loc_trend_min,
     nproc,
     min_chrom_size,
-    normalization,
+    last_used_path,
+    last_used_resolution,
+    last_used_scale_type,
+    last_used_region,
     last_used_normalization,
     last_used_gen_belt,
     last_used_max_width,
@@ -327,13 +332,14 @@ def call_stripes_callback(
         fig = go.Figure(fig)
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
-    path = Path(path)
-    filename = path.stem
-    output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
 
     functions_sequence = _where_to_start_calling_sequence(
-        (normalization, gen_belt, glob_pers_min, max_width, loc_trend_min, k),
+        (path, resolution, scale_type, chrom_name, normalization, gen_belt, glob_pers_min, max_width, loc_trend_min, k),
         (
+            last_used_path,
+            last_used_resolution,
+            last_used_scale_type,
+            last_used_region,
             last_used_normalization,
             last_used_gen_belt,
             last_used_glob_pers_min,
@@ -342,6 +348,9 @@ def call_stripes_callback(
             last_used_k,
         ),
     )
+    path = Path(path)
+    filename = path.stem
+    output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
     if not functions_sequence:
         raise PreventUpdate
     chrom, _, region = chrom_name.partition(":")
@@ -522,7 +531,7 @@ def _where_to_start_calling_sequence(input_params, state_params):
     functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, call._run_step_4_helper]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
-            if index == 0:  # normalization
+            if index <= 4:  # path, resolution, log/lin scale, chromosome region, normalization
                 return (*functions_list, True)
             if index == 1:  # genomic belt
                 return (*functions_list, True)
