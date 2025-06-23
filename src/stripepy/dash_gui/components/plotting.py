@@ -3,6 +3,14 @@ import plotly.express as px
 from dash import dcc, html
 
 
+def render_warning():
+    """Different info and error messages will be rendered here"""
+    return html.Div(
+        [],
+        id="warning-window",
+    )
+
+
 def render_filepath():
     """Text input for path to local file, pop-up tooltip and activation button"""
     return html.Div(
