@@ -23,6 +23,7 @@ from .plotting import (
     render_radio_log_scale,
     render_resolution,
     render_submit_button,
+    render_warning,
 )
 
 
@@ -58,6 +59,7 @@ def layout():
                     ),
                     html.Div(
                         [  # Right side of screen
+                            render_warning(),
                             render_filepath(),
                             render_resolution(),
                             render_radio_log_scale(),

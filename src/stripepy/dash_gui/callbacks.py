@@ -11,7 +11,14 @@ import plotly.graph_objects as go
 from colorscales import color_scale
 from components.axes import compute_x_axis_chroms, compute_x_axis_range
 from components.colorbar import colorbar
-from dash import dcc, html
+from components.dbc_warnings import (
+    compose_stale_component_warning,
+    warning_no_stripes,
+    warning_null,
+    warning_pick_save_file,
+    warning_stale_component,
+)
+from dash import dcc, html, no_update
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
@@ -38,11 +45,7 @@ def open_file_dialog_callback(base_directory):
     return root.filename
 
 
-def look_for_file_callback(file_path, last_used_path):
-    if file_path == last_used_path:
-        raise PreventUpdate
-    else:
-        pass
+def look_for_file_callback(file_path, metaInfo):
     file_path = Path(file_path)
 
     f, resolutions, resolution_value = _pick_resolution_and_array(file_path)
@@ -66,6 +69,7 @@ def look_for_file_callback(file_path, last_used_path):
         False,
         False,
         False,
+        warning_null(),
     )
 
 
@@ -110,9 +114,9 @@ def _pick_resolution_and_array(path):
 
 def pick_saved_callback(saved_string, update_plot_n_clicks):
     if saved_string is None:
-        raise PreventUpdate
+        return no_update, no_update, no_update, no_update, no_update, no_update, warning_pick_save_file()
     filepath, resolution, scale_type, chrom_name, normalization = saved_string.split(";")
-    return filepath, int(resolution), scale_type, chrom_name, normalization, update_plot_n_clicks + 1
+    return filepath, int(resolution), scale_type, chrom_name, normalization, update_plot_n_clicks + 1, warning_null()
 
 
 def look_for_normalizations_under_current_resolution_callback(resolution, path):
@@ -159,7 +163,29 @@ def update_plot_callback(
             and last_used_normalization == normalization
             and last_used_stripes == stripes_filepath
         ):
-            raise PreventUpdate
+            return (
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                warning_stale_component(
+                    (
+                        "file path",
+                        "resolution",
+                        "chromosome name",
+                        "scale type",
+                        "color map",
+                        "normalization",
+                        "stripes filepath",
+                    )
+                ),
+            )
         else:
             pass
     except NameError:
@@ -286,6 +312,7 @@ def update_plot_callback(
         colorMap,
         normalization,
         stripes_filepath,
+        warning_null(),
     )
 
 
@@ -352,7 +379,33 @@ def call_stripes_callback(
     filename = path.stem
     output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
     if not functions_sequence:
-        raise PreventUpdate
+        return (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            warning_stale_component(
+                (
+                    "file path",
+                    "resolution",
+                    "scale type",
+                    "chromosome name",
+                    "normalization",
+                    "genomic belt",
+                    "max width",
+                    "global minimum persistence",
+                    "constrain heights",
+                    "local trend minimum",
+                    "k neighbours",
+                )
+            ),
+        )
     chrom, _, region = chrom_name.partition(":")
     start_segment, _, end_segment = region.partition("-")
     function_scope = "NONE"
@@ -478,7 +531,20 @@ def call_stripes_callback(
     #### Add stripes as traces
     ####
     if result.empty:
-        raise PreventUpdate  # TODO: add message telling user no stripes were found
+        return (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            warning_no_stripes(),
+        )
+
     if function_scope == "START_AND_END_SEGMENT":
         fig = add_stripes_chrom_restriction(f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis))
     elif function_scope == "END_SEGMENT_ONLY":
@@ -502,6 +568,7 @@ def call_stripes_callback(
         str(loc_trend_min),
         str(nproc),
         fig,
+        warning_null(),
     )
 
 
