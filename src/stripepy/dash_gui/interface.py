@@ -54,8 +54,8 @@ def open_file_dialog(n_clicks, base_directory):
     State("chromosomes", "children"),
     prevent_initial_call=True,
 )
-def look_for_file(file_path, last_used_path):
-    return look_for_file_callback(file_path, last_used_path)
+def look_for_file(file_path, metaInfo):
+    return look_for_file_callback(file_path, metaInfo)
 
 
 @app.callback(
