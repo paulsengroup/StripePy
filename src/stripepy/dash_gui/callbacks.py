@@ -355,13 +355,24 @@ def call_stripes_callback(
     last_used_nproc,
     fig,
 ):
+    path = Path(path)
     if not isinstance(fig, go.Figure):
         fig = go.Figure(fig)
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
-
     functions_sequence = _where_to_start_calling_sequence(
-        (path, resolution, scale_type, chrom_name, normalization, gen_belt, glob_pers_min, max_width, loc_trend_min, k),
+        (
+            str(path),
+            resolution,
+            scale_type,
+            chrom_name,
+            normalization,
+            gen_belt,
+            glob_pers_min,
+            max_width,
+            loc_trend_min,
+            k,
+        ),
         (
             last_used_path,
             last_used_resolution,
@@ -375,11 +386,14 @@ def call_stripes_callback(
             last_used_k,
         ),
     )
-    path = Path(path)
     filename = path.stem
     output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
     if not functions_sequence:
         return (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
             no_update,
             no_update,
             no_update,
@@ -561,10 +575,18 @@ def call_stripes_callback(
             no_update,
             no_update,
             no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
             warning_no_stripes(),
         )
     else:
         return (
+            str(path),
+            resolution,
+            scale_type,
+            chrom_name,
             normalization,
             str(gen_belt),
             str(max_width),
