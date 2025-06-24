@@ -542,13 +542,10 @@ def call_stripes_callback(
                         fig = add_stripes_chrom_restriction_at_end(
                             f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
                         )
-                    elif function_scope == "SINGLE_CHROM":
-                        fig = add_stripes_whole_chrom(f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom)
-                    elif function_scope == "WHOLE_GENOME":
-                        for chrom in chroms:
-                            fig = add_stripes_whole_chrom(
-                                f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom
-                            )
+                    elif function_scope == "SINGLE_CHROM" or function_scope == "WHOLE_GENOME":
+                        fig = add_stripes_whole_chrom(
+                            f, fig, result, resolution, (traces_x_axis, traces_y_axis), chromosome_name
+                        )
     ####
     #### Add stripes as traces
     ####
