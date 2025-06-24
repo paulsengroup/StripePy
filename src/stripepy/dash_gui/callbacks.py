@@ -448,6 +448,7 @@ def call_stripes_callback(
             tasks = call._plan_tasks({chrom: chroms[chrom]}, min_chrom_size, None)
         else:
             tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
+        FOUND_STRIPES = False
         for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
             if skip:
                 continue
@@ -527,10 +528,31 @@ def call_stripes_callback(
                     (_, lt_stripes), (_, ut_stripes) = list(tpool.map(function, params))
                     result.set("stripes", lt_stripes, "LT", force=True)
                     result.set("stripes", ut_stripes, "UT", force=True)
+
+                    #####
+                    ### Add stripes
+                    #####
+                    if not result.empty:
+                        FOUND_STRIPES = True
+                    if function_scope == "START_AND_END_SEGMENT":
+                        fig = add_stripes_chrom_restriction(
+                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
+                        )
+                    elif function_scope == "END_SEGMENT_ONLY":
+                        fig = add_stripes_chrom_restriction_at_end(
+                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
+                        )
+                    elif function_scope == "SINGLE_CHROM":
+                        fig = add_stripes_whole_chrom(f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom)
+                    elif function_scope == "WHOLE_GENOME":
+                        for chrom in chroms:
+                            fig = add_stripes_whole_chrom(
+                                f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom
+                            )
     ####
     #### Add stripes as traces
     ####
-    if result.empty:
+    if not FOUND_STRIPES:
         return (
             no_update,
             no_update,
@@ -544,32 +566,20 @@ def call_stripes_callback(
             no_update,
             warning_no_stripes(),
         )
-
-    if function_scope == "START_AND_END_SEGMENT":
-        fig = add_stripes_chrom_restriction(f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis))
-    elif function_scope == "END_SEGMENT_ONLY":
-        fig = add_stripes_chrom_restriction_at_end(
-            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
+    else:
+        return (
+            normalization,
+            str(gen_belt),
+            str(max_width),
+            str(glob_pers_min),
+            str(constrain_heights),
+            str(k),
+            str(loc_pers_min),
+            str(loc_trend_min),
+            str(nproc),
+            fig,
+            warning_null(),
         )
-    elif function_scope == "SINGLE_CHROM":
-        fig = add_stripes_whole_chrom(f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom)
-    elif function_scope == "WHOLE_GENOME":
-        for chrom in chroms:
-            fig = add_stripes_whole_chrom(f, fig, result, resolution, (traces_x_axis, traces_y_axis), chrom)
-
-    return (
-        normalization,
-        str(gen_belt),
-        str(max_width),
-        str(glob_pers_min),
-        str(constrain_heights),
-        str(k),
-        str(loc_pers_min),
-        str(loc_trend_min),
-        str(nproc),
-        fig,
-        warning_null(),
-    )
 
 
 def _fetch_interactions(
