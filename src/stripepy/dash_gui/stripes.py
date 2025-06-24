@@ -33,12 +33,12 @@ def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name)
     pre_chrom_span = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
         if chrom_name == chromosome_name:
-            fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, pre_span_lengths)
+            fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span)
         pre_chrom_span += pre_span_lengths
     return fig
 
 
-def extract_stripes_whole_chromosome(fig, result, resolution, layers, margin, end_position):
+def extract_stripes_whole_chromosome(fig, result, resolution, layers, margin):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
@@ -50,16 +50,10 @@ def extract_stripes_whole_chromosome(fig, result, resolution, layers, margin, en
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
     geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
-    ENTERED_FRAME = False
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        if _is_within(x_values, y_values, (margin, end_position)):
-            ENTERED_FRAME = True
-            fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers))
-        if not _is_within(x_values, y_values, (margin, end_position)):
-            if ENTERED_FRAME == True:
-                break
+        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers))
     return fig
 
 
