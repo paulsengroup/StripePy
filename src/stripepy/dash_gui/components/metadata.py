@@ -54,7 +54,6 @@ def render_hidden():
             html.P("-1", id="last-used-loc-pers-min"),
             html.P("-1", id="last-used-loc-trend-min"),
             html.P("-1", id="last-used-nproc"),
-            html.P("", id="last-used-hdf5"),
             html.Button(id="created-stripes-map", n_clicks=0),
             html.P("", id="last-used-file-directory"),
         ],

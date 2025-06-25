@@ -173,33 +173,6 @@ def render_normalization():
     )
 
 
-def render_find_stripes_file():
-    """Find relevant HDF5 file on PC"""
-    return html.Div(
-        [
-            html.Div([html.Button(id="find-hdf5", n_clicks=0, children="Navigate")]),
-            "File path",
-            html.Div(
-                [
-                    dcc.Input(
-                        placeholder="",
-                        type="text",
-                        value="",
-                        disabled=True,
-                        id="stripes-filepath",
-                        style={"width": 700},
-                    ),
-                    html.Button(
-                        id="delete-stripe-file",
-                        n_clicks=0,
-                        className="fa-solid fa-xmark",
-                    ),
-                ],
-            ),
-        ],
-    )
-
-
 def render_submit_button():
     """Activation button for plotting"""
     return html.Button(
