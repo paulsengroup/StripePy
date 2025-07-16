@@ -308,6 +308,7 @@ def call_stripes_callback(
     resolution,
     scale_type,
     chrom_name,
+    color_map,
     normalization,
     gen_belt,
     max_width,
@@ -322,6 +323,7 @@ def call_stripes_callback(
     last_used_resolution,
     last_used_scale_type,
     last_used_region,
+    last_used_color_map,
     last_used_normalization,
     last_used_gen_belt,
     last_used_max_width,
@@ -344,6 +346,7 @@ def call_stripes_callback(
             resolution,
             scale_type,
             chrom_name,
+            color_map,
             normalization,
             gen_belt,
             glob_pers_min,
@@ -356,6 +359,7 @@ def call_stripes_callback(
             last_used_resolution,
             last_used_scale_type,
             last_used_region,
+            last_used_color_map,
             last_used_normalization,
             last_used_gen_belt,
             last_used_glob_pers_min,
@@ -382,12 +386,14 @@ def call_stripes_callback(
             no_update,
             no_update,
             no_update,
+            no_update,
             warning_stale_component(
                 (
                     "file path",
                     "resolution",
                     "scale type",
                     "chromosome name",
+                    "color map",
                     "normalization",
                     "genomic belt",
                     "max width",
@@ -528,21 +534,22 @@ def call_stripes_callback(
                         FOUND_STRIPES = True
                     if function_scope == "START_AND_END_SEGMENT":
                         fig = add_stripes_chrom_restriction(
-                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
+                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis), color_map
                         )
                     elif function_scope == "END_SEGMENT_ONLY":
                         fig = add_stripes_chrom_restriction_at_end(
-                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis)
+                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis), color_map
                         )
                     elif function_scope == "SINGLE_CHROM" or function_scope == "WHOLE_GENOME":
                         fig = add_stripes_whole_chrom(
-                            f, fig, result, resolution, (traces_x_axis, traces_y_axis), chromosome_name
+                            f, fig, result, resolution, (traces_x_axis, traces_y_axis), chromosome_name, color_map
                         )
     ####
     #### Add stripes as traces
     ####
     if not FOUND_STRIPES:
         return (
+            no_update,
             no_update,
             no_update,
             no_update,
@@ -565,6 +572,7 @@ def call_stripes_callback(
             resolution,
             scale_type,
             chrom_name,
+            color_map,
             normalization,
             str(gen_belt),
             str(max_width),
