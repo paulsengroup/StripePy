@@ -71,9 +71,6 @@ all = [
     "colorama >=0.4, <0.5",
     "matplotlib >=3.8, <4",
     "rich >=13.9, <15",
-    ]
-
-gui = [
   "plotly >=6.0.0, <7",
   "dash >=3, <4",
   "dash-bootstrap-components >=2, <3",

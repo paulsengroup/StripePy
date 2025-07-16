@@ -172,4 +172,3 @@ output/
 test/data
 *.log*
 *.bak*
-tmp/
