@@ -1,5 +1,6 @@
 import numpy as np
 import plotly.graph_objects as go
+from colorscales import contrast
 
 from stripepy.data_structures import ResultFile
 
@@ -113,8 +114,11 @@ def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map):
         y=rows + (margin / resolution),
         xaxis=layer[0],
         yaxis=layer[1],
-        fillcolor="green",
-        marker_color="green",
+        fillcolor=contrast(color_map, "stripe"),
+        marker_color=contrast(color_map, "stripe"),
+        hoverlabel={
+            "bgcolor": contrast(color_map, "stripe"),
+        },
     )
 
 
@@ -124,6 +128,9 @@ def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_m
         y=rows - (margin / resolution),
         xaxis=layer[0],
         yaxis=layer[1],
-        fillcolor="green",
-        marker_color="green",
+        fillcolor=contrast(color_map, "stripe"),
+        marker_color=contrast(color_map, "stripe"),
+        hoverlabel={
+            "bgcolor": contrast(color_map, "stripe"),
+        },
     )

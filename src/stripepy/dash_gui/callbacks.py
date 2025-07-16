@@ -8,7 +8,7 @@ from tkinter import filedialog
 import hictkpy as htk
 import numpy as np
 import plotly.graph_objects as go
-from colorscales import color_scale
+from colorscales import color_scale, contrast
 from components.axes import compute_x_axis_chroms, compute_x_axis_range
 from components.colorbar import colorbar
 from components.dbc_warnings import (
@@ -217,7 +217,7 @@ def update_plot_callback(
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
                 hoverlabel={
-                    "bgcolor": "green",
+                    "bgcolor": contrast(colorMap, "map"),
                 },
                 name="First matrix",
                 xaxis="x1",
@@ -228,7 +228,7 @@ def update_plot_callback(
         tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
         fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
         fig.update_yaxes(autorange="reversed", showgrid=False)
-        fig.update_layout(plot_bgcolor="mediumslateblue")
+        fig.update_layout(plot_bgcolor=contrast(colorMap, "background"))
         # NaN-values are transparent
         traces_x_axis, traces_y_axis = "x1", "y1"
     else:
@@ -251,7 +251,7 @@ def update_plot_callback(
                 customdata=inv_log_frame_string,
                 hovertemplate="%{customdata}<extra></extra>",
                 hoverlabel={
-                    "bgcolor": "green",
+                    "bgcolor": contrast(colorMap, "map"),
                 },
                 name="Second matrix",
                 xaxis="x2",
@@ -266,7 +266,7 @@ def update_plot_callback(
             xaxis2=dict(tickvals=tickvals_chrom, ticktext=ticktext_chrom, showgrid=False, side="top"),
             yaxis=dict(autorange="reversed", showgrid=False, visible=True),
             yaxis2=dict(autorange="reversed", showgrid=False, visible=False, side="right"),
-            plot_bgcolor="mediumslateblue",
+            plot_bgcolor=contrast(colorMap, "background"),
         )
         traces_x_axis, traces_y_axis = "x2", "y2"
 

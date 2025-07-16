@@ -45,3 +45,33 @@ def color_scale(name):
     if name not in scales:
         return named_colorscales[name]
     return scales[name]
+
+
+def contrast(colorMap, location):
+    map_ = {
+        "fruit_punch ": "teal",
+        "fall ": "teal",
+        "blues ": "darkorange",
+        "acidblues ": "teal",
+        "nmeth ": "purple",
+    }
+    stripe = {
+        "fruit_punch ": "cornflowerblue",
+        "fall ": "deepskyblue",
+        "blues ": "green",
+        "acidblues ": "coral",
+        "nmeth ": "coral",
+    }
+    background = {
+        "fruit_punch ": "mediumslateblue",
+        "fall ": "mediumslateblue",
+        "blues ": "chartreuse",
+        "acidblues ": "yellow",
+        "nmeth ": "cyan",
+    }
+    if location == "map":
+        return map_[colorMap]
+    elif location == "stripe":
+        return stripe[colorMap]
+    elif location == "background":
+        return background[colorMap]
