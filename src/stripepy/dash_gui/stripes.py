@@ -23,6 +23,7 @@ def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, l
             resolution,
             layers,
             pre_span_length + pre_span_in_chromosome,
+            pre_span_in_chromosome,
             int(end_limit),
             color_map,
         )
@@ -40,14 +41,14 @@ def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name,
     return fig
 
 
-def extract_stripes_whole_chromosome(fig, result, resolution, layers, margin, color_map):
+def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers, color_map))
+        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, pre_chrom_span, layers, color_map))
 
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
@@ -55,11 +56,13 @@ def extract_stripes_whole_chromosome(fig, result, resolution, layers, margin, co
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, margin, layers, color_map))
+        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, pre_chrom_span, layers, color_map))
     return fig
 
 
-def extract_stripes_part_of_chromosome(fig, result, resolution, layers, margin, end_limit, color_map):
+def extract_stripes_part_of_chromosome(
+    fig, result, resolution, layers, pre_interval_span, margin, end_limit, color_map
+):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
