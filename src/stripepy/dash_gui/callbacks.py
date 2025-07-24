@@ -445,6 +445,10 @@ def call_stripes_callback(
             tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
         FOUND_STRIPES = False
         for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
+            if function_scope == "SINGLE_CHROM":
+                subtract_from_start = True
+            else:
+                subtract_from_start = False
             if skip:
                 continue
             for function in functions_sequence:
@@ -539,7 +543,14 @@ def call_stripes_callback(
                         )
                     elif function_scope == "SINGLE_CHROM" or function_scope == "WHOLE_GENOME":
                         fig = add_stripes_whole_chrom(
-                            f, fig, result, resolution, (traces_x_axis, traces_y_axis), chromosome_name, color_map
+                            f,
+                            fig,
+                            result,
+                            resolution,
+                            (traces_x_axis, traces_y_axis),
+                            chromosome_name,
+                            color_map,
+                            subtract_from_start,
                         )
     ####
     #### Add stripes as traces

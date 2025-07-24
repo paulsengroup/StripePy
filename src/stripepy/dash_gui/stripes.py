@@ -32,23 +32,29 @@ def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, l
     return fig
 
 
-def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name, color_map):
+def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name, color_map, subtract_from_start=False):
     pre_chrom_span = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
         if chrom_name == chromosome_name:
-            fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map)
+            fig = extract_stripes_whole_chromosome(
+                fig, result, resolution, layers, pre_chrom_span, color_map, subtract_from_start
+            )
         pre_chrom_span += pre_span_lengths
     return fig
 
 
-def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map):
+def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map, subtract_from_start):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, pre_chrom_span, layers, color_map))
+        fig.add_trace(
+            _add_stripe_whole_chrom(
+                x_values, y_values, resolution, pre_chrom_span, layers, color_map, subtract_from_start
+            )
+        )
 
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
@@ -56,7 +62,11 @@ def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        fig.add_trace(_add_stripe_whole_chrom(x_values, y_values, resolution, pre_chrom_span, layers, color_map))
+        fig.add_trace(
+            _add_stripe_whole_chrom(
+                x_values, y_values, resolution, pre_chrom_span, layers, color_map, subtract_from_start
+            )
+        )
     return fig
 
 
@@ -98,20 +108,19 @@ def _get_correct_cells(df_row):
     return series[2:]
 
 
-def _is_within(col_values, row_values, borders):
-    if col_values[0] < borders[0] and col_values[1] < borders[0]:
-        return False
-    elif col_values[0] > borders[1] and col_values[1] > borders[1]:
-        return False
-    elif row_values[0] < borders[0] and row_values[1] < borders[0]:
-        return False
-    elif row_values[0] > borders[1] and row_values[1] > borders[1]:
-        return False
-    else:
-        return True
-
-
-def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map):
+def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map, subtract_from_start):
+    if subtract_from_start:
+        return go.Scatter(
+            x=cols,
+            y=rows,
+            xaxis=layer[0],
+            yaxis=layer[1],
+            fillcolor=contrast(color_map, "stripe"),
+            marker_color=contrast(color_map, "stripe"),
+            hoverlabel={
+                "bgcolor": contrast(color_map, "stripe"),
+            },
+        )
     return go.Scatter(
         x=cols + (margin / resolution),
         y=rows + (margin / resolution),
