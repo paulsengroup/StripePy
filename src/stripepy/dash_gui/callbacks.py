@@ -621,16 +621,16 @@ def _where_to_start_calling_sequence(input_params, state_params):
     functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, call._run_step_4_helper]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
-            if index <= 4:  # path, resolution, log/lin scale, chromosome region, normalization
+            if index <= 5:  # path, resolution, log/lin scale, chromosome region, normalization
                 return (*functions_list, True)
-            if index == 1:  # genomic belt
+            if index == 6:  # genomic belt
                 return (*functions_list, True)
-            if index == 2:  # global persistence minimum
+            if index == 7:  # global persistence minimum
                 return (*functions_list[1:], True)
-            if index == 3:  # max width
+            if index == 8:  # max width
                 return (*functions_list[2:], False)
-            if index == 4:  # local trend minimum
+            if index == 9:  # local trend minimum
                 return (*functions_list[2:], False)
-            if index == 5:  # k neighbours
+            if index == 10:  # k neighbours
                 return (*functions_list[3:], False)
     return False
