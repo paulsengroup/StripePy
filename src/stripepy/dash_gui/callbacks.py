@@ -419,9 +419,6 @@ def call_stripes_callback(
     elif not chrom and not region:
         function_scope = "WHOLE_GENOME"
         traces_x_axis, traces_y_axis = "x2", "y2"
-    if functions_sequence[-1] and function_scope != "WHOLE_GENOME":
-        function_scope = "SINGLE_CHROM"
-        traces_x_axis, traces_y_axis = "x1", "y1"
     with contextlib.ExitStack() as ctx:
         # Set up the pool of worker processes
         pool = ctx.enter_context(
