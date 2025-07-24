@@ -78,22 +78,26 @@ def extract_stripes_part_of_chromosome(
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
-        x_values, y_values = _get_square(array)
-        if _is_within(x_values, y_values, (margin, end_limit)):
-            fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers), color_map)
-        else:
+        array = _truncate_values(array, resolution, margin, end_limit)
+        if array is None:
             continue
+        x_values, y_values = _get_square(array)
+        if x_values is None or y_values is None:
+            continue
+        fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers, color_map))
 
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
     geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
-        x_values, y_values = _get_square(array)
-        if _is_within(x_values, y_values, (margin, end_limit)):
-            fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers), color_map)
-        else:
+        array = _truncate_values(array, resolution, margin, end_limit)
+        if array is None:
             continue
+        x_values, y_values = _get_square(array)
+        if x_values is None or y_values is None:
+            continue
+        fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers, color_map))
     return fig
 
 
@@ -106,6 +110,22 @@ def _get_square(array):
 def _get_correct_cells(df_row):
     series = df_row[1]
     return series[2:]
+
+
+def _truncate_values(array, resolution, margin, end_limit):
+    if array[0] < margin / resolution or array[1] < margin / resolution:
+        return None
+    if array[0] > end_limit / resolution or array[1] > end_limit / resolution:
+        return None
+    if array[2] < margin / resolution and array[3] < margin / resolution:
+        return None
+    if array[2] > end_limit / resolution and array[3] > end_limit / resolution:
+        return None
+    array[0] = max(array[0], margin / resolution)
+    array[2] = max(array[2], margin / resolution)
+    array[1] = min(array[1], end_limit / resolution)
+    array[3] = min(array[3], end_limit / resolution)
+    return array
 
 
 def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map, subtract_from_start):
