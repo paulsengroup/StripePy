@@ -98,6 +98,19 @@ def populate_empty_normalization_list(array):
     return populate_empty_normalization_list_callback(array)
 
 
+def _disable_radio_elements(become_disabled):
+    if become_disabled:
+        return [
+            {"label": "log scale", "value": "log scale", "disabled": True},
+            {"label": "linear scale", "value": "linear scale", "disabled": True},
+        ]
+    else:
+        return [
+            {"label": "log scale", "value": "log scale", "disabled": False},
+            {"label": "linear scale", "value": "linear scale", "disabled": False},
+        ]
+
+
 @app.callback(
     Output("HeatMap", "figure", allow_duplicate=True),
     Output("files-list", "options"),
@@ -125,8 +138,9 @@ def populate_empty_normalization_list(array):
     State("last-used-normalization", "children"),
     prevent_initial_call=True,
     running=[
+        (Output("filepath-dialog", "disabled"), True, False),
         (Output("resolution", "disabled"), True, False),
-        (Output("radio-log", "disabled"), True, False),
+        (Output("radio-log", "options"), _disable_radio_elements(True), _disable_radio_elements(False)),
         (Output("chromosome-name", "disabled"), True, False),
         (Output("color-map", "disabled"), True, False),
         (Output("normalization", "disabled"), True, False),
@@ -219,6 +233,7 @@ def update_plot(
     running=[
         (Output("filepath-dialog", "disabled"), True, False),
         (Output("resolution", "disabled"), True, False),
+        (Output("radio-log", "options"), _disable_radio_elements(True), _disable_radio_elements(False)),
         (Output("chromosome-name", "disabled"), True, False),
         (Output("color-map", "disabled"), True, False),
         (Output("normalization", "disabled"), True, False),
