@@ -123,16 +123,7 @@ def look_for_normalizations_under_current_resolution_callback(resolution, path):
     f = open_matrix_file_checked(path, resolution)
     avail_normalizations = f.avail_normalizations()
     avail_normalizations.append("No normalization")
-    return avail_normalizations, avail_normalizations[0]
-
-
-def populate_empty_normalization_list_callback(array):
-    if not isinstance(array, list):
-        return ["No normalization options available"], "Error"
-    elif len(array) == 0:
-        return ["No normalization options available"], "Error"
-    else:
-        return array, array[0]
+    return avail_normalizations, "No normalization"
 
 
 def update_plot_callback(
@@ -336,6 +327,8 @@ def call_stripes_callback(
     last_used_rel_change,
     fig,
 ):
+    if normalization == "No normalization" or normalization == "None":
+        normalization = None
     min_chrom_size = 1
     path = Path(path)
     if not isinstance(fig, go.Figure):

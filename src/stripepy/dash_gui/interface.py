@@ -9,7 +9,6 @@ from callbacks import (
     look_for_normalizations_under_current_resolution_callback,
     open_file_dialog_callback,
     pick_saved_callback,
-    populate_empty_normalization_list_callback,
     update_plot_callback,
 )
 from components.layout import layout
@@ -86,16 +85,6 @@ def pick_saved(n_clicks, saved_string, update_plot_n_clicks):
 )
 def look_for_normalizations_under_current_resolution(resolution, path):
     return look_for_normalizations_under_current_resolution_callback(resolution, path)
-
-
-@app.callback(
-    Output("normalization", "options", allow_duplicate=True),
-    Output("normalization", "value", allow_duplicate=True),
-    Input("normalization", "options"),
-    prevent_initial_call=True,
-)
-def populate_empty_normalization_list(array):
-    return populate_empty_normalization_list_callback(array)
 
 
 def _disable_radio_elements(become_disabled):
