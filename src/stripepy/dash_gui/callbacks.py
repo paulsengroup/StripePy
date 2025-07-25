@@ -318,7 +318,7 @@ def call_stripes_callback(
     loc_pers_min,
     loc_trend_min,
     nproc,
-    min_chrom_size,
+    rel_change,
     last_used_path,
     last_used_resolution,
     last_used_scale_type,
@@ -333,8 +333,10 @@ def call_stripes_callback(
     last_used_loc_pers_min,
     last_used_loc_trend_min,
     last_used_nproc,
+    last_used_rel_change,
     fig,
 ):
+    min_chrom_size = 1
     path = Path(path)
     if not isinstance(fig, go.Figure):
         fig = go.Figure(fig)
@@ -353,6 +355,9 @@ def call_stripes_callback(
             max_width,
             loc_trend_min,
             k,
+            rel_change,
+            loc_pers_min,
+            constrain_heights,
         ),
         (
             last_used_path,
@@ -366,6 +371,9 @@ def call_stripes_callback(
             last_used_max_width,
             last_used_loc_trend_min,
             last_used_k,
+            last_used_rel_change,
+            last_used_loc_pers_min,
+            last_used_constrain_heights,
         ),
     )
     filename = path.stem
@@ -621,9 +629,9 @@ def _where_to_start_calling_sequence(input_params, state_params):
     functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, call._run_step_4_helper]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
-            if index <= 5:  # path, resolution, log/lin scale, chromosome region, normalization
+            if index <= 4:  # path, resolution, log/lin scale, chromosome region
                 return (*functions_list, True)
-            if index == 6:  # genomic belt
+            if index <= 6:  # normalization, genomic belt
                 return (*functions_list, True)
             if index == 7:  # global persistence minimum
                 return (*functions_list[1:], True)
@@ -631,6 +639,8 @@ def _where_to_start_calling_sequence(input_params, state_params):
                 return (*functions_list[2:], False)
             if index == 9:  # local trend minimum
                 return (*functions_list[2:], False)
-            if index == 10:  # k neighbours
+            if index <= 11:  # k neighbours, relative change
                 return (*functions_list[3:], False)
+            if index <= 13:  # local minimum persistence, constrain heights
+                return "skip"
     return False

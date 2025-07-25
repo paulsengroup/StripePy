@@ -8,11 +8,8 @@ DEFAULT_CONSTRAIN_HEIGHTS = "False"
 DEFAULT_K_NEIGHBOURS = "3"
 DEFAULT_LOC_MIN_PERS = "0.33"
 DEFAULT_LOC_TREND = "0.25"
-# DEFAULT_FORCE = "False"
-DEFAULT_NPROC = "1"
-DEFAULT_MIN_CHROM_SIZE = "1"
-# DEFAULT_VERBOSITY = "info"
-DEFAULT_REL_CHANGE = "0.5"
+DEFAULT_NPROC = "16"
+DEFAULT_REL_CHANGE = "5.0"
 
 
 def render_genomic_belt():
@@ -197,36 +194,7 @@ def render_local_trend_minimum():
     )
 
 
-"""
-def render_force():
-    """ """Force overwrite DCC dropdown field and pop-up tooltip""" """
-    return html.Div(
-        [
-            "force ",
-            dcc.Dropdown(
-                options=["True", "False"],
-                value=DEFAULT_FORCE,
-                id="force-input",
-                style={"width": 300},
-            ),
-            "  ",
-            html.I(
-                id="force-icon",
-                className="fa-solid fa-circle-question",
-            ),
-            dbc.Tooltip(
-                f"Overwrite existing file(s) (default: {DEFAULT_FORCE}).",
-                target="force-icon",
-                placement="right",
-                trigger="hover",
-            ),
-        ],
-        style={"marginTop": 40, "display": "flex", "alignItems": "center"},
-    )
-"""
-
-
-def render_nrpoc():
+def render_nproc():
     """Parallelization count DCC input field and pop-up tooltip"""
     return html.Div(
         [
@@ -251,61 +219,6 @@ def render_nrpoc():
         ],
         style={"marginTop": 40},
     )
-
-
-def render_minimum_chromosome_size():
-    """Minimum chromosome size DCC input field and pop-up tooltip"""
-    return html.Div(
-        [
-            "minimum chromosome size ",
-            dcc.Input(
-                type="text",
-                value=DEFAULT_MIN_CHROM_SIZE,
-                id="min-chrom-size-input",
-            ),
-            "  ",
-            html.I(
-                id="min-chrom-size-icon",
-                className="fa-solid fa-circle-question",
-            ),
-            dbc.Tooltip(
-                f"Minimum size, in bp, for a chromosome to be analysed (default: {DEFAULT_MIN_CHROM_SIZE}).",
-                target="min-chrom-size-icon",
-                placement="right",
-                trigger="hover",
-            ),
-        ],
-        style={"marginTop": 40},
-    )
-
-
-"""
-def render_verbosity():
-    """ """Verbosity DCC dropdown field and pop-up tooltip""" """
-    return html.Div(
-        [
-            "verbosity ",
-            dcc.Dropdown(
-                options=["debug", "info", "warning", "error", "critical"],
-                value=DEFAULT_VERBOSITY,
-                id="verbosity-input",
-                style={"width": 300},
-            ),
-            "  ",
-            html.I(
-                id="verbosity-icon",
-                className="fa-solid fa-circle-question",
-            ),
-            dbc.Tooltip(
-                f"Set verbosity of output to the console (default: {DEFAULT_VERBOSITY}).",
-                target="verbosity-icon",
-                placement="right",
-                trigger="hover",
-            ),
-        ],
-        style={"marginTop": 40, "display": "flex", "alignItems": "center"},
-    )
-"""
 
 
 def render_relative_change():
