@@ -351,6 +351,7 @@ def call_stripes_callback(
             rel_change,
             loc_pers_min,
             constrain_heights,
+            nproc,
         ),
         (
             last_used_path,
@@ -367,6 +368,7 @@ def call_stripes_callback(
             last_used_rel_change,
             last_used_loc_pers_min,
             last_used_constrain_heights,
+            last_used_nproc,
         ),
     )
     filename = path.stem
@@ -400,8 +402,11 @@ def call_stripes_callback(
                     "max width",
                     "global minimum persistence",
                     "constrain heights",
-                    "local trend minimum",
                     "k neighbours",
+                    "local minimal persistence",
+                    "local trend minimum",
+                    "number of processors",
+                    "relative signal change",
                 )
             ),
         )
