@@ -541,7 +541,14 @@ def call_stripes_callback(
                         FOUND_STRIPES = True
                     if function_scope == "START_AND_END_SEGMENT":
                         fig = add_stripes_chrom_restriction(
-                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis), color_map
+                            f,
+                            fig,
+                            chrom_name,
+                            result,
+                            resolution,
+                            (traces_x_axis, traces_y_axis),
+                            color_map,
+                            rel_change,
                         )
                     elif function_scope == "END_SEGMENT_ONLY":
                         fig = add_stripes_chrom_restriction_at_end(
@@ -557,6 +564,7 @@ def call_stripes_callback(
                             chromosome_name,
                             color_map,
                             subtract_from_start,
+                            rel_change,
                         )
     ####
     #### Add stripes as traces

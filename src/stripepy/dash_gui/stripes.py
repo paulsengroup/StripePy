@@ -5,7 +5,7 @@ from colorscales import contrast
 from stripepy.data_structures import ResultFile
 
 
-def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, layers, color_map):
+def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, layers, color_map, rel_change):
     chromosome_name, _, spans = chromosome_name.partition(":")
     pre_span_length = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
@@ -26,27 +26,40 @@ def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, l
             pre_span_in_chromosome,
             int(end_limit),
             color_map,
+            rel_change,
         )
     else:
-        fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_span_length, color_map)
+        fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_span_length, color_map, rel_change)
     return fig
 
 
-def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name, color_map, subtract_from_start=False):
+def add_stripes_whole_chrom(
+    f, fig, result, resolution, layers, chromosome_name, color_map, subtract_from_start, rel_change
+):
     pre_chrom_span = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
         if chrom_name == chromosome_name:
             fig = extract_stripes_whole_chromosome(
-                fig, result, resolution, layers, pre_chrom_span, color_map, subtract_from_start
+                fig,
+                result,
+                resolution,
+                layers,
+                pre_chrom_span,
+                color_map,
+                subtract_from_start,
+                rel_change,
             )
         pre_chrom_span += pre_span_lengths
     return fig
 
 
-def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map, subtract_from_start):
+def extract_stripes_whole_chromosome(
+    fig, result, resolution, layers, pre_chrom_span, color_map, subtract_from_start, rel_change
+):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
+    geo_frame_LT = geo_frame_LT[geo_frame_LT["relative_change"] > rel_change]
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
@@ -59,6 +72,7 @@ def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
     geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
+    geo_frame_UT = geo_frame_UT[geo_frame_UT["relative_change"] > rel_change]
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
@@ -71,11 +85,12 @@ def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_
 
 
 def extract_stripes_part_of_chromosome(
-    fig, result, resolution, layers, pre_interval_span, margin, end_limit, color_map
+    fig, result, resolution, layers, pre_interval_span, margin, end_limit, color_map, rel_change
 ):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
+    geo_frame_LT = geo_frame_LT[geo_frame_LT["relative_change"] > rel_change]
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
         array = _truncate_values(array, resolution, margin, end_limit)
@@ -89,6 +104,7 @@ def extract_stripes_part_of_chromosome(
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
     geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
+    geo_frame_UT = geo_frame_UT[geo_frame_UT["relative_change"] > rel_change]
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
         array = _truncate_values(array, resolution, margin, end_limit)
