@@ -218,7 +218,7 @@ def update_plot_callback(
 
         tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
         fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
-        fig.update_yaxes(autorange="reversed", showgrid=False)
+        fig.update_yaxes(tickvals=tickvals, ticktext=ticktext, autorange="reversed", showgrid=False)
         fig.update_layout(plot_bgcolor=contrast(colorMap, "background"))
         # NaN-values are transparent
         traces_x_axis, traces_y_axis = "x1", "y1"
@@ -255,7 +255,7 @@ def update_plot_callback(
         fig.update_layout(
             xaxis1=dict(tickvals=tickvals, ticktext=ticktext, showgrid=False, side="bottom"),
             xaxis2=dict(tickvals=tickvals_chrom, ticktext=ticktext_chrom, showgrid=False, side="top"),
-            yaxis=dict(autorange="reversed", showgrid=False, visible=True),
+            yaxis=dict(tickvals=tickvals, ticktext=ticktext, autorange="reversed", showgrid=False, visible=True),
             yaxis2=dict(autorange="reversed", showgrid=False, visible=False, side="right"),
             plot_bgcolor=contrast(colorMap, "background"),
         )
