@@ -57,6 +57,29 @@ def render_hidden():
             html.P("-1", id="last-used-rel-change"),
             html.Button(id="created-stripes-map", n_clicks=0),
             html.P("", id="last-used-file-directory"),
+            html.P("", id="result-chrom-name"),  # chrom_name
+            html.P("", id="result-chrom-size"),  # chrom_size
+            html.P("", id="result-min-persistence"),  # min_persistence
+            html.P("", id="result-ut-pseudodistribution"),  # ut_pseudodistribution
+            html.P("", id="result-lt-pseudodistribution"),  # lt_pseudodistribution
+            html.P("", id="result-ut-all-minimum-points"),  # ut_all_minimum_points
+            html.P("", id="result-lt-all-minimum-points"),  # lt_all_minimum_points
+            html.P("", id="result-ut-all-maximum-points"),  # ut_all_maximum_points
+            html.P("", id="result-lt-all-maximum-points"),  # lt_all_maximum_points
+            html.P("", id="result-ut-persistence-of-all-minimum-points"),  # ut_persistence_of_all_minimum_points
+            html.P("", id="result-lt-persistence-of-all-minimum-points"),  # lt_persistence_of_all_minimum_points
+            html.P("", id="result-ut-persistence-of-all-maximum-points"),  # ut_persistence_of_all_maximum_points
+            html.P("", id="result-lt-persistence-of-all-maximum-points"),  # lt_persistence_of_all_maximum_points
+            html.P("", id="result-ut-persistent-minimum-points"),  # ut_persistent_minimum_points
+            html.P("", id="result-lt-persistent-minimum-points"),  # lt_persistent_minimum_points
+            html.P("", id="result-ut-persistent-maximum-points"),  # ut_persistent_maximum_points
+            html.P("", id="result-lt-persistent-maximum-points"),  # lt_persistent_maximum_points
+            html.P("", id="result-ut-persistence-of-minimum-points"),  # ut_persistence_of_minimum_points
+            html.P("", id="result-lt-persistence-of-minimum-points"),  # lt_persistence_of_minimum_points
+            html.P("", id="result-ut-persistence-of-maximum-points"),  # ut_persistence_of_maximum_points
+            html.P("", id="result-lt-persistence-of-maximum-points"),  # lt_persistence_of_maximum_points
+            html.P("", id="result-ut-stripes"),  # ut_stripes
+            html.P("", id="result-lt-stripes"),  # lt_stripes
         ],
         id="last-used-values",
         hidden=True,

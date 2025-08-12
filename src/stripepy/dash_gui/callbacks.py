@@ -26,7 +26,7 @@ from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
 from stripepy.algorithms import step1, step2, step3, step4
 from stripepy.cli import call
 from stripepy.cli.call import *
-from stripepy.data_structures import IOManager, ProcessPoolWrapper
+from stripepy.data_structures import IOManager, ProcessPoolWrapper, Result
 from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 
 
@@ -326,6 +326,29 @@ def call_stripes_callback(
     last_used_nproc,
     last_used_rel_change,
     fig,
+    result_chrom_name,
+    result_chrom_size,
+    result_min_persistence,
+    result_ut_pseudodistribution,
+    result_lt_pseudodistribution,
+    result_ut_all_minimum_points,
+    result_lt_all_minimum_points,
+    result_ut_all_maximum_points,
+    result_lt_all_maximum_points,
+    result_ut_persistence_of_all_minimum_points,
+    result_lt_persistence_of_all_minimum_points,
+    result_ut_persistence_of_all_maximum_points,
+    result_lt_persistence_of_all_maximum_points,
+    result_ut_persistent_minimum_points,
+    result_lt_persistent_minimum_points,
+    result_ut_persistent_maximum_points,
+    result_lt_persistent_maximum_points,
+    result_ut_persistence_of_minimum_points,
+    result_lt_persistence_of_minimum_points,
+    result_ut_persistence_of_maximum_points,
+    result_lt_persistence_of_maximum_points,
+    result_ut_stripes,
+    result_lt_stripes,
 ):
     if normalization == "No normalization" or normalization == "None":
         normalization = None
@@ -409,7 +432,33 @@ def call_stripes_callback(
                     "relative signal change",
                 )
             ),
+            *[no_update] * 23,
         )
+    result_package = [
+        result_chrom_name,
+        result_chrom_size,
+        result_min_persistence,
+        result_ut_pseudodistribution,
+        result_lt_pseudodistribution,
+        result_ut_all_minimum_points,
+        result_lt_all_minimum_points,
+        result_ut_all_maximum_points,
+        result_lt_all_maximum_points,
+        result_ut_persistence_of_all_minimum_points,
+        result_lt_persistence_of_all_minimum_points,
+        result_ut_persistence_of_all_maximum_points,
+        result_lt_persistence_of_all_maximum_points,
+        result_ut_persistent_minimum_points,
+        result_lt_persistent_minimum_points,
+        result_ut_persistent_maximum_points,
+        result_lt_persistent_maximum_points,
+        result_ut_persistence_of_minimum_points,
+        result_lt_persistence_of_minimum_points,
+        result_ut_persistence_of_maximum_points,
+        result_lt_persistence_of_maximum_points,
+        result_ut_stripes,
+        result_lt_stripes,
+    ]
     chrom, _, region = chrom_name.partition(":")
     start_segment, _, end_segment = region.partition("-")
     function_scope = "NONE"
@@ -459,7 +508,7 @@ def call_stripes_callback(
                 subtract_from_start = False
             if skip:
                 continue
-            for function in functions_sequence:
+            for j, function in enumerate(functions_sequence):
                 if isinstance(function, bool):
                     break
                 if function == step1.run:
@@ -490,6 +539,8 @@ def call_stripes_callback(
                     result = call._merge_results(tasks_)
                 if function == call._run_step_3_helper:
                     print("Running step 3")
+                    if j == 0:
+                        result = _compose_result(result_package)
                     if pool.ready:
                         executor = pool.get_mapper(chunksize=50)
                     else:
@@ -524,6 +575,8 @@ def call_stripes_callback(
                     result = call._merge_results(tasks_)
                 if function == call._run_step_4_helper:
                     print("Running step 4")
+                    if j == 0:
+                        result = _compose_result(result_package)
                     if pool.ready:
                         executor = pool.get_mapper(chunksize=50)
                     else:
@@ -589,6 +642,7 @@ def call_stripes_callback(
             no_update,
             no_update,
             warning_no_stripes(),
+            *_unpack_result(result),
         )
     else:
         return (
@@ -608,6 +662,7 @@ def call_stripes_callback(
             str(nproc),
             fig,
             warning_null(),
+            *_unpack_result(result),
         )
 
 
@@ -652,3 +707,52 @@ def _where_to_start_calling_sequence(input_params, state_params):
             if index <= 13:  # local minimum persistence, constrain heights
                 return "skip"
     return False
+
+
+def _compose_result(result_package):
+    attributes_list = [
+        "all_minimum_points",
+        "all_maximum_points",
+        "persistence_of_all_minimum_points",
+        "persistence_of_all_maximum_points",
+        "persistent_minimum_points",
+        "persistent_maximum_points",
+        "persistence_of_minimum_points",
+        "persistence_of_maximum_points",
+        "stripes",
+    ]
+    result = Result(result_package.pop(0), result_package.pop(0))
+    result.set_min_persistence(result_package.pop(0))
+    for attribute in attributes_list:
+        result.set(attribute, result_package.pop(0), "upper")
+        result.set(attribute, result_package.pop(0), "lower")
+    return
+
+
+def _unpack_result(result):
+    chrom_name, chrom_size = result.chrom
+    return [
+        chrom_name,
+        chrom_size,
+        result.min_persistence,
+        result.get("pseudodistribution", "upper"),
+        result.get("pseudodistribution", "lower"),
+        result.get("all_minimum_points", "upper"),
+        result.get("all_minimum_points", "lower"),
+        result.get("all_maximum_points", "upper"),
+        result.get("all_maximum_points", "lower"),
+        result.get("persistence_of_all_minimum_points", "upper"),
+        result.get("persistence_of_all_minimum_points", "lower"),
+        result.get("persistence_of_all_maximum_points", "upper"),
+        result.get("persistence_of_all_maximum_points", "lower"),
+        result.get("persistent_minimum_points", "upper"),
+        result.get("persistent_minimum_points", "lower"),
+        result.get("persistent_maximum_points", "upper"),
+        result.get("persistent_maximum_points", "lower"),
+        result.get("persistence_of_minimum_points", "upper"),
+        result.get("persistence_of_minimum_points", "lower"),
+        result.get("persistence_of_maximum_points", "upper"),
+        result.get("persistence_of_maximum_points", "lower"),
+        result.get("stripes", "upper"),
+        result.get("stripes", "lower"),
+    ]
