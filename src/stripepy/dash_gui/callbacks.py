@@ -426,11 +426,13 @@ def call_stripes_callback(
         function_scope = "WHOLE_GENOME"
         traces_x_axis, traces_y_axis = "x2", "y2"
     with contextlib.ExitStack() as ctx:
+        # Set up logger for the process pool
+        main_logger = ctx.enter_context(ProcessSafeLogger("warning", path=None, progress_bar_type="call"))
         # Set up the pool of worker processes
         pool = ctx.enter_context(
             ProcessPoolWrapper(
                 nproc=nproc,
-                main_logger=None,
+                main_logger=main_logger,
                 init_mpl=False,  # roi is not None,
                 lazy_pool_initialization=True,
                 logger=None,
