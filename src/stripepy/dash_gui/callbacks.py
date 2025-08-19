@@ -728,28 +728,58 @@ def _compose_result(result_package):
 
 def _unpack_result(result):
     chrom_name, chrom_size = result.chrom
-    return [
+    up_pse = result.get("pseudodistribution", "upper")
+    lt_pse = result.get("pseudodistribution", "lower")
+    up_all_min = result.get("all_minimum_points", "upper")
+    lt_all_min = result.get("all_minimum_points", "lower")
+    up_all_max = result.get("all_maximum_points", "upper")
+    lt_all_max = result.get("all_maximum_points", "lower")
+    up_pers_all_min = result.get("persistence_of_all_minimum_points", "upper")
+    lt_pers_all_min = result.get("persistence_of_all_minimum_points", "lower")
+    up_pers_all_max = result.get("persistence_of_all_maximum_points", "upper")
+    lt_pers_all_max = result.get("persistence_of_all_maximum_points", "lower")
+    up_pers_min = result.get("persistent_minimum_points", "upper")
+    lt_pers_min = result.get("persistent_minimum_points", "lower")
+    up_pers_max = result.get("persistent_maximum_points", "upper")
+    lt_pers_max = result.get("persistent_maximum_points", "lower")
+    up_pers_of_min = result.get("persistence_of_minimum_points", "upper")
+    lt_pers_of_min = result.get("persistence_of_minimum_points", "lower")
+    up_pers_of_max = result.get("persistence_of_maximum_points", "upper")
+    lt_pers_of_max = result.get("persistence_of_maximum_points", "lower")
+    up_stripes = result.get("stripes", "upper")
+    lt_stripes = result.get("stripes", "lower")
+    return (
         chrom_name,
         chrom_size,
         result.min_persistence,
-        result.get("pseudodistribution", "upper"),
-        result.get("pseudodistribution", "lower"),
-        result.get("all_minimum_points", "upper"),
-        result.get("all_minimum_points", "lower"),
-        result.get("all_maximum_points", "upper"),
-        result.get("all_maximum_points", "lower"),
-        result.get("persistence_of_all_minimum_points", "upper"),
-        result.get("persistence_of_all_minimum_points", "lower"),
-        result.get("persistence_of_all_maximum_points", "upper"),
-        result.get("persistence_of_all_maximum_points", "lower"),
-        result.get("persistent_minimum_points", "upper"),
-        result.get("persistent_minimum_points", "lower"),
-        result.get("persistent_maximum_points", "upper"),
-        result.get("persistent_maximum_points", "lower"),
-        result.get("persistence_of_minimum_points", "upper"),
-        result.get("persistence_of_minimum_points", "lower"),
-        result.get("persistence_of_maximum_points", "upper"),
-        result.get("persistence_of_maximum_points", "lower"),
-        result.get("stripes", "upper"),
-        result.get("stripes", "lower"),
-    ]
+        _make_into_string(up_pse.tolist()),
+        _make_into_string(lt_pse.tolist()),
+        _make_into_string(up_all_min.tolist()),
+        _make_into_string(lt_all_min.tolist()),
+        _make_into_string(up_all_max.tolist()),
+        _make_into_string(lt_all_max.tolist()),
+        _make_into_string(up_pers_all_min.tolist()),
+        _make_into_string(lt_pers_all_min.tolist()),
+        _make_into_string(up_pers_all_max.tolist()),
+        _make_into_string(lt_pers_all_max.tolist()),
+        _make_into_string(up_pers_min.tolist()),
+        _make_into_string(lt_pers_min.tolist()),
+        _make_into_string(up_pers_max.tolist()),
+        _make_into_string(lt_pers_max.tolist()),
+        _make_into_string(up_pers_of_min.tolist()),
+        _make_into_string(lt_pers_of_min.tolist()),
+        _make_into_string(up_pers_of_max.tolist()),
+        _make_into_string(lt_pers_of_max.tolist()),
+        _make_into_string(up_stripes.tolist()),
+        _make_into_string(lt_stripes.tolist()),
+    )
+
+
+def _make_into_string(array):
+    """
+    Convert a numpy array into a string representation
+    """
+    list_stored_string = ""
+    while array:
+        list_stored_string += str(array.pop()) + ";"
+    return list_stored_string[:-1]  # Remove the last semicolon
