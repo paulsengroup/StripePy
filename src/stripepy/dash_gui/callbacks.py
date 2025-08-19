@@ -477,6 +477,7 @@ def call_stripes_callback(
     with contextlib.ExitStack() as ctx:
         # Set up logger for the process pool
         main_logger = ctx.enter_context(ProcessSafeLogger("warning", path=None, progress_bar_type="call"))
+        logger = structlog.get_logger().bind(step="main")
         # Set up the pool of worker processes
         pool = ctx.enter_context(
             ProcessPoolWrapper(
@@ -529,65 +530,61 @@ def call_stripes_callback(
                             gen_belt,
                         )
                         lt_matrix = ut_matrix.T
-                if function == call._run_step_2_helper:
+                if function == call._run_step_2:
                     print("Running step 2")
-                    params = (
-                        (chromosome_name, chrom_size, lt_matrix, glob_pers_min, "lower"),
-                        (chromosome_name, chrom_size, ut_matrix, glob_pers_min, "upper"),
+                    if j == 0:
+                        if pool.ready:
+                            # Signal that matrices should be fetched from the shared global state
+                            lt_matrix = None
+                            ut_matrix = None
+
+                    result = function(
+                        chromosome_name,
+                        chrom_size,
+                        lt_matrix,
+                        ut_matrix,
+                        glob_pers_min,
+                        pool,
+                        logger.bind(chrom=chromosome_name),
                     )
-                    tasks_ = pool.map(function, params)
-                    result = call._merge_results(tasks_)
-                if function == call._run_step_3_helper:
+                if function == call._run_step_3:
                     print("Running step 3")
                     if j == 0:
+                        if pool.ready:
+                            # Signal that matrices should be fetched from the shared global state
+                            lt_matrix = None
+                            ut_matrix = None
                         result = _compose_result(result_package)
-                    if pool.ready:
-                        executor = pool.get_mapper(chunksize=50)
-                    else:
-                        executor = pool.map
-                    params = (
-                        (
-                            result,
-                            lt_matrix,
-                            resolution,
-                            gen_belt,
-                            max_width,
-                            loc_pers_min,
-                            loc_trend_min,
-                            "lower",
-                            executor,
-                            None,
-                        ),
-                        (
-                            result,
-                            ut_matrix,
-                            resolution,
-                            gen_belt,
-                            max_width,
-                            loc_pers_min,
-                            loc_trend_min,
-                            "upper",
-                            executor,
-                            None,
-                        ),
+                    result = function(
+                        result,
+                        lt_matrix,
+                        ut_matrix,
+                        resolution,
+                        gen_belt,
+                        max_width,
+                        loc_pers_min,
+                        loc_trend_min,
+                        tpool,
+                        pool,
+                        logger.bind(chrom=chromosome_name),
                     )
-                    tasks_ = pool.map(function, params)
-                    result = call._merge_results(tasks_)
-                if function == call._run_step_4_helper:
+                if function == call._run_step_4:
                     print("Running step 4")
                     if j == 0:
+                        if pool.ready:
+                            # Signal that matrices should be fetched from the shared global state
+                            lt_matrix = None
+                            ut_matrix = None
                         result = _compose_result(result_package)
-                    if pool.ready:
-                        executor = pool.get_mapper(chunksize=50)
-                    else:
-                        executor = pool.map
-                    params = (
-                        (result.get("stripes", "lower"), lt_matrix, "lower", k, executor, None),
-                        (result.get("stripes", "upper"), ut_matrix, "upper", k, executor, None),
+                    result = function(
+                        result,
+                        lt_matrix,
+                        ut_matrix,
+                        k,
+                        tpool,
+                        pool,
+                        logger.bind(chrom=chromosome_name),
                     )
-                    (_, lt_stripes), (_, ut_stripes) = list(tpool.map(function, params))
-                    result.set("stripes", lt_stripes, "LT", force=True)
-                    result.set("stripes", ut_stripes, "UT", force=True)
 
                     #####
                     ### Add stripes
@@ -689,7 +686,7 @@ def _fetch_interactions(
 
 
 def _where_to_start_calling_sequence(input_params, state_params):
-    functions_list = [step1.run, call._run_step_2_helper, call._run_step_3_helper, call._run_step_4_helper]
+    functions_list = [step1.run, call._run_step_2, call._run_step_3, call._run_step_4]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
             if index <= 4:  # path, resolution, log/lin scale, chromosome region
