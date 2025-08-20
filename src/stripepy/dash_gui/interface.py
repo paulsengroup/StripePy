@@ -22,6 +22,7 @@ app.layout = layout()
 
 @app.callback(
     Output("file-path", "value", allow_duplicate=True),
+    Output("warning-window", "children", allow_duplicate=True),
     Input("filepath-dialog", "n_clicks"),
     State("last-used-file-directory", "children"),
     prevent_initial_call=True,

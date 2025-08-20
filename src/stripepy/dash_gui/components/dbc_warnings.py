@@ -47,3 +47,12 @@ def warning_pick_save_file():
         ],
         id="alert-message",
     )
+
+
+def warning_cancel():
+    return html.Div(
+        [
+            Alert("File selection was cancelled", color="info"),
+        ],
+        id="alert-message",
+    )

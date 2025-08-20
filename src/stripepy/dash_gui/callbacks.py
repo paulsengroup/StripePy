@@ -13,6 +13,7 @@ from components.axes import compute_x_axis_chroms, compute_x_axis_range
 from components.colorbar import colorbar
 from components.dbc_warnings import (
     compose_stale_component_warning,
+    warning_cancel,
     warning_no_stripes,
     warning_null,
     warning_pick_save_file,
@@ -42,7 +43,9 @@ def open_file_dialog_callback(base_directory):
         filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*")),
     )
     root.destroy()
-    return root.filename
+    if root.filename == "":
+        return no_update, warning_cancel()
+    return root.filename, warning_null()
 
 
 def look_for_file_callback(file_path, metaInfo):
