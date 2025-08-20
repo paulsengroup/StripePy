@@ -194,7 +194,11 @@ def update_plot_callback(
     to_string_vector = np.vectorize(str)
     inv_log_frame_string = to_string_vector(frame)
 
+    filter_for_finite_and_positive = np.isfinite(frame) & (frame > 0)
     if scale_type == "log scale":
+        if frame[filter_for_finite_and_positive].mean() < 1:  # Scale matrix if the mean value is less than 1
+            scaling_product = 1 / np.min(frame[filter_for_finite_and_positive])
+            frame[filter_for_finite_and_positive] *= scaling_product
         np.log(frame, out=frame, where=np.isnan(frame) == False)
     under_lowest_real_value = np.min(frame[np.isfinite(frame)]) - abs(np.min(frame[np.isfinite(frame)]))
     # isfinite() dicounts nan, inf and -inf
