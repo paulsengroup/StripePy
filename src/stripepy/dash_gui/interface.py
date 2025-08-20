@@ -377,40 +377,44 @@ def call_stripes(
         result_chrom_name,
         result_chrom_size,
         result_min_persistence,
-        result_ut_pseudodistribution.split(";"),
-        result_lt_pseudodistribution.split(";"),
-        result_ut_all_minimum_points.split(";"),
-        result_lt_all_minimum_points.split(";"),
-        result_ut_all_maximum_points.split(";"),
-        result_lt_all_maximum_points.split(";"),
-        result_ut_persistence_of_all_minimum_points.split(";"),
-        result_lt_persistence_of_all_minimum_points.split(";"),
-        result_ut_persistence_of_all_maximum_points.split(";"),
-        result_lt_persistence_of_all_maximum_points.split(";"),
-        result_ut_persistent_minimum_points.split(";"),
-        result_lt_persistent_minimum_points.split(";"),
-        result_ut_persistent_maximum_points.split(";"),
-        result_lt_persistent_maximum_points.split(";"),
-        result_ut_persistence_of_minimum_points.split(";"),
-        result_lt_persistence_of_minimum_points.split(";"),
-        result_ut_persistence_of_maximum_points.split(";"),
-        result_lt_persistence_of_maximum_points.split(";"),
-        result_ut_stripes.split(";"),
-        result_lt_stripes.split(";"),
+        _string_to_list(result_ut_pseudodistribution),
+        _string_to_list(result_lt_pseudodistribution),
+        _string_to_list(result_ut_all_minimum_points),
+        _string_to_list(result_lt_all_minimum_points),
+        _string_to_list(result_ut_all_maximum_points),
+        _string_to_list(result_lt_all_maximum_points),
+        _string_to_list(result_ut_persistence_of_all_minimum_points),
+        _string_to_list(result_lt_persistence_of_all_minimum_points),
+        _string_to_list(result_ut_persistence_of_all_maximum_points),
+        _string_to_list(result_lt_persistence_of_all_maximum_points),
+        _string_to_list(result_ut_persistent_minimum_points),
+        _string_to_list(result_lt_persistent_minimum_points),
+        _string_to_list(result_ut_persistent_maximum_points),
+        _string_to_list(result_lt_persistent_maximum_points),
+        _string_to_list(result_ut_persistence_of_minimum_points),
+        _string_to_list(result_lt_persistence_of_minimum_points),
+        _string_to_list(result_ut_persistence_of_maximum_points),
+        _string_to_list(result_lt_persistence_of_maximum_points),
+        _string_to_stripe(result_ut_stripes),
+        _string_to_stripe(result_lt_stripes),
     )
 
 
 def _string_to_int(string):
     assert isinstance(string, str)
-    if isinstance(string, int):
-        return string
-    if isinstance(string, float):
-        return string
-    if "," in string:
-        string = string.replace(",", "")
-    if "." in string:
-        return float(string)
-    return int(string)
+    try:
+        if isinstance(string, int):
+            return string
+        if isinstance(string, float):
+            return string
+        if "," in string:
+            string = string.replace(",", "")
+        if "." in string:
+            return float(string)
+        return int(string)
+    except ValueError:
+        if string == "inf":
+            return float("inf")
 
 
 def _string_to_bool(string):
@@ -418,6 +422,26 @@ def _string_to_bool(string):
     if string == "":
         return False
     return eval(string)
+
+
+def _string_to_list(string):
+    assert isinstance(string, str)
+    if string == "":
+        return []
+    return_list = []
+    for value in string.split(";"):
+        return_list.append(_string_to_int(value))
+    return return_list
+
+
+def _string_to_stripe(string):
+    assert isinstance(string, str)
+    if string == "":
+        return []
+    stripes = []
+    for stripe in string.split(";"):
+        stripes.append([_string_to_int(attribute) for attribute in stripe.split(":")])
+    return stripes
 
 
 @app.callback(

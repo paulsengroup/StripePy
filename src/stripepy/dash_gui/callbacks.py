@@ -26,7 +26,7 @@ from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
 from stripepy.algorithms import step1, step2, step3, step4
 from stripepy.cli import call
 from stripepy.cli.call import *
-from stripepy.data_structures import IOManager, ProcessPoolWrapper, Result
+from stripepy.data_structures import IOManager, ProcessPoolWrapper, Result, Stripe
 from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 
 
@@ -367,6 +367,7 @@ def call_stripes_callback(
             color_map,
             normalization,
             gen_belt,
+            nproc,
             glob_pers_min,
             max_width,
             loc_trend_min,
@@ -374,7 +375,6 @@ def call_stripes_callback(
             rel_change,
             loc_pers_min,
             constrain_heights,
-            nproc,
         ),
         (
             last_used_path,
@@ -384,6 +384,7 @@ def call_stripes_callback(
             last_used_color_map,
             last_used_normalization,
             last_used_gen_belt,
+            last_used_nproc,
             last_used_glob_pers_min,
             last_used_max_width,
             last_used_loc_trend_min,
@@ -391,11 +392,8 @@ def call_stripes_callback(
             last_used_rel_change,
             last_used_loc_pers_min,
             last_used_constrain_heights,
-            last_used_nproc,
         ),
     )
-    filename = path.stem
-    output_file = f"./tmp/{filename}/{resolution}/stripes.hdf5"
     if not functions_sequence:
         return (
             no_update,
@@ -512,8 +510,7 @@ def call_stripes_callback(
             for j, function in enumerate(functions_sequence):
                 if isinstance(function, bool):
                     break
-                if function == step1.run:
-                    print("Running step 1")
+                if j == 0:
                     if pool.ready:
                         # Signal that matrices should be fetched from the shared global state
                         lt_matrix = None
@@ -532,12 +529,6 @@ def call_stripes_callback(
                         lt_matrix = ut_matrix.T
                 if function == call._run_step_2:
                     print("Running step 2")
-                    if j == 0:
-                        if pool.ready:
-                            # Signal that matrices should be fetched from the shared global state
-                            lt_matrix = None
-                            ut_matrix = None
-
                     result = function(
                         chromosome_name,
                         chrom_size,
@@ -550,11 +541,8 @@ def call_stripes_callback(
                 if function == call._run_step_3:
                     print("Running step 3")
                     if j == 0:
-                        if pool.ready:
-                            # Signal that matrices should be fetched from the shared global state
-                            lt_matrix = None
-                            ut_matrix = None
-                        result = _compose_result(result_package)
+                        print("Not first call, composing result")
+                        result = _compose_result(result_package, function)
                     result = function(
                         result,
                         lt_matrix,
@@ -571,11 +559,8 @@ def call_stripes_callback(
                 if function == call._run_step_4:
                     print("Running step 4")
                     if j == 0:
-                        if pool.ready:
-                            # Signal that matrices should be fetched from the shared global state
-                            lt_matrix = None
-                            ut_matrix = None
-                        result = _compose_result(result_package)
+                        print("Not first call, composing result")
+                        result = _compose_result(result_package, function)
                     result = function(
                         result,
                         lt_matrix,
@@ -689,25 +674,24 @@ def _where_to_start_calling_sequence(input_params, state_params):
     functions_list = [step1.run, call._run_step_2, call._run_step_3, call._run_step_4]
     for index, input_ in enumerate(input_params):
         if input_ != state_params[index]:
-            if index <= 4:  # path, resolution, log/lin scale, chromosome region
+            if (
+                index <= 7
+            ):  # path, resolution, log/lin scale, chromosome region, color mapping, normalization, genomic belt, nproc
                 return (*functions_list, True)
-            if index <= 6:  # normalization, genomic belt
-                return (*functions_list, True)
-            if index == 7:  # global persistence minimum
+            if index == 8:  # global persistence minimum
                 return (*functions_list[1:], True)
-            if index == 8:  # max width
+            if index <= 10:  # max width, local trend minimum
                 return (*functions_list[2:], False)
-            if index == 9:  # local trend minimum
-                return (*functions_list[2:], False)
-            if index <= 11:  # k neighbours, relative change
+            if index <= 12:  # k neighbours, relative change
                 return (*functions_list[3:], False)
-            if index <= 13:  # local minimum persistence, constrain heights
-                return "skip"
+            if index <= 14:  # local minimum persistence, constrain heights
+                return False
     return False
 
 
-def _compose_result(result_package):
+def _compose_result(result_package, starting_point):
     attributes_list = [
+        "pseudodistribution",
         "all_minimum_points",
         "all_maximum_points",
         "persistence_of_all_minimum_points",
@@ -716,14 +700,33 @@ def _compose_result(result_package):
         "persistent_maximum_points",
         "persistence_of_minimum_points",
         "persistence_of_maximum_points",
-        "stripes",
     ]
     result = Result(result_package.pop(0), result_package.pop(0))
     result.set_min_persistence(result_package.pop(0))
     for attribute in attributes_list:
-        result.set(attribute, result_package.pop(0), "upper")
-        result.set(attribute, result_package.pop(0), "lower")
-    return
+        result.set(attribute, np.array(result_package.pop(0)), "upper")
+        result.set(attribute, np.array(result_package.pop(0)), "lower")
+    upper_stripes_list = result_package.pop(0)
+    lower_stripes_list = result_package.pop(0)
+    if starting_point == call._run_step_3:  # Propagate the data collected in step 2
+        upper_stripes = [
+            Stripe(seed, top_pers=pers, where="upper_triangular") for seed, pers, _, _, _, _ in upper_stripes_list
+        ]
+        lower_stripes = [
+            Stripe(seed, top_pers=pers, where="lower_triangular") for seed, pers, _, _, _, _ in lower_stripes_list
+        ]
+    elif starting_point == call._run_step_4:  # Propagate the data collected in step 3
+        upper_stripes = [
+            Stripe(seed, top_pers=pers, horizontal_bounds=(lb, rb), vertical_bounds=(tb, bb), where="upper_triangular")
+            for seed, pers, lb, rb, tb, bb in upper_stripes_list
+        ]
+        lower_stripes = [
+            Stripe(seed, top_pers=pers, horizontal_bounds=(lb, rb), vertical_bounds=(tb, bb), where="lower_triangular")
+            for seed, pers, lb, rb, tb, bb in lower_stripes_list
+        ]
+    result.set("stripes", upper_stripes, "upper")
+    result.set("stripes", lower_stripes, "lower")
+    return result
 
 
 def _unpack_result(result):
@@ -770,8 +773,8 @@ def _unpack_result(result):
         _make_into_string(lt_pers_of_min.tolist()),
         _make_into_string(up_pers_of_max.tolist()),
         _make_into_string(lt_pers_of_max.tolist()),
-        _make_into_string(up_stripes.tolist()),
-        _make_into_string(lt_stripes.tolist()),
+        _make_stripes_into_string(up_stripes.tolist()),
+        _make_stripes_into_string(lt_stripes.tolist()),
     )
 
 
@@ -781,5 +784,15 @@ def _make_into_string(array):
     """
     list_stored_string = ""
     while array:
-        list_stored_string += str(array.pop()) + ";"
+        list_stored_string += str(array.pop(0)) + ";"
+    return list_stored_string[:-1]  # Remove the last semicolon
+
+
+def _make_stripes_into_string(array):
+    """
+    Convert a numpy array of stripes into a string representation
+    """
+    list_stored_string = ""
+    for stripe in array:
+        list_stored_string += f"{stripe.seed}:{stripe.top_persistence}:{stripe.left_bound}:{stripe.right_bound}:{stripe.top_bound}:{stripe.bottom_bound};"
     return list_stored_string[:-1]  # Remove the last semicolon
