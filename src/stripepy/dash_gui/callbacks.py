@@ -200,10 +200,8 @@ def update_plot_callback(
             scaling_product = 1 / np.min(frame[filter_for_finite_and_positive])
             frame[filter_for_finite_and_positive] *= scaling_product
         np.log(frame, out=frame, where=np.isnan(frame) == False)
-    under_lowest_real_value = np.min(frame[np.isfinite(frame)]) - abs(np.min(frame[np.isfinite(frame)]))
-    # isfinite() dicounts nan, inf and -inf
-
-    frame = np.where(np.isneginf(frame), under_lowest_real_value, frame)
+    lowest_real_value = np.min(frame[filter_for_finite_and_positive])  # isfinite() dicounts nan, inf and -inf
+    frame = np.where(np.isneginf(frame), lowest_real_value, frame)
 
     if chromosome_name:
         fig = go.Figure()
