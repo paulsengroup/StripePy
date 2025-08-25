@@ -122,10 +122,12 @@ def pick_saved_callback(saved_string, update_plot_n_clicks):
     return filepath, int(resolution), scale_type, chrom_name, normalization, update_plot_n_clicks + 1, warning_null()
 
 
-def look_for_normalizations_under_current_resolution_callback(resolution, path):
+def look_for_normalizations_under_current_resolution_callback(resolution, path, current_normalization):
     f = open_matrix_file_checked(path, resolution)
     avail_normalizations = f.avail_normalizations()
     avail_normalizations.append("No normalization")
+    if current_normalization in avail_normalizations:
+        return avail_normalizations, no_update
     return avail_normalizations, "No normalization"
 
 

@@ -79,13 +79,14 @@ def pick_saved(n_clicks, saved_string, update_plot_n_clicks):
     Output("normalization", "value", allow_duplicate=True),
     Input("resolution", "value"),
     State("file-path", "value"),
+    State("normalization", "value"),
     prevent_initial_call=True,
     running=[
         (Output("normalization", "disabled"), True, False),
     ],
 )
-def look_for_normalizations_under_current_resolution(resolution, path):
-    return look_for_normalizations_under_current_resolution_callback(resolution, path)
+def look_for_normalizations_under_current_resolution(resolution, path, current_normalization):
+    return look_for_normalizations_under_current_resolution_callback(resolution, path, current_normalization)
 
 
 def _disable_radio_elements(become_disabled):
