@@ -185,12 +185,12 @@ def update_plot_callback(
 
     colorMap_code = color_scale(colorMap)
     # "No normalization" is stored in dropdown menu; "None" is stored in saved files.
-    if normalization == "No normalization" or normalization == "None":
-        normalization = None
+    if normalization == "No normalization":
+        normalization_parameter = None
 
     f = open_matrix_file_checked(filepath, resolution)
 
-    sel = f.fetch(chromosome_name, normalization=normalization)
+    sel = f.fetch(chromosome_name, normalization=normalization_parameter)
     frame = sel.to_numpy()
     frame = frame.astype(np.float32)
     to_string_vector = np.vectorize(str)
@@ -363,6 +363,8 @@ def call_stripes_callback(
     path = Path(path)
     if not isinstance(fig, go.Figure):
         fig = go.Figure(fig)
+    raw_plot = [trace for trace in fig["data"] if type(trace) == go.Heatmap]
+    fig["data"] = tuple(raw_plot)
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
     functions_sequence = _where_to_start_calling_sequence(
