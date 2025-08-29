@@ -1,3 +1,4 @@
+import plotly.graph_objects as go
 from dash import dcc, html
 
 from .calling import (
@@ -42,6 +43,7 @@ def layout():
                             html.Div(
                                 [
                                     dcc.Graph(
+                                        figure=go.Figure(),
                                         style={"width": "90vh", "height": "90vh"},
                                         id="HeatMap",
                                     ),

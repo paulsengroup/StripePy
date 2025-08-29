@@ -145,17 +145,16 @@ def update_plot_callback(
     last_used_region,
     last_used_color_map,
     last_used_normalization,
+    fig,
 ):
     filepath = Path(filepath)
-    try:
-        if (
-            filepath == Path(last_used_path)
-            and resolution == last_used_resolution
-            and last_used_region == chromosome_name
-            and last_used_scale_type == scale_type
-            and last_used_color_map == colorMap
-            and last_used_normalization == normalization
-        ):
+    if (
+        filepath == Path(last_used_path)
+        and resolution == last_used_resolution
+        and last_used_region == chromosome_name
+        and last_used_normalization == normalization
+    ):
+        if last_used_scale_type == scale_type and last_used_color_map == colorMap:
             return (
                 no_update,
                 no_update,
@@ -178,19 +177,14 @@ def update_plot_callback(
                     )
                 ),
             )
-        else:
-            pass
-    except NameError:
-        pass
+        else:  # Only color map or scale type changed; keep stripes
+            KEEP_STRIPES = True
+    else:  # Significant change; redraw heatmap
+        KEEP_STRIPES = False
 
     colorMap_code = color_scale(colorMap)
-    # "No normalization" is stored in dropdown menu; "None" is stored in saved files.
-    if normalization == "No normalization":
-        normalization_parameter = None
-
     f = open_matrix_file_checked(filepath, resolution)
-
-    sel = f.fetch(chromosome_name, normalization=normalization_parameter)
+    sel = f.fetch(chromosome_name, normalization=None if normalization == "No normalization" else normalization)
     frame = sel.to_numpy()
     frame = frame.astype(np.float32)
     to_string_vector = np.vectorize(str)
@@ -206,22 +200,42 @@ def update_plot_callback(
     frame = np.where(np.isneginf(frame), lowest_real_value, frame)
 
     if chromosome_name:
-        fig = go.Figure()
-        fig.add_trace(
-            go.Heatmap(
-                z=frame,
-                colorbar=colorbar(frame, scale_type),
-                colorscale=colorMap_code,
-                customdata=inv_log_frame_string,
-                hovertemplate="%{customdata}<extra></extra>",
-                hoverlabel={
-                    "bgcolor": contrast(colorMap, "map"),
-                },
-                name="First matrix",
-                xaxis="x1",
-                yaxis="y1",
+        if KEEP_STRIPES:
+            # fig["data"] is an immutable data structure, so the object is re-created
+            new_trace = [
+                go.Heatmap(
+                    z=frame,
+                    colorbar=colorbar(frame, scale_type),
+                    colorscale=colorMap_code,
+                    customdata=inv_log_frame_string,
+                    hovertemplate="%{customdata}<extra></extra>",
+                    hoverlabel={
+                        "bgcolor": contrast(colorMap, "map"),
+                    },
+                    name="First matrix",
+                    xaxis="x1",
+                    yaxis="y1",
+                )
+            ]
+            new_trace += list(fig["data"][1:])
+            fig = go.Figure(data=tuple(new_trace))
+        else:
+            fig = go.Figure()
+            fig.add_trace(
+                go.Heatmap(
+                    z=frame,
+                    colorbar=colorbar(frame, scale_type),
+                    colorscale=colorMap_code,
+                    customdata=inv_log_frame_string,
+                    hovertemplate="%{customdata}<extra></extra>",
+                    hoverlabel={
+                        "bgcolor": contrast(colorMap, "map"),
+                    },
+                    name="First matrix",
+                    xaxis="x1",
+                    yaxis="y1",
+                )
             )
-        )
 
         tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
         fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
@@ -230,32 +244,60 @@ def update_plot_callback(
         # NaN-values are transparent
         traces_x_axis, traces_y_axis = "x1", "y1"
     else:
-        fig = go.Figure()
-        fig.add_trace(
-            go.Heatmap(
-                z=frame,
-                colorbar=colorbar(frame, scale_type),
-                colorscale=colorMap_code,
-                name="First matrix",
-                xaxis="x1",
-                yaxis="y1",
+        if KEEP_STRIPES:
+            # fig["data"] is an immutable data structure, so the object is re-created
+            new_trace = [
+                go.Heatmap(
+                    z=frame,
+                    colorbar=colorbar(frame, scale_type),
+                    colorscale=colorMap_code,
+                    name="First matrix",
+                    xaxis="x1",
+                    yaxis="y1",
+                ),
+                go.Heatmap(
+                    z=frame,
+                    colorbar=colorbar(frame, scale_type),
+                    colorscale=colorMap_code,
+                    customdata=inv_log_frame_string,
+                    hovertemplate="%{customdata}<extra></extra>",
+                    hoverlabel={
+                        "bgcolor": contrast(colorMap, "map"),
+                    },
+                    name="Second matrix",
+                    xaxis="x2",
+                    yaxis="y2",
+                ),
+            ]
+            new_trace += list(fig["data"][2:])
+            fig = go.Figure(data=tuple(new_trace))
+        else:
+            fig = go.Figure()
+            fig.add_trace(
+                go.Heatmap(
+                    z=frame,
+                    colorbar=colorbar(frame, scale_type),
+                    colorscale=colorMap_code,
+                    name="First matrix",
+                    xaxis="x1",
+                    yaxis="y1",
+                )
             )
-        )
-        fig.add_trace(
-            go.Heatmap(
-                z=frame,
-                colorbar=colorbar(frame, scale_type),
-                colorscale=colorMap_code,
-                customdata=inv_log_frame_string,
-                hovertemplate="%{customdata}<extra></extra>",
-                hoverlabel={
-                    "bgcolor": contrast(colorMap, "map"),
-                },
-                name="Second matrix",
-                xaxis="x2",
-                yaxis="y2",
+            fig.add_trace(
+                go.Heatmap(
+                    z=frame,
+                    colorbar=colorbar(frame, scale_type),
+                    colorscale=colorMap_code,
+                    customdata=inv_log_frame_string,
+                    hovertemplate="%{customdata}<extra></extra>",
+                    hoverlabel={
+                        "bgcolor": contrast(colorMap, "map"),
+                    },
+                    name="Second matrix",
+                    xaxis="x2",
+                    yaxis="y2",
+                )
             )
-        )
 
         tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
         tickvals_chrom, ticktext_chrom = compute_x_axis_chroms(f)
