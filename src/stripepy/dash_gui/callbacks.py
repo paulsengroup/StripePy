@@ -143,6 +143,7 @@ def update_plot_callback(
     resolution,
     scale_type,
     files_list,
+    rel_change,
     last_used_path,
     last_used_resolution,
     last_used_scale_type,
@@ -331,10 +332,10 @@ def update_plot_callback(
 
     if DRAW_STRIPES and existing_lt_stripes and existing_ut_stripes:
         fig = add_stripes_visualisation_change(
-            fig, existing_lt_stripes, resolution, colorMap, chromosome_name, traces_x_axis, traces_y_axis
+            fig, existing_lt_stripes, resolution, colorMap, chromosome_name, rel_change, traces_x_axis, traces_y_axis
         )
         fig = add_stripes_visualisation_change(
-            fig, existing_ut_stripes, resolution, colorMap, chromosome_name, traces_x_axis, traces_y_axis
+            fig, existing_ut_stripes, resolution, colorMap, chromosome_name, rel_change, traces_x_axis, traces_y_axis
         )
 
     filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}"
@@ -699,6 +700,7 @@ def call_stripes_callback(
             no_update,
             no_update,
             no_update,
+            no_update,
             warning_no_stripes(),
             *_unpack_result(result),
         )
@@ -718,6 +720,7 @@ def call_stripes_callback(
             str(loc_pers_min),
             str(loc_trend_min),
             str(nproc),
+            str(rel_change),
             fig,
             warning_null(),
             *_unpack_result(result),
@@ -794,7 +797,7 @@ def _compose_result(result_package, starting_point):
     elif starting_point == call._run_step_4:  # Propagate the data collected in step 3
         upper_stripes = [
             Stripe(seed, top_pers=pers, horizontal_bounds=(lb, rb), vertical_bounds=(tb, bb), where="upper_triangular")
-            for seed, pers, lb, rb, tb, bb in upper_stripes_list
+            for seed, pers, lb, rb, tb, bb, rc in upper_stripes_list
         ]
         lower_stripes = [
             Stripe(seed, top_pers=pers, horizontal_bounds=(lb, rb), vertical_bounds=(tb, bb), where="lower_triangular")
@@ -870,5 +873,5 @@ def _make_stripes_into_string(array):
     """
     list_stored_string = ""
     for stripe in array:
-        list_stored_string += f"{stripe.seed}:{stripe.top_persistence}:{stripe.left_bound}:{stripe.right_bound}:{stripe.top_bound}:{stripe.bottom_bound};"
+        list_stored_string += f"{stripe.seed}:{stripe.top_persistence}:{stripe.left_bound}:{stripe.right_bound}:{stripe.top_bound}:{stripe.bottom_bound}:{stripe.rel_change};"
     return list_stored_string[:-1]  # Remove the last semicolon
