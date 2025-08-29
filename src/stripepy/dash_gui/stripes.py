@@ -5,37 +5,29 @@ from colorscales import contrast
 from stripepy.data_structures import ResultFile
 
 
-def add_stripes_chrom_restriction(f, fig, chromosome_name, result, resolution, layers, color_map, rel_change):
-    chromosome_name, _, spans = chromosome_name.partition(":")
+def add_stripes_chrom_restriction(
+    f, fig, result, resolution, layers, color_map, rel_change, chromosome_name, pre_span_in_chromosome, end_limit
+):
     pre_span_length = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
         if chrom_name == chromosome_name:
             break
         else:
             pre_span_length += pre_span_lengths
-    if spans:
-        pre_span_in_chromosome, _, end_limit = spans.partition("-")
-        pre_span_in_chromosome = int(pre_span_in_chromosome.replace(",", ""))
-        end_limit = int(end_limit.replace(",", ""))
-        fig = extract_stripes_part_of_chromosome(
-            fig,
-            result,
-            resolution,
-            layers,
-            pre_span_length + pre_span_in_chromosome,
-            pre_span_in_chromosome,
-            int(end_limit),
-            color_map,
-            rel_change,
-        )
-    else:
-        fig = extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_span_length, color_map, rel_change)
+    fig = extract_stripes_part_of_chromosome(
+        fig,
+        result,
+        resolution,
+        layers,
+        pre_span_in_chromosome,
+        end_limit,
+        color_map,
+        rel_change,
+    )
     return fig
 
 
-def add_stripes_whole_chrom(
-    f, fig, result, resolution, layers, chromosome_name, color_map, subtract_from_start, rel_change
-):
+def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name, color_map, rel_change):
     pre_chrom_span = 0
     for chrom_name, pre_span_lengths in f.chromosomes().items():
         if chrom_name == chromosome_name:
@@ -46,16 +38,13 @@ def add_stripes_whole_chrom(
                 layers,
                 pre_chrom_span,
                 color_map,
-                subtract_from_start,
                 rel_change,
             )
         pre_chrom_span += pre_span_lengths
     return fig
 
 
-def extract_stripes_whole_chromosome(
-    fig, result, resolution, layers, pre_chrom_span, color_map, subtract_from_start, rel_change
-):
+def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map, rel_change):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
@@ -63,11 +52,7 @@ def extract_stripes_whole_chromosome(
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        fig.add_trace(
-            _add_stripe_whole_chrom(
-                x_values, y_values, resolution, pre_chrom_span, layers, color_map, subtract_from_start
-            )
-        )
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, pre_chrom_span, layers, color_map, True))
 
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
@@ -76,17 +61,11 @@ def extract_stripes_whole_chromosome(
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
         x_values, y_values = _get_square(array)
-        fig.add_trace(
-            _add_stripe_whole_chrom(
-                x_values, y_values, resolution, pre_chrom_span, layers, color_map, subtract_from_start
-            )
-        )
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, pre_chrom_span, layers, color_map, True))
     return fig
 
 
-def extract_stripes_part_of_chromosome(
-    fig, result, resolution, layers, pre_interval_span, margin, end_limit, color_map, rel_change
-):
+def extract_stripes_part_of_chromosome(fig, result, resolution, layers, margin, end_limit, color_map, rel_change):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
@@ -99,7 +78,7 @@ def extract_stripes_part_of_chromosome(
         x_values, y_values = _get_square(array)
         if x_values is None or y_values is None:
             continue
-        fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers, color_map))
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, layers, color_map, False))
 
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
@@ -113,7 +92,7 @@ def extract_stripes_part_of_chromosome(
         x_values, y_values = _get_square(array)
         if x_values is None or y_values is None:
             continue
-        fig.add_trace(_add_stripe_chrom_restriction(x_values, y_values, resolution, margin, layers, color_map))
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, layers, color_map, False))
     return fig
 
 
@@ -144,8 +123,8 @@ def _truncate_values(array, resolution, margin, end_limit):
     return array
 
 
-def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map, subtract_from_start):
-    if subtract_from_start:
+def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chromosome):
+    if is_whole_chromosome:
         return go.Scatter(
             x=cols,
             y=rows,
@@ -157,9 +136,24 @@ def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map, su
                 "bgcolor": contrast(color_map, "stripe"),
             },
         )
+    else:
+        return go.Scatter(
+            x=cols - (margin / resolution),
+            y=rows - (margin / resolution),
+            xaxis=layer[0],
+            yaxis=layer[1],
+            fillcolor=contrast(color_map, "stripe"),
+            marker_color=contrast(color_map, "stripe"),
+            hoverlabel={
+                "bgcolor": contrast(color_map, "stripe"),
+            },
+        )
+
+
+def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map):
     return go.Scatter(
-        x=cols + (margin / resolution),
-        y=rows + (margin / resolution),
+        x=cols,
+        y=rows,
         xaxis=layer[0],
         yaxis=layer[1],
         fillcolor=contrast(color_map, "stripe"),
@@ -190,17 +184,19 @@ def add_stripes_visualisation_change(
     resolution,
     color_map,
     chromosome_name,
+    relative_change_constant,
     layer_x,
     layer_y,
 ):
-    print(f"stripe_list: {stripe_list}")
     chrom_name, _, spans = chromosome_name.partition(":")
     if spans:
         pre_span_in_chromosome, _, end_limit = spans.partition("-")
         margin = int(pre_span_in_chromosome.replace(",", ""))
         end_limit = int(end_limit.replace(",", ""))
     for stripe in stripe_list:
-        seed, top_pers, left_bound, right_bound, top_bound, bottom_bound = stripe
+        seed, top_pers, left_bound, right_bound, top_bound, bottom_bound, rel_change = stripe
+        if relative_change_constant > rel_change:
+            continue
         array = [left_bound, right_bound, top_bound, bottom_bound]
         array = _truncate_values(array, resolution, margin, end_limit)
         if array is None:
@@ -209,4 +205,20 @@ def add_stripes_visualisation_change(
         fig.add_trace(
             _add_stripe_chrom_restriction(x_values, y_values, resolution, margin, (layer_x, layer_y), color_map)
         )
+    return fig
+
+
+def add_stripes_rel_change_filter(
+    fig, stripe_list, resolution, color_map, relative_change_threshold, traces, margin, end_limit
+):
+    for stripe in stripe_list:
+        seed, top_pers, left_bound, right_bound, top_bound, bottom_bound, rel_change = stripe
+        if rel_change < relative_change_threshold:
+            continue
+        array = [left_bound, right_bound, top_bound, bottom_bound]
+        array = _truncate_values(array, resolution, margin, end_limit)
+        if array is None:
+            continue
+        x_values, y_values = _get_square(array)
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, traces, color_map, False))
     return fig

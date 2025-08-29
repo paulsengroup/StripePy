@@ -24,6 +24,7 @@ from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
 from stripes import (
     add_stripes_chrom_restriction,
+    add_stripes_rel_change_filter,
     add_stripes_visualisation_change,
     add_stripes_whole_chrom,
 )
@@ -385,21 +386,6 @@ def call_stripes_callback(
     loc_trend_min,
     nproc,
     rel_change,
-    last_used_path,
-    last_used_resolution,
-    last_used_scale_type,
-    last_used_region,
-    last_used_color_map,
-    last_used_normalization,
-    last_used_gen_belt,
-    last_used_max_width,
-    last_used_glob_pers_min,
-    last_used_constrain_heights,
-    last_used_k,
-    last_used_loc_pers_min,
-    last_used_loc_trend_min,
-    last_used_nproc,
-    last_used_rel_change,
     fig,
     result_chrom_name,
     result_chrom_size,
@@ -424,91 +410,17 @@ def call_stripes_callback(
     result_lt_persistence_of_maximum_points,
     result_ut_stripes,
     result_lt_stripes,
+    from_where_to_call,
+    traces,
+    chrom,
+    margin,
+    end_limit,
+    restriction_scope,
 ):
-    if normalization == "No normalization" or normalization == "None":
-        normalization = None
     min_chrom_size = 1
-    path = Path(path)
-    if not isinstance(fig, go.Figure):
-        fig = go.Figure(fig)
-    raw_plot = [trace for trace in fig["data"] if type(trace) == go.Heatmap]
-    fig["data"] = tuple(raw_plot)
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
-    functions_sequence = _where_to_start_calling_sequence(
-        (
-            str(path),
-            resolution,
-            scale_type,
-            chrom_name,
-            color_map,
-            normalization,
-            gen_belt,
-            nproc,
-            glob_pers_min,
-            max_width,
-            loc_trend_min,
-            k,
-            rel_change,
-            loc_pers_min,
-            constrain_heights,
-        ),
-        (
-            last_used_path,
-            last_used_resolution,
-            last_used_scale_type,
-            last_used_region,
-            last_used_color_map,
-            last_used_normalization,
-            last_used_gen_belt,
-            last_used_nproc,
-            last_used_glob_pers_min,
-            last_used_max_width,
-            last_used_loc_trend_min,
-            last_used_k,
-            last_used_rel_change,
-            last_used_loc_pers_min,
-            last_used_constrain_heights,
-        ),
-    )
-    if not functions_sequence:
-        return (
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            warning_stale_component(
-                (
-                    "file path",
-                    "resolution",
-                    "scale type",
-                    "chromosome name",
-                    "color map",
-                    "normalization",
-                    "genomic belt",
-                    "max width",
-                    "global minimum persistence",
-                    "constrain heights",
-                    "k neighbours",
-                    "local minimal persistence",
-                    "local trend minimum",
-                    "number of processors",
-                    "relative signal change",
-                )
-            ),
-            *[no_update] * 23,
-        )
+    functions_sequence = _where_to_start_calling_sequence(from_where_to_call)
     result_package = [
         result_chrom_name,
         result_chrom_size,
@@ -534,21 +446,7 @@ def call_stripes_callback(
         result_ut_stripes,
         result_lt_stripes,
     ]
-    chrom, _, region = chrom_name.partition(":")
-    start_segment, _, end_segment = region.partition("-")
-    function_scope = "NONE"
-    if start_segment and end_segment:
-        function_scope = "START_AND_END_SEGMENT"
-        traces_x_axis, traces_y_axis = "x1", "y1"
-    elif start_segment:
-        function_scope = "END_SEGMENT_ONLY"
-        traces_x_axis, traces_y_axis = "x1", "y1"
-    elif chrom:
-        function_scope = "SINGLE_CHROM"
-        traces_x_axis, traces_y_axis = "x1", "y1"
-    elif not chrom and not region:
-        function_scope = "WHOLE_GENOME"
-        traces_x_axis, traces_y_axis = "x2", "y2"
+    traces_x_axis, traces_y_axis = traces
     with contextlib.ExitStack() as ctx:
         # Set up logger for the process pool
         main_logger = ctx.enter_context(ProcessSafeLogger("warning", path=None, progress_bar_type="call"))
@@ -568,25 +466,15 @@ def call_stripes_callback(
         tpool = ctx.enter_context(
             concurrent.futures.ThreadPoolExecutor(max_workers=min(nproc, 2)),
         )
-        if (
-            function_scope == "START_AND_END_SEGMENT"
-            or function_scope == "END_SEGMENT_ONLY"
-            or function_scope == "SINGLE_CHROM"
-        ):
-            tasks = call._plan_tasks({chrom: chroms[chrom]}, min_chrom_size, None)
-        else:
+        if restriction_scope == "whole genome":
             tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
+        else:
+            tasks = call._plan_tasks({chrom: chroms[chrom]}, min_chrom_size, None)
         FOUND_STRIPES = False
         for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
-            if function_scope == "SINGLE_CHROM":
-                subtract_from_start = True
-            else:
-                subtract_from_start = False
             if skip:
                 continue
             for j, function in enumerate(functions_sequence):
-                if isinstance(function, bool):
-                    break
                 if j == 0:
                     if pool.ready:
                         # Signal that matrices should be fetched from the shared global state
@@ -648,38 +536,35 @@ def call_stripes_callback(
                         logger.bind(chrom=chromosome_name),
                     )
 
-                    #####
-                    ### Add stripes
-                    #####
-                    if not result.empty:
-                        FOUND_STRIPES = True
-                    if function_scope == "START_AND_END_SEGMENT":
-                        fig = add_stripes_chrom_restriction(
-                            f,
-                            fig,
-                            chrom_name,
-                            result,
-                            resolution,
-                            (traces_x_axis, traces_y_axis),
-                            color_map,
-                            rel_change,
-                        )
-                    elif function_scope == "END_SEGMENT_ONLY":
-                        fig = add_stripes_chrom_restriction_at_end(
-                            f, fig, chrom_name, result, resolution, (traces_x_axis, traces_y_axis), color_map
-                        )
-                    elif function_scope == "SINGLE_CHROM" or function_scope == "WHOLE_GENOME":
-                        fig = add_stripes_whole_chrom(
-                            f,
-                            fig,
-                            result,
-                            resolution,
-                            (traces_x_axis, traces_y_axis),
-                            chromosome_name,
-                            color_map,
-                            subtract_from_start,
-                            rel_change,
-                        )
+            #####
+            ### Add stripes
+            #####
+            if not result.empty:
+                FOUND_STRIPES = True
+            if restriction_scope == "chromosome restriction":
+                fig = add_stripes_chrom_restriction(
+                    f,
+                    fig,
+                    result,
+                    resolution,
+                    (traces_x_axis, traces_y_axis),
+                    color_map,
+                    rel_change,
+                    chrom,
+                    margin,
+                    end_limit,
+                )
+            else:
+                fig = add_stripes_whole_chrom(
+                    f,
+                    fig,
+                    result,
+                    resolution,
+                    (traces_x_axis, traces_y_axis),
+                    chromosome_name,
+                    color_map,
+                    rel_change,
+                )
     ####
     #### Add stripes as traces
     ####
@@ -749,23 +634,14 @@ def _fetch_interactions(
     return ut_matrix
 
 
-def _where_to_start_calling_sequence(input_params, state_params):
+def _where_to_start_calling_sequence(from_where_to_call):
     functions_list = [step1.run, call._run_step_2, call._run_step_3, call._run_step_4]
-    for index, input_ in enumerate(input_params):
-        if input_ != state_params[index]:
-            if (
-                index <= 7
-            ):  # path, resolution, log/lin scale, chromosome region, color mapping, normalization, genomic belt, nproc
-                return (*functions_list, True)
-            if index == 8:  # global persistence minimum
-                return (*functions_list[1:], True)
-            if index <= 10:  # max width, local trend minimum
-                return (*functions_list[2:], False)
-            if index <= 12:  # k neighbours, relative change
-                return (*functions_list[3:], False)
-            if index <= 14:  # local minimum persistence, constrain heights
-                return False
-    return False
+    if from_where_to_call == "Step 2":
+        return (*functions_list[1:],)
+    if from_where_to_call == "Step 3":
+        return (*functions_list[2:],)
+    if from_where_to_call == "Step 4":
+        return (*functions_list[3:],)
 
 
 def _compose_result(result_package, starting_point):
@@ -785,24 +661,33 @@ def _compose_result(result_package, starting_point):
     for attribute in attributes_list:
         result.set(attribute, np.array(result_package.pop(0)), "upper")
         result.set(attribute, np.array(result_package.pop(0)), "lower")
-    upper_stripes_list = result_package.pop(0)
-    lower_stripes_list = result_package.pop(0)
     if starting_point == call._run_step_3:  # Propagate the data collected in step 2
-        upper_stripes = [
-            Stripe(seed, top_pers=pers, where="upper_triangular") for seed, pers, _, _, _, _ in upper_stripes_list
-        ]
-        lower_stripes = [
-            Stripe(seed, top_pers=pers, where="lower_triangular") for seed, pers, _, _, _, _ in lower_stripes_list
-        ]
+        upper_stripes_list = result_package.pop(0)[:2]
+        lower_stripes_list = result_package.pop(0)[:2]
+        upper_stripes = [Stripe(seed, top_pers=pers, where="upper_triangular") for seed, pers in upper_stripes_list]
+        lower_stripes = [Stripe(seed, top_pers=pers, where="lower_triangular") for seed, pers in lower_stripes_list]
     elif starting_point == call._run_step_4:  # Propagate the data collected in step 3
-        upper_stripes = [
-            Stripe(seed, top_pers=pers, horizontal_bounds=(lb, rb), vertical_bounds=(tb, bb), where="upper_triangular")
-            for seed, pers, lb, rb, tb, bb, rc in upper_stripes_list
-        ]
-        lower_stripes = [
-            Stripe(seed, top_pers=pers, horizontal_bounds=(lb, rb), vertical_bounds=(tb, bb), where="lower_triangular")
-            for seed, pers, lb, rb, tb, bb in lower_stripes_list
-        ]
+        upper_stripes_list = result_package.pop(0)[:6]
+        lower_stripes_list = result_package.pop(0)[:6]
+        upper_stripes = []
+        for stripe_string in upper_stripes_list:
+            seed, pers, lb, rb, tb, bb = stripe_string
+            new_stripe = Stripe(seed, top_pers=pers, where="upper_triangular")
+            new_stripe.set_horizontal_bounds(lb, rb)
+            new_stripe.set_vertical_bounds(tb, bb)
+            upper_stripes.append(new_stripe)
+
+        lower_stripes = []
+        for stripe_string in lower_stripes_list:
+            seed, pers, lb, rb, tb, bb = stripe_string
+            new_stripe = Stripe(seed, top_pers=pers, where="lower_triangular")
+            new_stripe.set_horizontal_bounds(lb, rb)
+            new_stripe.set_vertical_bounds(tb, bb)
+            lower_stripes.append(new_stripe)
+    elif starting_point == "After":
+        upper_stripes_list = result_package.pop(0)
+        lower_stripes_list = result_package.pop(0)
+        return upper_stripes_list, lower_stripes_list
     result.set("stripes", upper_stripes, "upper")
     result.set("stripes", lower_stripes, "lower")
     return result
@@ -875,3 +760,11 @@ def _make_stripes_into_string(array):
     for stripe in array:
         list_stored_string += f"{stripe.seed}:{stripe.top_persistence}:{stripe.left_bound}:{stripe.right_bound}:{stripe.top_bound}:{stripe.bottom_bound}:{stripe.rel_change};"
     return list_stored_string[:-1]  # Remove the last semicolon
+
+
+def filter_stripes_callback(
+    fig, resolution, colorMap, chromosome_name, rel_change, traces, margin, end_limit, ut_stripes, lt_stripes
+):
+    fig = add_stripes_rel_change_filter(fig, ut_stripes, resolution, colorMap, rel_change, traces, margin, end_limit)
+    fig = add_stripes_rel_change_filter(fig, lt_stripes, resolution, colorMap, rel_change, traces, margin, end_limit)
+    return (*[no_update] * 14, rel_change, fig, warning_null(), *[no_update] * 23)

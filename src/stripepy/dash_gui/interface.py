@@ -1,18 +1,22 @@
 # Copyright (C) 2025 Bendik Berg <bendber@ifi.uio.no>
 #
 # SPDX-License-Identifier: MIT
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
+import plotly.graph_objects as go
 from callbacks import (
     call_stripes_callback,
+    filter_stripes_callback,
     look_for_file_callback,
     look_for_normalizations_under_current_resolution_callback,
     open_file_dialog_callback,
     pick_saved_callback,
     update_plot_callback,
 )
+from components.dbc_warnings import warning_stale_component
 from components.layout import layout
-from dash import Dash, Input, Output, State
+from dash import Dash, Input, Output, State, no_update
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.FONT_AWESOME])
 
@@ -357,62 +361,117 @@ def call_stripes(
     result_ut_stripes,
     result_lt_stripes,
 ):
-    return call_stripes_callback(
+    path = Path(path)
+    if normalization == "No normalization":
+        normalization = None
+    if not isinstance(fig, go.Figure):
+        fig = go.Figure(fig)
+    raw_plot = [trace for trace in fig["data"] if type(trace) == go.Heatmap]
+    fig["data"] = tuple(raw_plot)
+    current_settings = (
         path,
         resolution,
-        scale_type,
         chrom_name,
-        color_map,
         normalization,
-        _string_to_int(gen_belt),
-        _string_to_int(max_width),
-        _string_to_int(glob_pers_min),
-        bool(constrain_heights),
-        _string_to_int(k),
-        _string_to_int(loc_pers_min),
-        _string_to_int(loc_trend_min),
-        _string_to_int(nproc),
-        _string_to_int(rel_change),
-        last_used_path,
-        last_used_resolution,
-        last_used_scale_type,
-        last_used_region,
-        last_used_color_map,
-        last_used_normalization,
-        _string_to_int(last_used_gen_belt),
-        _string_to_int(last_used_max_width),
-        _string_to_int(last_used_glob_pers_min),
-        _string_to_bool(last_used_constrain_heights),
-        _string_to_int(last_used_k),
-        _string_to_int(last_used_loc_pers_min),
-        _string_to_int(last_used_loc_trend_min),
-        _string_to_int(last_used_nproc),
-        _string_to_int(last_used_rel_change),
-        fig,
-        result_chrom_name,
-        result_chrom_size,
-        result_min_persistence,
-        _string_to_list(result_ut_pseudodistribution),
-        _string_to_list(result_lt_pseudodistribution),
-        _string_to_list(result_ut_all_minimum_points),
-        _string_to_list(result_lt_all_minimum_points),
-        _string_to_list(result_ut_all_maximum_points),
-        _string_to_list(result_lt_all_maximum_points),
-        _string_to_list(result_ut_persistence_of_all_minimum_points),
-        _string_to_list(result_lt_persistence_of_all_minimum_points),
-        _string_to_list(result_ut_persistence_of_all_maximum_points),
-        _string_to_list(result_lt_persistence_of_all_maximum_points),
-        _string_to_list(result_ut_persistent_minimum_points),
-        _string_to_list(result_lt_persistent_minimum_points),
-        _string_to_list(result_ut_persistent_maximum_points),
-        _string_to_list(result_lt_persistent_maximum_points),
-        _string_to_list(result_ut_persistence_of_minimum_points),
-        _string_to_list(result_lt_persistence_of_minimum_points),
-        _string_to_list(result_ut_persistence_of_maximum_points),
-        _string_to_list(result_lt_persistence_of_maximum_points),
-        _string_to_stripe(result_ut_stripes),
-        _string_to_stripe(result_lt_stripes),
+        gen_belt.replace(",", ""),
+        nproc,
+        glob_pers_min,
+        max_width.replace(",", ""),
+        loc_trend_min,
+        k,
+        rel_change,
+        loc_pers_min,
+        constrain_heights,
     )
+    past_settings = (
+        Path(last_used_path),
+        last_used_resolution,
+        last_used_region,
+        last_used_normalization,
+        last_used_gen_belt,
+        last_used_nproc,
+        last_used_glob_pers_min,
+        last_used_max_width,
+        last_used_loc_trend_min,
+        last_used_k,
+        last_used_rel_change,
+        last_used_loc_pers_min,
+        last_used_constrain_heights,
+    )
+    from_where_to_call = _compare(current_settings, past_settings)
+
+    restriction_scope = _find_restriction_scope(chrom_name)
+    traces = ("x2", "y2") if restriction_scope == "whole genome" else ("x1", "y1")
+
+    chromosome_name, _, region = chrom_name.partition(":")
+    margin, _, end_limit = region.partition("-")
+    margin = int(margin.replace(",", ""))
+    end_limit = int(end_limit.replace(",", ""))
+
+    if from_where_to_call == "After":
+        return filter_stripes_callback(
+            fig,
+            resolution,
+            color_map,
+            chrom_name,
+            _string_to_int(rel_change),
+            traces,
+            margin,
+            end_limit,
+            _string_to_stripe_after(result_ut_stripes, "After"),
+            _string_to_stripe_after(result_lt_stripes, "After"),
+        )
+    elif from_where_to_call == "No change":
+        return _stale_fields()
+    else:
+        return_list = call_stripes_callback(
+            path,
+            resolution,
+            scale_type,
+            chrom_name,
+            color_map,
+            normalization,
+            _string_to_int(gen_belt),
+            _string_to_int(max_width),
+            _string_to_int(glob_pers_min),
+            bool(constrain_heights),
+            _string_to_int(k),
+            _string_to_int(loc_pers_min),
+            _string_to_int(loc_trend_min),
+            _string_to_int(nproc),
+            _string_to_int(rel_change),
+            fig,
+            result_chrom_name,
+            result_chrom_size,
+            result_min_persistence,
+            _string_to_list(result_ut_pseudodistribution),
+            _string_to_list(result_lt_pseudodistribution),
+            _string_to_list(result_ut_all_minimum_points),
+            _string_to_list(result_lt_all_minimum_points),
+            _string_to_list(result_ut_all_maximum_points),
+            _string_to_list(result_lt_all_maximum_points),
+            _string_to_list(result_ut_persistence_of_all_minimum_points),
+            _string_to_list(result_lt_persistence_of_all_minimum_points),
+            _string_to_list(result_ut_persistence_of_all_maximum_points),
+            _string_to_list(result_lt_persistence_of_all_maximum_points),
+            _string_to_list(result_ut_persistent_minimum_points),
+            _string_to_list(result_lt_persistent_minimum_points),
+            _string_to_list(result_ut_persistent_maximum_points),
+            _string_to_list(result_lt_persistent_maximum_points),
+            _string_to_list(result_ut_persistence_of_minimum_points),
+            _string_to_list(result_lt_persistence_of_minimum_points),
+            _string_to_list(result_ut_persistence_of_maximum_points),
+            _string_to_list(result_lt_persistence_of_maximum_points),
+            _string_to_stripe(result_ut_stripes),
+            _string_to_stripe(result_lt_stripes),
+            from_where_to_call,
+            traces,
+            chromosome_name,
+            margin,
+            end_limit,
+            restriction_scope,
+        )
+        return return_list
 
 
 def _string_to_int(string):
@@ -457,6 +516,96 @@ def _string_to_stripe(string):
     for stripe in string.split(";"):
         stripes.append([_string_to_int(attribute) for attribute in stripe.split(":")])
     return stripes
+
+
+def _string_to_stripe_after(string, where):
+    if string == "":
+        return []
+    stripes = []
+    for stripe in string.split(";"):
+        new_stripe = stripe.split(":")
+        if where == "Step 3":
+            relevant_section = new_stripe[:2]
+        if where == "Step 4":
+            relevant_section = new_stripe[:6]
+        if where == "After":
+            relevant_section = new_stripe
+        add_list = [_string_to_int(element) for element in relevant_section]
+        stripes.append(add_list)
+    return stripes
+
+
+def _compare(current_settings, past_settings):
+    for index, comparison in enumerate(current_settings):
+        if comparison != past_settings[index]:
+            if index <= 6:  # interactions
+                print("Go from step 2")
+                return "Step 2"
+            if index <= 8:  # max width, local trend minimum
+                print("Go from step 3")
+                return "Step 3"
+            if index <= 9:  # k neighbours
+                print("Go from step 4")
+                return "Step 4"
+            if index <= 10:  # relative change
+                print("Go from after step 4")
+                return "After"
+            if index <= 12:  # local minimum persistence, constrain heights
+                break
+    return "No change"
+
+
+def _find_restriction_scope(chrom_name):
+    restriction_scope = ""
+    chrom, _, region = chrom_name.partition(":")
+    if region:
+        restriction_scope = "chromosome restriction"
+    if chrom:
+        "single chromosome"
+    else:
+        "whole genome"
+    return restriction_scope
+
+
+def _stale_fields():
+    return (
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        no_update,
+        warning_stale_component(
+            (
+                "file path",
+                "resolution",
+                "scale type",
+                "chromosome name",
+                "color map",
+                "normalization",
+                "genomic belt",
+                "max width",
+                "global minimum persistence",
+                "constrain heights",
+                "k neighbours",
+                "local minimal persistence",
+                "local trend minimum",
+                "number of processors",
+                "relative signal change",
+            )
+        ),
+        *[no_update] * 23,
+    )
 
 
 @app.callback(
