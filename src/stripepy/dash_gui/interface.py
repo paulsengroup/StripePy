@@ -128,6 +128,8 @@ def _disable_radio_elements(become_disabled):
     State("last-used-color-map", "children"),
     State("last-used-normalization", "children"),
     State("HeatMap", "figure"),
+    State("result-ut-stripes", "children"),
+    State("result-lt-stripes", "children"),
     prevent_initial_call=True,
     running=[
         (Output("filepath-dialog", "disabled"), True, False),
@@ -155,6 +157,8 @@ def update_plot(
     last_used_color_map,
     last_used_normalization,
     fig,
+    ut_stripes,
+    lt_stripes,
 ):
     return update_plot_callback(
         chromosome_name,
@@ -171,6 +175,8 @@ def update_plot(
         last_used_color_map,
         last_used_normalization,
         fig,
+        _string_to_stripe(ut_stripes),
+        _string_to_stripe(lt_stripes),
     )
 
 

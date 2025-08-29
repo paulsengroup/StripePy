@@ -22,7 +22,11 @@ from components.dbc_warnings import (
 from dash import dcc, html, no_update
 from dash.exceptions import PreventUpdate
 from plotly.subplots import make_subplots
-from stripes import add_stripes_chrom_restriction, add_stripes_whole_chrom
+from stripes import (
+    add_stripes_chrom_restriction,
+    add_stripes_visualisation_change,
+    add_stripes_whole_chrom,
+)
 
 from stripepy.algorithms import step1, step2, step3, step4
 from stripepy.cli import call
@@ -146,15 +150,22 @@ def update_plot_callback(
     last_used_color_map,
     last_used_normalization,
     fig,
+    existing_ut_stripes,
+    existing_lt_stripes,
 ):
+    KEEP_STRIPES = False
+    DRAW_STRIPES = False
     filepath = Path(filepath)
     if (
         filepath == Path(last_used_path)
         and resolution == last_used_resolution
-        and last_used_region == chromosome_name
         and last_used_normalization == normalization
     ):
-        if last_used_scale_type == scale_type and last_used_color_map == colorMap:
+        if (
+            last_used_region == chromosome_name
+            and last_used_scale_type == scale_type
+            and last_used_color_map == colorMap
+        ):  # Give warning that nothing changed
             return (
                 no_update,
                 no_update,
@@ -173,12 +184,18 @@ def update_plot_callback(
                         "scale type",
                         "color map",
                         "normalization",
-                        "stripes filepath",
                     )
                 ),
             )
-        else:  # Only color map or scale type changed; keep stripes
-            KEEP_STRIPES = True
+        elif chromosome_name.partition(":")[0] == last_used_region.partition(":")[0]:
+            if (
+                chromosome_name.partition(":")[2] != last_used_region.partition(":")[2]
+            ):  # Same chromosome, but different region; redraw stripes
+                DRAW_STRIPES = True
+            else:  # Only scale type or color map changed; keep stripes
+                KEEP_STRIPES = True
+        else:  # Different chromosome; delete stripes
+            KEEP_STRIPES = False
     else:  # Significant change; redraw heatmap
         KEEP_STRIPES = False
 
@@ -311,6 +328,14 @@ def update_plot_callback(
         traces_x_axis, traces_y_axis = "x2", "y2"
 
     fig.layout.update(showlegend=False)
+
+    if DRAW_STRIPES and existing_lt_stripes and existing_ut_stripes:
+        fig = add_stripes_visualisation_change(
+            fig, existing_lt_stripes, resolution, colorMap, chromosome_name, traces_x_axis, traces_y_axis
+        )
+        fig = add_stripes_visualisation_change(
+            fig, existing_ut_stripes, resolution, colorMap, chromosome_name, traces_x_axis, traces_y_axis
+        )
 
     filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}"
     try:

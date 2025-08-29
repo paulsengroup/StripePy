@@ -182,3 +182,31 @@ def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_m
             "bgcolor": contrast(color_map, "stripe"),
         },
     )
+
+
+def add_stripes_visualisation_change(
+    fig,
+    stripe_list,
+    resolution,
+    color_map,
+    chromosome_name,
+    layer_x,
+    layer_y,
+):
+    print(f"stripe_list: {stripe_list}")
+    chrom_name, _, spans = chromosome_name.partition(":")
+    if spans:
+        pre_span_in_chromosome, _, end_limit = spans.partition("-")
+        margin = int(pre_span_in_chromosome.replace(",", ""))
+        end_limit = int(end_limit.replace(",", ""))
+    for stripe in stripe_list:
+        seed, top_pers, left_bound, right_bound, top_bound, bottom_bound = stripe
+        array = [left_bound, right_bound, top_bound, bottom_bound]
+        array = _truncate_values(array, resolution, margin, end_limit)
+        if array is None:
+            continue
+        x_values, y_values = _get_square(array)
+        fig.add_trace(
+            _add_stripe_chrom_restriction(x_values, y_values, resolution, margin, (layer_x, layer_y), color_map)
+        )
+    return fig
