@@ -500,8 +500,10 @@ def _string_to_list(string):
 def _string_to_stripe(string, where):
     if string == "":
         return []
-    stripes = []
+    if where == "Step 2":
+        return []
 
+    stripes = []
     for stripe in string.split(";"):
         new_stripe = stripe.split(":")
         if where == "Step 3":
