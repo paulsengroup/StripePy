@@ -367,7 +367,7 @@ def update_plot_callback(
 def call_stripes_callback(
     path,
     resolution,
-    chrom_name,
+    region,
     color_map,
     normalization,
     gen_belt,
@@ -380,7 +380,7 @@ def call_stripes_callback(
     nproc,
     rel_change,
     fig,
-    result_chrom_name,
+    result_region,
     result_chrom_size,
     result_min_persistence,
     result_ut_pseudodistribution,
@@ -405,7 +405,7 @@ def call_stripes_callback(
     result_lt_stripes,
     from_where_to_call,
     traces,
-    chrom,
+    chromosome_name,
     margin,
     end_limit,
     restriction_scope,
@@ -415,7 +415,7 @@ def call_stripes_callback(
     chroms = f.chromosomes(include_ALL=False)
     functions_sequence = _where_to_start_calling_sequence(from_where_to_call)
     result_package = [
-        result_chrom_name,
+        result_region,
         result_chrom_size,
         result_min_persistence,
         result_ut_pseudodistribution,
@@ -462,7 +462,7 @@ def call_stripes_callback(
         if restriction_scope == "whole genome":
             tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
         else:
-            tasks = call._plan_tasks({chrom: chroms[chrom]}, min_chrom_size, None)
+            tasks = call._plan_tasks({chromosome_name: chroms[chromosome_name]}, min_chrom_size, None)
         FOUND_STRIPES = False
         for i, (chromosome_name, chrom_size, skip) in enumerate(tasks):
             if skip:
@@ -566,7 +566,7 @@ def call_stripes_callback(
         return (
             str(path),
             resolution,
-            chrom_name,
+            region,
             normalization,
             str(gen_belt),
             str(max_width),

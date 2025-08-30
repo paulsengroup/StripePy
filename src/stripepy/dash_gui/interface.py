@@ -302,7 +302,7 @@ def call_stripes(
     n_clicks,
     path,
     resolution,
-    chrom_name,
+    region,
     color_map,
     normalization,
     gen_belt,
@@ -328,7 +328,7 @@ def call_stripes(
     last_used_nproc,
     last_used_rel_change,
     fig,
-    result_chrom_name,
+    result_region,
     result_chrom_size,
     result_min_persistence,
     result_ut_pseudodistribution,
@@ -362,7 +362,7 @@ def call_stripes(
     current_settings = (
         path,
         resolution,
-        chrom_name,
+        region,
         normalization,
         gen_belt.replace(",", ""),
         nproc,
@@ -391,13 +391,13 @@ def call_stripes(
     )
     from_where_to_call = _compare(current_settings, past_settings)
 
-    restriction_scope = _find_restriction_scope(chrom_name)
+    restriction_scope = _find_restriction_scope(region)
     traces = ("x2", "y2") if restriction_scope == "whole genome" else ("x1", "y1")
 
-    chromosome_name, _, region = chrom_name.partition(":")
-    margin, _, end_limit = region.partition("-")
-    margin = int(margin.replace(",", ""))
-    end_limit = int(end_limit.replace(",", ""))
+    chromosome_name, _, frame = region.partition(":")
+    margin, _, end_limit = frame.partition("-")
+    margin = _string_to_int(margin)
+    end_limit = _string_to_int(end_limit)
 
     if from_where_to_call == "After":
         return filter_stripes_callback(
@@ -417,7 +417,7 @@ def call_stripes(
         return_list = call_stripes_callback(
             path,
             resolution,
-            chrom_name,
+            region,
             color_map,
             normalization,
             _string_to_int(gen_belt),
@@ -430,7 +430,7 @@ def call_stripes(
             _string_to_int(nproc),
             _string_to_int(rel_change),
             fig,
-            result_chrom_name,
+            result_region,
             result_chrom_size,
             result_min_persistence,
             _string_to_list(result_ut_pseudodistribution),
@@ -546,8 +546,8 @@ def _compare(current_settings, past_settings):
 
 def _find_restriction_scope(chrom_name):
     restriction_scope = ""
-    chrom, _, region = chrom_name.partition(":")
-    if region:
+    chrom, _, frame = chrom_name.partition(":")
+    if frame:
         restriction_scope = "chromosome restriction"
     if chrom:
         "single chromosome"
