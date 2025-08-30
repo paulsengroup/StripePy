@@ -47,9 +47,10 @@ def extract_stripes(fig, result, resolution, layers, color_map, rel_change, marg
     geo_frame_LT = geo_frame_LT[geo_frame_LT["relative_change"] > rel_change]
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
-        array = _truncate_values(array, resolution, margin, end_limit)
-        if array is None:
-            continue
+        if not is_whole_chromosome:
+            array = _truncate_values(array, resolution, margin, end_limit)
+            if array is None:
+                continue
         x_values, y_values = _get_square(array)
         if x_values is None or y_values is None:
             continue
