@@ -229,7 +229,7 @@ def update_plot_callback(
                     customdata=inv_log_frame_string,
                     hovertemplate="%{customdata}<extra></extra>",
                     hoverlabel={
-                        "bgcolor": contrast(colorMap, "map"),
+                        "bgcolor": contrast(colorMap, "label"),
                     },
                     name="First matrix",
                     xaxis="x1",
@@ -248,7 +248,7 @@ def update_plot_callback(
                     customdata=inv_log_frame_string,
                     hovertemplate="%{customdata}<extra></extra>",
                     hoverlabel={
-                        "bgcolor": contrast(colorMap, "map"),
+                        "bgcolor": contrast(colorMap, "label"),
                     },
                     name="First matrix",
                     xaxis="x1",
@@ -281,7 +281,7 @@ def update_plot_callback(
                     customdata=inv_log_frame_string,
                     hovertemplate="%{customdata}<extra></extra>",
                     hoverlabel={
-                        "bgcolor": contrast(colorMap, "map"),
+                        "bgcolor": contrast(colorMap, "label"),
                     },
                     name="Second matrix",
                     xaxis="x2",
@@ -310,7 +310,7 @@ def update_plot_callback(
                     customdata=inv_log_frame_string,
                     hovertemplate="%{customdata}<extra></extra>",
                     hoverlabel={
-                        "bgcolor": contrast(colorMap, "map"),
+                        "bgcolor": contrast(colorMap, "label"),
                     },
                     name="Second matrix",
                     xaxis="x2",

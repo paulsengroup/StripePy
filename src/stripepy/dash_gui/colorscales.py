@@ -48,7 +48,14 @@ def color_scale(name):
 
 
 def contrast(colorMap, location):
-    map_ = {
+    """
+    Provide colors to hover labels, stripes and background. Recommended use is inside another function, like this: function_that_takes_color_name(contrast(colorMap, "stripe"))
+
+    Returns
+    -------
+    String. Name of color to be inserted in the location of the call.
+    """
+    label = {
         "fruit_punch ": "teal",
         "fall ": "teal",
         "blues ": "darkorange",
@@ -69,8 +76,8 @@ def contrast(colorMap, location):
         "acidblues ": "yellow",
         "nmeth ": "cyan",
     }
-    if location == "map":
-        return map_[colorMap]
+    if location == "label":
+        return label[colorMap]
     elif location == "stripe":
         return stripe[colorMap]
     elif location == "background":
