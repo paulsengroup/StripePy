@@ -408,8 +408,8 @@ def call_stripes(
             traces,
             margin,
             end_limit,
-            _string_to_stripe_after(result_ut_stripes, "After"),
-            _string_to_stripe_after(result_lt_stripes, "After"),
+            _string_to_stripe(result_ut_stripes, "After"),
+            _string_to_stripe(result_lt_stripes, "After"),
         )
     elif from_where_to_call == "No change":
         return _stale_fields()
@@ -451,8 +451,8 @@ def call_stripes(
             _string_to_list(result_lt_persistence_of_minimum_points),
             _string_to_list(result_ut_persistence_of_maximum_points),
             _string_to_list(result_lt_persistence_of_maximum_points),
-            _string_to_stripe(result_ut_stripes),
-            _string_to_stripe(result_lt_stripes),
+            _string_to_stripe(result_ut_stripes, from_where_to_call),
+            _string_to_stripe(result_lt_stripes, from_where_to_call),
             from_where_to_call,
             traces,
             chromosome_name,
@@ -497,20 +497,11 @@ def _string_to_list(string):
     return return_list
 
 
-def _string_to_stripe(string):
-    assert isinstance(string, str)
+def _string_to_stripe(string, where):
     if string == "":
         return []
     stripes = []
-    for stripe in string.split(";"):
-        stripes.append([_string_to_int(attribute) for attribute in stripe.split(":")])
-    return stripes
 
-
-def _string_to_stripe_after(string, where):
-    if string == "":
-        return []
-    stripes = []
     for stripe in string.split(";"):
         new_stripe = stripe.split(":")
         if where == "Step 3":
