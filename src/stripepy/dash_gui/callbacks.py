@@ -183,6 +183,8 @@ def update_plot_callback(
                     )
                 ),
             )
+        elif colorMap != last_used_color_map:
+            DRAW_STRIPES = True
         elif chromosome_name.partition(":")[0] == last_used_region.partition(":")[0]:
             if (
                 chromosome_name.partition(":")[2] != last_used_region.partition(":")[2]
