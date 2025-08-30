@@ -81,7 +81,6 @@ discourse:
   downloading_sample_datasets
   detect_stripes
   fetch_stripes
-  visualize_stripes
   generate_plots
 
 .. toctree::

@@ -82,6 +82,7 @@ test = [
 
 docs = [
     "furo==2024.8.6",
+    "ipython==9.5.0",
     "sphinx==8.2.3",
     "sphinx-copybutton==0.5.2",
 ]

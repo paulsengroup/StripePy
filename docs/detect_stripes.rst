@@ -114,15 +114,12 @@ Step 3: shape analysis
 
 The maximum permissible stripe width can be explicitly controlled using the ``--max-width`` option, which is specified in base pairs and defaults to 100,000 bp.
 
-The height of a stripe can be constrained by studying a local pseudo-distribution via two alternative criteria:
-
-* One criterion involves direct thresholding the local pseudo-distribution to a minimum value, specified via the option ``--loc-trend-min``, which should be set between 0 and 1 (defaulting to 0.25).
-  A higher value for this parameter generally results in the detection of shorter stripes.
-* Alternatively, the algorithm applies topological persistence to the local pseudo-distribution to identify persistent peaks.
-  The location of the furthest identified peak is then used as a boundary for the stripe.
-  This approach is engaged when the ``--constrain-heights`` flag is activated, which instructs the algorithm to utilize peaks within the local pseudo-distribution for height estimation.
-  When ``--constrain-heights`` is active, the ``--loc-pers-min`` option acts as a threshold value between 0 and 1 (defaulting to 0.33) used to identify signal peaks within a horizontal domain when estimating the height of a stripe.
-  If no persistent maximum other than the global maximum is found by the algorithm, the previous criterion is run.
+The height of a stripe is determined by studying a local pseudo-distribution.
+The algorithm applies topological persistence to the local pseudo-distribution to identify persistent peaks.
+The ``--loc-pers-min`` option acts as a threshold value between 0 and 1 (defaulting to 0.33) used to determine which peaks are persistent with respect to their topological persistence.
+The location of the furthest identified peak is then used as a boundary for the stripe.
+If no persistent maximum other than the global maximum is found, we threshold the local pseudo-distribution to a minimum value, specified via the option ``--loc-trend-min``, which should be set to a value between 0 and 1 (defaulting to 0.25).
+A higher value for this parameter generally results in the detection of shorter stripes.
 
 Step 4: signal analysis
 ^^^^^^^^^^^^^^^^^^^^^^^
