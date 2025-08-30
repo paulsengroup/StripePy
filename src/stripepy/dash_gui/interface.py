@@ -359,10 +359,18 @@ def call_stripes(
         fig = go.Figure(fig)
     raw_plot = [trace for trace in fig["data"] if type(trace) == go.Heatmap]
     fig["data"] = tuple(raw_plot)
+
+    chromosome_name, _, frame = region.partition(":")
+    margin, _, end_limit = frame.partition("-")
+    margin = _string_to_int(margin)
+    end_limit = _string_to_int(end_limit)
+
+    last_used_chromosome_name, _, last_used_frame = last_used_region.partition(":")
+
     current_settings = (
         path,
         resolution,
-        region,
+        chromosome_name,
         normalization,
         gen_belt.replace(",", ""),
         nproc,
@@ -377,7 +385,7 @@ def call_stripes(
     past_settings = (
         Path(last_used_path),
         last_used_resolution,
-        last_used_region,
+        last_used_chromosome_name,
         last_used_normalization,
         last_used_gen_belt,
         last_used_nproc,
@@ -393,11 +401,6 @@ def call_stripes(
 
     restriction_scope = _find_restriction_scope(region)
     traces = ("x2", "y2") if restriction_scope == "whole genome" else ("x1", "y1")
-
-    chromosome_name, _, frame = region.partition(":")
-    margin, _, end_limit = frame.partition("-")
-    margin = _string_to_int(margin)
-    end_limit = _string_to_int(end_limit)
 
     if from_where_to_call == "After":
         return filter_stripes_callback(
@@ -565,13 +568,10 @@ def _stale_fields():
         no_update,
         no_update,
         no_update,
-        no_update,
-        no_update,
         warning_stale_component(
             (
                 "file path",
                 "resolution",
-                "scale type",
                 "chromosome name",
                 "color map",
                 "normalization",
