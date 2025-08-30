@@ -29,7 +29,7 @@ def render_genomic_belt():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Radius of the band, centred around the diagonal, where the search is restricted to (in bp, default: {DEFAULT_GEN_BELT}.",
+                f"Radius of the band, centred around the diagonal, where the search is restricted to, in bp.",
                 target="gen-belt-icon",
                 placement="right",
                 trigger="hover",
@@ -56,7 +56,7 @@ def render_max_width():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Maximum stripe width, in bp (default: {DEFAULT_MAX_WIDTH}).",
+                f"Maximum stripe width, in bp.",
                 target="max-width-icon",
                 placement="right",
                 trigger="hover",
@@ -83,7 +83,7 @@ def render_global_minimum_persistence():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Threshold value between 0 and 1 to filter persistence maxima points and identify loci of interest, aka seeds (default: {DEFAULT_GLOB_PERS}).",
+                f"Threshold value between 0 and 1 to filter persistence maxima points and identify loci of interest, aka seeds.",
                 target="glob-pers-icon",
                 placement="right",
                 trigger="hover",
@@ -110,7 +110,7 @@ def render_constrain_heights():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Use peaks in signal to constrain the stripe height (default: {DEFAULT_CONSTRAIN_HEIGHTS}).",
+                f"Use peaks in signal to constrain the stripe height.",
                 target="constrain-heights-icon",
                 placement="right",
                 trigger="hover",
@@ -131,7 +131,7 @@ def render_k_neighbours():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"k for the k-neighbour, i.e., number of bins adjacent to the stripe boundaries on both sides (default: {DEFAULT_K_NEIGHBOURS}).",
+                f"k for the k-neighbour, i.e., number of bins adjacent to the stripe boundaries on both sides.",
                 target="k-neighbours-icon",
                 placement="right",
                 trigger="hover",
@@ -157,7 +157,7 @@ def render_local_minimum_persistence():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Threshold value between 0 and 1 to find peaks in signal in a horizontal domain while estimating the height of a stripe; when --constrain-heights is set to 'False', it is not used (default: {DEFAULT_LOC_MIN_PERS}).",
+                f"Threshold value between 0 and 1 to find peaks in signal in a horizontal domain while estimating the height of a stripe; when --constrain-heights is set to 'False', it is not used.",
                 target="loc-min-pers-icon",
                 placement="right",
                 trigger="hover",
@@ -184,7 +184,7 @@ def render_local_trend_minimum():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Threshold value between 0 and 1 to estimate the height of a stripe (default: {DEFAULT_LOC_TREND}); the higher this value, the shorter the stripe; it is always used when --constrain-heights is set to 'False', but could be necessary also when --constrain-heights is 'True' and no persistent maximum other than the global maximum is found.",
+                f"Threshold value between 0 and 1 to estimate the height of a stripe; the higher this value, the shorter the stripe; it is always used when --constrain-heights is set to 'False', but could be necessary also when --constrain-heights is 'True' and no persistent maximum other than the global maximum is found.",
                 target="loc-trend-icon",
                 placement="right",
                 trigger="hover",
@@ -211,7 +211,7 @@ def render_nproc():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Maximum number of parallel processes to use (default: {DEFAULT_NPROC}).",
+                f"Maximum number of parallel processes to use.",
                 target="nproc-icon",
                 placement="right",
                 trigger="hover",
@@ -238,7 +238,7 @@ def render_relative_change():
                 className="fa-solid fa-circle-question",
             ),
             dbc.Tooltip(
-                f"Cutoff for the relative change (default: {DEFAULT_REL_CHANGE}).\n"
+                f"Cutoff for the relative change.\n"
                 "Only used when highlighting architectural stripes.\n"
                 "The relative change is computed as the ratio between the average number of interactions found inside a stripe and the number of interactions in a neighborhood outside of the stripe.",
                 target="rel-change-icon",
