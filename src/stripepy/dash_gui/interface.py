@@ -54,11 +54,10 @@ def open_file_dialog(n_clicks, base_directory):
     Output("data", "hidden"),
     Output("warning-window", "children", allow_duplicate=True),
     Input("file-path", "value"),
-    State("chromosomes", "children"),
     prevent_initial_call=True,
 )
-def look_for_file(file_path, metaInfo):
-    return look_for_file_callback(file_path, metaInfo)
+def look_for_file(file_path):
+    return look_for_file_callback(file_path)
 
 
 @app.callback(
@@ -182,17 +181,15 @@ def update_plot(
         last_used_color_map,
         last_used_normalization,
         fig,
-        _string_to_stripe(ut_stripes),
-        _string_to_stripe(lt_stripes),
+        _string_to_stripe(ut_stripes, "After"),
+        _string_to_stripe(lt_stripes, "After"),
     )
 
 
 @app.callback(
     Output("calling-last-used-path", "children"),
     Output("calling-last-used-resolution", "children"),
-    Output("calling-last-used-scale-type", "children"),
     Output("calling-last-used-region", "children"),
-    Output("calling-last-used-color-map", "children"),
     Output("calling-last-used-normalization", "children", allow_duplicate=True),
     Output("last-used-gen-belt", "children"),
     Output("last-used-max-width", "children"),
@@ -231,7 +228,6 @@ def update_plot(
     Input("start-calling", "n_clicks"),
     State("file-path", "value"),
     State("resolution", "value"),
-    State("radio-log", "value"),
     State("chromosome-name", "value"),
     State("color-map", "value"),
     State("normalization", "value"),
@@ -246,9 +242,7 @@ def update_plot(
     State("rel-change-input", "value"),
     State("calling-last-used-path", "children"),
     State("calling-last-used-resolution", "children"),
-    State("calling-last-used-scale-type", "children"),
     State("calling-last-used-region", "children"),
-    State("calling-last-used-color-map", "children"),
     State("calling-last-used-normalization", "children"),
     State("last-used-gen-belt", "children"),
     State("last-used-max-width", "children"),
@@ -308,7 +302,6 @@ def call_stripes(
     n_clicks,
     path,
     resolution,
-    scale_type,
     chrom_name,
     color_map,
     normalization,
@@ -323,9 +316,7 @@ def call_stripes(
     rel_change,
     last_used_path,
     last_used_resolution,
-    last_used_scale_type,
     last_used_region,
-    last_used_color_map,
     last_used_normalization,
     last_used_gen_belt,
     last_used_max_width,
@@ -413,7 +404,6 @@ def call_stripes(
             fig,
             resolution,
             color_map,
-            chrom_name,
             _string_to_int(rel_change),
             traces,
             margin,
@@ -427,14 +417,13 @@ def call_stripes(
         return_list = call_stripes_callback(
             path,
             resolution,
-            scale_type,
             chrom_name,
             color_map,
             normalization,
             _string_to_int(gen_belt),
             _string_to_int(max_width),
             _string_to_int(glob_pers_min),
-            bool(constrain_heights),
+            _string_to_bool(constrain_heights),
             _string_to_int(k),
             _string_to_int(loc_pers_min),
             _string_to_int(loc_trend_min),

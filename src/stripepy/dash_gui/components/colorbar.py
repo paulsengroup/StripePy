@@ -14,14 +14,13 @@ def colorbar(matrix, scale_type):
     """
     find_normal_values = matrix[np.isfinite(matrix)]
     max_float = np.nanmax(find_normal_values)
-    min_float = np.nanmin(find_normal_values)
     if scale_type == "log scale":
-        return _colorbar(max_float, min_float)
+        return _colorbar(max_float)
     else:
         return _colorbar_normal_scale(max_float)
 
 
-def _colorbar(max_float, min_float):
+def _colorbar(max_float):
     max_int = math.floor(max_float)
     tickvals = np.linspace(1, max_int, num=10)
 

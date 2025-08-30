@@ -2,70 +2,45 @@ import numpy as np
 import plotly.graph_objects as go
 from colorscales import contrast
 
-from stripepy.data_structures import ResultFile
 
-
-def add_stripes_chrom_restriction(
-    f, fig, result, resolution, layers, color_map, rel_change, chromosome_name, pre_span_in_chromosome, end_limit
+def add_stripes(
+    f,
+    fig,
+    result,
+    resolution,
+    layers,
+    color_map,
+    chromosome_name,
+    rel_change,
+    margin=0,
+    end_limit=0,
+    is_whole_chromosome=True,
 ):
-    pre_span_length = 0
-    for chrom_name, pre_span_lengths in f.chromosomes().items():
-        if chrom_name == chromosome_name:
-            break
-        else:
-            pre_span_length += pre_span_lengths
-    fig = extract_stripes_part_of_chromosome(
+    length_of_earlier_chromosomes = 0
+    if is_whole_chromosome:
+        for chrom_name, chromosome_lengths in f.chromosomes().items():
+            if chrom_name == chromosome_name:
+                end_limit = length_of_earlier_chromosomes + chromosome_lengths
+                break
+            else:
+                length_of_earlier_chromosomes += chromosome_lengths
+                pass
+
+    fig = extract_stripes(
         fig,
         result,
         resolution,
         layers,
-        pre_span_in_chromosome,
-        end_limit,
         color_map,
         rel_change,
+        length_of_earlier_chromosomes + margin,
+        end_limit,
+        is_whole_chromosome,
     )
     return fig
 
 
-def add_stripes_whole_chrom(f, fig, result, resolution, layers, chromosome_name, color_map, rel_change):
-    pre_chrom_span = 0
-    for chrom_name, pre_span_lengths in f.chromosomes().items():
-        if chrom_name == chromosome_name:
-            fig = extract_stripes_whole_chromosome(
-                fig,
-                result,
-                resolution,
-                layers,
-                pre_chrom_span,
-                color_map,
-                rel_change,
-            )
-        pre_chrom_span += pre_span_lengths
-    return fig
-
-
-def extract_stripes_whole_chromosome(fig, result, resolution, layers, pre_chrom_span, color_map, rel_change):
-    geo_frame_LT = result.get_stripe_geo_descriptors("LT")
-    bio_frame_LT = result.get_stripe_bio_descriptors("LT")
-    geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
-    geo_frame_LT = geo_frame_LT[geo_frame_LT["relative_change"] > rel_change]
-    for rows in geo_frame_LT.iterrows():
-        array = _get_correct_cells(rows)
-        x_values, y_values = _get_square(array)
-        fig.add_trace(_draw_stripe(x_values, y_values, resolution, pre_chrom_span, layers, color_map, True))
-
-    geo_frame_UT = result.get_stripe_geo_descriptors("UT")
-    bio_frame_UT = result.get_stripe_bio_descriptors("UT")
-    geo_frame_UT["relative_change"] = bio_frame_UT["rel_change"]
-    geo_frame_UT = geo_frame_UT[geo_frame_UT["relative_change"] > rel_change]
-    for rows in geo_frame_UT.iterrows():
-        array = _get_correct_cells(rows)
-        x_values, y_values = _get_square(array)
-        fig.add_trace(_draw_stripe(x_values, y_values, resolution, pre_chrom_span, layers, color_map, True))
-    return fig
-
-
-def extract_stripes_part_of_chromosome(fig, result, resolution, layers, margin, end_limit, color_map, rel_change):
+def extract_stripes(fig, result, resolution, layers, color_map, rel_change, margin, end_limit, is_whole_chromosome):
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
@@ -78,7 +53,7 @@ def extract_stripes_part_of_chromosome(fig, result, resolution, layers, margin, 
         x_values, y_values = _get_square(array)
         if x_values is None or y_values is None:
             continue
-        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, layers, color_map, False))
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, layers, color_map, is_whole_chromosome))
 
     geo_frame_UT = result.get_stripe_geo_descriptors("UT")
     bio_frame_UT = result.get_stripe_bio_descriptors("UT")
@@ -86,13 +61,14 @@ def extract_stripes_part_of_chromosome(fig, result, resolution, layers, margin, 
     geo_frame_UT = geo_frame_UT[geo_frame_UT["relative_change"] > rel_change]
     for rows in geo_frame_UT.iterrows():
         array = _get_correct_cells(rows)
-        array = _truncate_values(array, resolution, margin, end_limit)
-        if array is None:
-            continue
+        if not is_whole_chromosome:
+            array = _truncate_values(array, resolution, margin, end_limit)
+            if array is None:
+                continue
         x_values, y_values = _get_square(array)
         if x_values is None or y_values is None:
             continue
-        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, layers, color_map, False))
+        fig.add_trace(_draw_stripe(x_values, y_values, resolution, margin, layers, color_map, is_whole_chromosome))
     return fig
 
 
@@ -148,20 +124,6 @@ def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chro
                 "bgcolor": contrast(color_map, "stripe"),
             },
         )
-
-
-def _add_stripe_whole_chrom(cols, rows, resolution, margin, layer, color_map):
-    return go.Scatter(
-        x=cols,
-        y=rows,
-        xaxis=layer[0],
-        yaxis=layer[1],
-        fillcolor=contrast(color_map, "stripe"),
-        marker_color=contrast(color_map, "stripe"),
-        hoverlabel={
-            "bgcolor": contrast(color_map, "stripe"),
-        },
-    )
 
 
 def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_map):

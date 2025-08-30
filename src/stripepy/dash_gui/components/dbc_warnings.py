@@ -3,13 +3,6 @@ from dash import html
 from dash_bootstrap_components import Alert
 
 
-def compose_stale_component_warning(comp_names):
-    comp_naming_string = ""
-    for name in comp_names:
-        comp_naming_string += "\n•" + name
-    return comp_naming_string
-
-
 def warning_stale_component(comp_names):
     comp_naming_string = ""
     for index, name in enumerate(comp_names):

@@ -1,6 +1,4 @@
-import concurrent.futures
 import contextlib
-import pathlib
 from pathlib import Path
 from tkinter import *
 from tkinter import filedialog
@@ -12,24 +10,20 @@ from colorscales import color_scale, contrast
 from components.axes import compute_x_axis_chroms, compute_x_axis_range
 from components.colorbar import colorbar
 from components.dbc_warnings import (
-    compose_stale_component_warning,
     warning_cancel,
     warning_no_stripes,
     warning_null,
     warning_pick_save_file,
     warning_stale_component,
 )
-from dash import dcc, html, no_update
-from dash.exceptions import PreventUpdate
-from plotly.subplots import make_subplots
+from dash import html, no_update
 from stripes import (
-    add_stripes_chrom_restriction,
+    add_stripes,
     add_stripes_rel_change_filter,
     add_stripes_visualisation_change,
-    add_stripes_whole_chrom,
 )
 
-from stripepy.algorithms import step1, step2, step3, step4
+from stripepy.algorithms import step1
 from stripepy.cli import call
 from stripepy.cli.call import *
 from stripepy.data_structures import IOManager, ProcessPoolWrapper, Result, Stripe
@@ -53,7 +47,7 @@ def open_file_dialog_callback(base_directory):
     return root.filename, warning_null()
 
 
-def look_for_file_callback(file_path, metaInfo):
+def look_for_file_callback(file_path):
     file_path = Path(file_path)
 
     f, resolutions, resolution_value = _pick_resolution_and_array(file_path)
@@ -373,7 +367,6 @@ def update_plot_callback(
 def call_stripes_callback(
     path,
     resolution,
-    scale_type,
     chrom_name,
     color_map,
     normalization,
@@ -542,36 +535,16 @@ def call_stripes_callback(
             if not result.empty:
                 FOUND_STRIPES = True
             if restriction_scope == "chromosome restriction":
-                fig = add_stripes_chrom_restriction(
-                    f,
-                    fig,
-                    result,
-                    resolution,
-                    (traces_x_axis, traces_y_axis),
-                    color_map,
-                    rel_change,
-                    chrom,
-                    margin,
-                    end_limit,
+                fig = add_stripes(
+                    f, fig, result, resolution, traces, color_map, chromosome_name, rel_change, margin, end_limit, False
                 )
             else:
-                fig = add_stripes_whole_chrom(
-                    f,
-                    fig,
-                    result,
-                    resolution,
-                    (traces_x_axis, traces_y_axis),
-                    chromosome_name,
-                    color_map,
-                    rel_change,
-                )
+                fig = add_stripes(f, fig, result, resolution, traces, color_map, chromosome_name, rel_change)
     ####
     #### Add stripes as traces
     ####
     if not FOUND_STRIPES:
         return (
-            no_update,
-            no_update,
             no_update,
             no_update,
             no_update,
@@ -593,9 +566,7 @@ def call_stripes_callback(
         return (
             str(path),
             resolution,
-            scale_type,
             chrom_name,
-            color_map,
             normalization,
             str(gen_belt),
             str(max_width),
@@ -762,9 +733,7 @@ def _make_stripes_into_string(array):
     return list_stored_string[:-1]  # Remove the last semicolon
 
 
-def filter_stripes_callback(
-    fig, resolution, colorMap, chromosome_name, rel_change, traces, margin, end_limit, ut_stripes, lt_stripes
-):
+def filter_stripes_callback(fig, resolution, colorMap, rel_change, traces, margin, end_limit, ut_stripes, lt_stripes):
     fig = add_stripes_rel_change_filter(fig, ut_stripes, resolution, colorMap, rel_change, traces, margin, end_limit)
     fig = add_stripes_rel_change_filter(fig, lt_stripes, resolution, colorMap, rel_change, traces, margin, end_limit)
-    return (*[no_update] * 14, rel_change, fig, warning_null(), *[no_update] * 23)
+    return (*[no_update] * 12, rel_change, fig, warning_null(), *[no_update] * 23)
