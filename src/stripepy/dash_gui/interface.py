@@ -417,7 +417,7 @@ def call_stripes(
     elif from_where_to_call == "No change":
         return _stale_fields()
     else:
-        return_list = call_stripes_callback(
+        return call_stripes_callback(
             path,
             resolution,
             region,
@@ -463,7 +463,6 @@ def call_stripes(
             end_limit,
             restriction_scope,
         )
-        return return_list
 
 
 def _string_to_int(string):

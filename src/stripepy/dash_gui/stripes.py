@@ -127,20 +127,6 @@ def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chro
         )
 
 
-def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_map):
-    return go.Scatter(
-        x=cols - (margin / resolution),
-        y=rows - (margin / resolution),
-        xaxis=layer[0],
-        yaxis=layer[1],
-        fillcolor=contrast(color_map, "stripe"),
-        marker_color=contrast(color_map, "stripe"),
-        hoverlabel={
-            "bgcolor": contrast(color_map, "stripe"),
-        },
-    )
-
-
 def add_stripes_visualisation_change(
     fig,
     stripe_list,
@@ -169,6 +155,20 @@ def add_stripes_visualisation_change(
             _add_stripe_chrom_restriction(x_values, y_values, resolution, margin, (layer_x, layer_y), color_map)
         )
     return fig
+
+
+def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_map):
+    return go.Scatter(
+        x=cols - (margin / resolution),
+        y=rows - (margin / resolution),
+        xaxis=layer[0],
+        yaxis=layer[1],
+        fillcolor=contrast(color_map, "stripe"),
+        marker_color=contrast(color_map, "stripe"),
+        hoverlabel={
+            "bgcolor": contrast(color_map, "stripe"),
+        },
+    )
 
 
 def add_stripes_rel_change_filter(

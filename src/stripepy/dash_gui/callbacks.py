@@ -67,6 +67,29 @@ def look_for_file_callback(file_path):
     )
 
 
+def _pick_resolution_and_array(path):
+    file_is_multi_res = _is_multi_res(path)
+    if file_is_multi_res:
+        temp_f = htk.MultiResFile(path)
+        resolutions = temp_f.resolutions().tolist()
+
+        # Pick the resolution closest to 10kb
+        resolution_value = _pick_closest(resolutions, 10000)
+        f = htk.File(path, resolution_value)
+    else:
+        f = htk.File(path)
+        resolutions = [f.resolution()]
+        resolution_value = resolutions
+    return f, resolutions, resolution_value
+
+
+def _is_multi_res(path):
+    if htk.is_cooler(path):
+        return False
+    else:
+        return True
+
+
 def _pick_closest(array, target_res):
     if target_res in array:
         return target_res
@@ -81,29 +104,6 @@ def _pick_closest(array, target_res):
                 return head
         else:
             last = head
-
-
-def _is_multi_res(path):
-    if htk.is_cooler(path):
-        return False
-    else:
-        return True
-
-
-def _pick_resolution_and_array(path):
-    file_is_multi_res = _is_multi_res(path)
-    if file_is_multi_res:
-        temp_f = htk.MultiResFile(path)
-        resolutions = temp_f.resolutions().tolist()
-
-        # Pick the resolution closest to 25kb
-        resolution_value = _pick_closest(resolutions, 25000)
-        f = htk.File(path, resolution_value)
-    else:
-        f = htk.File(path)
-        resolutions = [f.resolution()]
-        resolution_value = resolutions
-    return f, resolutions, resolution_value
 
 
 def pick_saved_callback(saved_string, update_plot_n_clicks):
