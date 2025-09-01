@@ -1,5 +1,3 @@
-from plotly.express.colors import named_colorscales
-
 from stripepy.plot import _get_custom_palettes
 
 custom_palettes = _get_custom_palettes()
@@ -23,27 +21,23 @@ nmeth = tuple(map(tuple, nmeth.tolist()))
 def color_scale(name):
     """
     Provide colorscales to interface.py.
-    Choose between cooltools colors and default plotly colors.
+    Utilizes 255-based RGB-scales adapted from https://github.com/open2c/cooltools/blob/master/cooltools/lib/plotting.py
 
     Returns
     -------
     List of tuples. Each tuple consists of a floating number and an rgb string on the form 'rgb(255, 255, 255)'.
-    If no match between input string and stored values, falls back to default plotly colors.
     """
     if name is None:
-        name = "fruit_punch "
+        name = "fruit_punch"
     scales = {
-        "fruit_punch ": [
+        "fruit_punch": [
             [index / (len(fruit_punch) - 1), "rgb" + str(element)] for index, element in enumerate(fruit_punch)
         ],
-        "fall ": [[index / (len(fall) - 1), "rgb" + str(element)] for index, element in enumerate(fall)],
-        "blues ": [[index / (len(blues) - 1), "rgb" + str(element)] for index, element in enumerate(blues)],
-        "acidblues ": [[index / (len(acidblues) - 1), "rgb" + str(element)] for index, element in enumerate(acidblues)],
-        "nmeth ": [[index / (len(nmeth) - 1), "rgb" + str(element)] for index, element in enumerate(nmeth)],
+        "fall": [[index / (len(fall) - 1), "rgb" + str(element)] for index, element in enumerate(fall)],
+        "blues": [[index / (len(blues) - 1), "rgb" + str(element)] for index, element in enumerate(blues)],
+        "acidblues": [[index / (len(acidblues) - 1), "rgb" + str(element)] for index, element in enumerate(acidblues)],
+        "nmeth": [[index / (len(nmeth) - 1), "rgb" + str(element)] for index, element in enumerate(nmeth)],
     }
-
-    if name not in scales:
-        return named_colorscales[name]
     return scales[name]
 
 
@@ -56,25 +50,25 @@ def contrast(colorMap, location):
     String. Name of color to be inserted in the location of the call.
     """
     label = {
-        "fruit_punch ": "teal",
-        "fall ": "teal",
-        "blues ": "darkorange",
-        "acidblues ": "teal",
-        "nmeth ": "purple",
+        "fruit_punch": "teal",
+        "fall": "teal",
+        "blues": "darkorange",
+        "acidblues": "teal",
+        "nmeth": "purple",
     }
     stripe = {
-        "fruit_punch ": "cornflowerblue",
-        "fall ": "deepskyblue",
-        "blues ": "green",
-        "acidblues ": "coral",
-        "nmeth ": "coral",
+        "fruit_punch": "cornflowerblue",
+        "fall": "deepskyblue",
+        "blues": "green",
+        "acidblues": "coral",
+        "nmeth": "coral",
     }
     background = {
-        "fruit_punch ": "mediumslateblue",
-        "fall ": "mediumslateblue",
-        "blues ": "chartreuse",
-        "acidblues ": "yellow",
-        "nmeth ": "cyan",
+        "fruit_punch": "mediumslateblue",
+        "fall": "mediumslateblue",
+        "blues": "chartreuse",
+        "acidblues": "yellow",
+        "nmeth": "cyan",
     }
     if location == "label":
         return label[colorMap]

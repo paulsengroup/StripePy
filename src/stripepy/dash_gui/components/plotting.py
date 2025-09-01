@@ -1,5 +1,4 @@
 import dash_bootstrap_components as dbc
-import plotly.express as px
 from dash import dcc, html
 
 
@@ -112,15 +111,14 @@ def render_color_map():
         [
             dcc.Dropdown(
                 options=[
-                    "fruit_punch ",
-                    "fall ",
-                    "blues ",
-                    "acidblues ",
-                    "nmeth ",
-                    *px.colors.named_colorscales(),
+                    "fruit_punch",
+                    "fall",
+                    "blues",
+                    "acidblues",
+                    "nmeth",
                 ],
                 placeholder="Color map",
-                value="fruit_punch ",
+                value="fruit_punch",
                 id="color-map",
                 disabled=True,
                 style={"width": 300, "fontSize": 20},
