@@ -554,20 +554,7 @@ def _find_restriction_scope(chrom_name):
 
 def _stale_fields():
     return (
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
-        no_update,
+        *[no_update] * 14,
         warning_stale_component(
             (
                 "file path",

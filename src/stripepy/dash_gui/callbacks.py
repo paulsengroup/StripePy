@@ -62,15 +62,7 @@ def look_for_file_callback(file_path):
         resolution_value,
         metaInfo,
         str(file_path.parent),
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
-        False,
+        *[False] * 9,
         warning_null(),
     )
 
@@ -546,20 +538,7 @@ def call_stripes_callback(
     ####
     if not FOUND_STRIPES:
         return (
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
-            no_update,
+            *[no_update] * 14,
             warning_no_stripes(),
             *_unpack_result(result),
         )
