@@ -275,7 +275,7 @@ def update_plot_callback(
     KEEP_STRIPES = False
     DRAW_STRIPES = False
     filepath = Path(filepath)
-    if (
+    if (  # Stripes are either kept or redrawn
         filepath == Path(last_used_path)
         and resolution == last_used_resolution
         and last_used_normalization == normalization
@@ -306,14 +306,14 @@ def update_plot_callback(
                     )
                 ),
             )
-        elif colorMap != last_used_color_map:
+        elif colorMap != last_used_color_map:  # Stripes must be redrawn to get new color
             DRAW_STRIPES = True
         elif chromosome_region.partition(":")[0] == last_used_region.partition(":")[0]:
             if (
                 chromosome_region.partition(":")[2] != last_used_region.partition(":")[2]
             ):  # Same chromosome, but different region; redraw stripes
                 DRAW_STRIPES = True
-            else:  # Only scale type or color map changed; keep stripes
+            else:  # Only scale type changed; stripes unaffected
                 KEEP_STRIPES = True
         else:  # Different chromosome; delete stripes
             KEEP_STRIPES = False
@@ -321,6 +321,7 @@ def update_plot_callback(
         KEEP_STRIPES = False
 
     colorMap_code = color_scale(colorMap)
+    # The lines below utilize StripePy and hictkpy to access a file. # The file data is then formatted to fit into a go.Heatmap figure.
     f = open_matrix_file_checked(filepath, resolution)
     sel = f.fetch(chromosome_region, normalization=None if normalization == "No normalization" else normalization)
     frame = sel.to_numpy()
@@ -328,13 +329,13 @@ def update_plot_callback(
     to_string_vector = np.vectorize(str)
     inv_log_frame_string = to_string_vector(frame)
 
-    filter_for_finite_and_positive = np.isfinite(frame) & (frame > 0)
+    filter_for_finite_and_positive = np.isfinite(frame) & (frame > 0)  # ignore nan, inf and -inf
     if scale_type == "log scale":
         if frame[filter_for_finite_and_positive].mean() < 1:  # Scale matrix if the mean value is less than 1
             scaling_product = 1 / np.min(frame[filter_for_finite_and_positive])
             frame[filter_for_finite_and_positive] *= scaling_product
         np.log(frame, out=frame, where=np.isnan(frame) == False)
-    lowest_real_value = np.min(frame[filter_for_finite_and_positive])  # isfinite() dicounts nan, inf and -inf
+    lowest_real_value = np.min(frame[filter_for_finite_and_positive])
     frame = np.where(np.isneginf(frame), lowest_real_value, frame)
 
     if chromosome_region:  # The plot is either a chromosome or a part of one
@@ -374,6 +375,7 @@ def update_plot_callback(
                 )
             )
 
+        # Formatting of axes
         tickvals, ticktext = compute_x_axis_range(chromosome_region, f, resolution)
         fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
         fig.update_yaxes(tickvals=tickvals, ticktext=ticktext, autorange="reversed", showgrid=False)
@@ -381,6 +383,7 @@ def update_plot_callback(
         # NaN-values are transparent
         traces_x_axis, traces_y_axis = "x1", "y1"
     else:
+        # If the user wants to visualize the entire genome, a second X axis is added above the figure
         if KEEP_STRIPES:
             # fig["data"] is an immutable data structure, so the object is re-created
             new_trace = [
@@ -436,6 +439,7 @@ def update_plot_callback(
                 )
             )
 
+        # Formatting of axes
         tickvals, ticktext = compute_x_axis_range(chromosome_region, f, resolution)
         tickvals_chrom, ticktext_chrom = compute_x_axis_chroms(f)
         fig.update_layout(
@@ -566,7 +570,6 @@ def call_stripes_callback(
         result_ut_stripes,
         result_lt_stripes,
     ]
-    traces_x_axis, traces_y_axis = traces
     with contextlib.ExitStack() as ctx:
         # Set up logger for the process pool
         main_logger = ctx.enter_context(ProcessSafeLogger("warning", path=None, progress_bar_type="call"))
@@ -581,13 +584,12 @@ def call_stripes_callback(
                 logger=None,
             )
         )
-
         # Set up the pool of worker threads
         tpool = ctx.enter_context(
             concurrent.futures.ThreadPoolExecutor(max_workers=min(nproc, 2)),
         )
         if restriction_scope == "whole genome":
-            tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None for the time being
+            tasks = call._plan_tasks(chroms, min_chrom_size, None)  # logger set to None
         else:
             tasks = call._plan_tasks({chromosome_name: chroms[chromosome_name]}, min_chrom_size, None)
         FOUND_STRIPES = False
@@ -656,9 +658,7 @@ def call_stripes_callback(
                         logger.bind(chrom=chromosome_name),
                     )
 
-            #####
-            ### Add stripes
-            #####
+            # Add stripes to Figure
             if not result.empty:
                 FOUND_STRIPES = True
             if restriction_scope == "chromosome restriction":
@@ -667,9 +667,6 @@ def call_stripes_callback(
                 )
             else:
                 fig = add_stripes(f, fig, result, resolution, traces, color_map, chromosome_name, rel_change)
-    ####
-    #### Add stripes as traces
-    ####
     if not FOUND_STRIPES:
         return (
             *[no_update] * 14,
@@ -772,7 +769,7 @@ def _compose_result(result_package, starting_point):
             new_stripe.set_horizontal_bounds(lb, rb)
             new_stripe.set_vertical_bounds(tb, bb)
             lower_stripes.append(new_stripe)
-    elif starting_point == "After":
+    elif starting_point == "After":  # Propagate all the data collected, including relative change
         upper_stripes_list = result_package.pop(0)
         lower_stripes_list = result_package.pop(0)
         return upper_stripes_list, lower_stripes_list

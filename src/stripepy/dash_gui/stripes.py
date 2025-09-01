@@ -20,7 +20,7 @@ def add_stripes(
     Add stripes to the chosen figure.
     """
     length_of_earlier_chromosomes = 0
-    if is_whole_chromosome:
+    if is_whole_chromosome:  # Compute the total length of chromosomes to the left of the current one.
         for chrom_name, chromosome_lengths in f.chromosomes().items():
             if chrom_name == chromosome_name:
                 end_limit = length_of_earlier_chromosomes + chromosome_lengths
@@ -44,10 +44,16 @@ def add_stripes(
 
 
 def extract_stripes(fig, result, resolution, layers, color_map, rel_change, margin, end_limit, is_whole_chromosome):
+    # Geographical descriptors include the bottom-most and top-most position of the stripe,
+    # as well as horizontal positions and its position on the diagonal (seed).
+    # The parameter rel_change conveys the threshold for relative change.
+    # The data frame column "rel_change" contains the relative change value for every stripe.
     geo_frame_LT = result.get_stripe_geo_descriptors("LT")
     bio_frame_LT = result.get_stripe_bio_descriptors("LT")
     geo_frame_LT["relative_change"] = bio_frame_LT["rel_change"]
     geo_frame_LT = geo_frame_LT[geo_frame_LT["relative_change"] > rel_change]
+    # Each dataframe row containing bottom boundary, top boundary, left boundary
+    # and right boundary are manipulated to be compatible with the go.Scatter object
     for rows in geo_frame_LT.iterrows():
         array = _get_correct_cells(rows)
         if not is_whole_chromosome:

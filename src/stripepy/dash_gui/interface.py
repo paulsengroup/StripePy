@@ -535,7 +535,7 @@ def _compare(current_settings, past_settings):
     """
     for index, comparison in enumerate(current_settings):
         if comparison != past_settings[index]:
-            if index <= 6:  # interactions
+            if index <= 6:  # Matrix plotting, gen_belt, nproc
                 print("Go from step 2")
                 return "Step 2"
             if index <= 8:  # max width, local trend minimum
