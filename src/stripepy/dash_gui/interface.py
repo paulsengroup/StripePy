@@ -147,7 +147,7 @@ def _disable_radio_elements(become_disabled):
 )
 def update_plot(
     n_clicks,
-    chromosome_name,
+    chromosome_region,
     colorMap,
     normalization,
     filepath,
@@ -166,7 +166,7 @@ def update_plot(
     lt_stripes,
 ):
     return update_plot_callback(
-        chromosome_name,
+        chromosome_region,
         colorMap,
         normalization,
         filepath,

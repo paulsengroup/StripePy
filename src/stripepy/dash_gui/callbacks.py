@@ -131,7 +131,7 @@ def look_for_normalizations_under_current_resolution_callback(resolution, path, 
 
 
 def update_plot_callback(
-    chromosome_name,
+    chromosome_region,
     colorMap,
     normalization,
     filepath,
@@ -158,7 +158,7 @@ def update_plot_callback(
         and last_used_normalization == normalization
     ):
         if (
-            last_used_region == chromosome_name
+            last_used_region == chromosome_region
             and last_used_scale_type == scale_type
             and last_used_color_map == colorMap
         ):  # Give warning that nothing changed
@@ -185,9 +185,9 @@ def update_plot_callback(
             )
         elif colorMap != last_used_color_map:
             DRAW_STRIPES = True
-        elif chromosome_name.partition(":")[0] == last_used_region.partition(":")[0]:
+        elif chromosome_region.partition(":")[0] == last_used_region.partition(":")[0]:
             if (
-                chromosome_name.partition(":")[2] != last_used_region.partition(":")[2]
+                chromosome_region.partition(":")[2] != last_used_region.partition(":")[2]
             ):  # Same chromosome, but different region; redraw stripes
                 DRAW_STRIPES = True
             else:  # Only scale type or color map changed; keep stripes
@@ -199,7 +199,7 @@ def update_plot_callback(
 
     colorMap_code = color_scale(colorMap)
     f = open_matrix_file_checked(filepath, resolution)
-    sel = f.fetch(chromosome_name, normalization=None if normalization == "No normalization" else normalization)
+    sel = f.fetch(chromosome_region, normalization=None if normalization == "No normalization" else normalization)
     frame = sel.to_numpy()
     frame = frame.astype(np.float32)
     to_string_vector = np.vectorize(str)
@@ -214,9 +214,8 @@ def update_plot_callback(
     lowest_real_value = np.min(frame[filter_for_finite_and_positive])  # isfinite() dicounts nan, inf and -inf
     frame = np.where(np.isneginf(frame), lowest_real_value, frame)
 
-    if chromosome_name:
-        if KEEP_STRIPES:
-            # fig["data"] is an immutable data structure, so the object is re-created
+    if chromosome_region:  # The plot is either a chromosome or a part of one
+        if KEEP_STRIPES:  # fig["data"] is an immutable data structure, so the object is edited destructively
             new_trace = [
                 go.Heatmap(
                     z=frame,
@@ -252,7 +251,7 @@ def update_plot_callback(
                 )
             )
 
-        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
+        tickvals, ticktext = compute_x_axis_range(chromosome_region, f, resolution)
         fig.update_xaxes(tickvals=tickvals, ticktext=ticktext, showgrid=False)
         fig.update_yaxes(tickvals=tickvals, ticktext=ticktext, autorange="reversed", showgrid=False)
         fig.update_layout(plot_bgcolor=contrast(colorMap, "background"))
@@ -314,7 +313,7 @@ def update_plot_callback(
                 )
             )
 
-        tickvals, ticktext = compute_x_axis_range(chromosome_name, f, resolution)
+        tickvals, ticktext = compute_x_axis_range(chromosome_region, f, resolution)
         tickvals_chrom, ticktext_chrom = compute_x_axis_chroms(f)
         fig.update_layout(
             xaxis1=dict(tickvals=tickvals, ticktext=ticktext, showgrid=False, side="bottom"),
@@ -329,26 +328,26 @@ def update_plot_callback(
 
     if DRAW_STRIPES and existing_lt_stripes and existing_ut_stripes:
         fig = add_stripes_visualisation_change(
-            fig, existing_lt_stripes, resolution, colorMap, chromosome_name, rel_change, traces_x_axis, traces_y_axis
+            fig, existing_lt_stripes, resolution, colorMap, chromosome_region, rel_change, traces_x_axis, traces_y_axis
         )
         fig = add_stripes_visualisation_change(
-            fig, existing_ut_stripes, resolution, colorMap, chromosome_name, rel_change, traces_x_axis, traces_y_axis
+            fig, existing_ut_stripes, resolution, colorMap, chromosome_region, rel_change, traces_x_axis, traces_y_axis
         )
 
-    filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}"
+    filepath_assembled_string = f"{filepath};{resolution};{scale_type};{chromosome_region};{normalization}"
     try:
         if filepath_assembled_string not in [values for dicts in files_list for values in dicts.values()]:
             files_list.append(
                 {
-                    "label": f"res={resolution}, scaletype={scale_type}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
-                    "value": f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}",
+                    "label": f"res={resolution}, scaletype={scale_type}, norm={normalization}, region={chromosome_region if chromosome_region else "entire"}: {filepath.name}",
+                    "value": f"{filepath};{resolution};{scale_type};{chromosome_region};{normalization}",
                 }
             )
     except TypeError:
         files_list = [
             {
-                "label": f"res={resolution}, scaletype={scale_type}, norm={normalization}, region={chromosome_name if chromosome_name else "entire"}: {filepath.name}",
-                "value": f"{filepath};{resolution};{scale_type};{chromosome_name};{normalization}",
+                "label": f"res={resolution}, scaletype={scale_type}, norm={normalization}, region={chromosome_region if chromosome_region else "entire"}: {filepath.name}",
+                "value": f"{filepath};{resolution};{scale_type};{chromosome_region};{normalization}",
             }
         ]
 
@@ -359,7 +358,7 @@ def update_plot_callback(
         str(filepath),
         resolution,
         scale_type,
-        chromosome_name,
+        chromosome_region,
         colorMap,
         normalization,
         warning_null(),
