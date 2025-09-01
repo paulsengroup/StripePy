@@ -466,6 +466,9 @@ def call_stripes(
 
 
 def _string_to_int(string):
+    """
+    Turn string representation of a number into a number
+    """
     assert isinstance(string, str)
     try:
         if isinstance(string, int):
@@ -490,6 +493,9 @@ def _string_to_bool(string):
 
 
 def _string_to_list(string):
+    """
+    Turn a string representation of numbers into a list containing the numbers
+    """
     assert isinstance(string, str)
     if string == "":
         return []
@@ -500,6 +506,10 @@ def _string_to_list(string):
 
 
 def _string_to_stripe(string, where):
+    """
+    Similar to _string_to_list. Tailor made for the strings that store stripe info.
+    Returns different scopes of data depending on what step of StripePy is run.
+    """
     if string == "":
         return []
     if where == "Step 2":
@@ -520,6 +530,9 @@ def _string_to_stripe(string, where):
 
 
 def _compare(current_settings, past_settings):
+    """
+    Calculate the first necessary step of StripePy to run, if any.
+    """
     for index, comparison in enumerate(current_settings):
         if comparison != past_settings[index]:
             if index <= 6:  # interactions
@@ -540,6 +553,9 @@ def _compare(current_settings, past_settings):
 
 
 def _find_restriction_scope(chrom_name):
+    """
+    Calculates whether to visualise a region of a chromosome, a whole chromosome, or the entire genome
+    """
     restriction_scope = ""
     chrom, _, frame = chrom_name.partition(":")
     if frame:
@@ -552,6 +568,9 @@ def _find_restriction_scope(chrom_name):
 
 
 def _stale_fields():
+    """
+    No stripes are drawn on the Hi-C matrix, and a new warning pops up in the warning banner.
+    """
     return (
         *[no_update] * 14,
         warning_stale_component(

@@ -2,6 +2,12 @@ from dash import dcc, html
 
 
 def render_metadata():
+    """
+    Render function for data including:
+    - Name and length of chromosomes in the file
+    - Earlier runs, for quick reruns
+    - Buttons relating to rerunning and toggling hide/show metadata
+    """
     return html.Div(
         [
             html.Button(
@@ -32,6 +38,9 @@ def render_metadata():
 
 
 def render_hidden():
+    """
+    Stores all data related to the last runs of matrix plotting and stripe calling.
+    """
     return html.Div(
         [
             html.P("", id="last-used-path"),

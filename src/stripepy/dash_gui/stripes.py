@@ -16,6 +16,9 @@ def add_stripes(
     end_limit=0,
     is_whole_chromosome=True,
 ):
+    """
+    Add stripes to the chosen figure.
+    """
     length_of_earlier_chromosomes = 0
     if is_whole_chromosome:
         for chrom_name, chromosome_lengths in f.chromosomes().items():
@@ -85,6 +88,10 @@ def _get_correct_cells(df_row):
 
 
 def _truncate_values(array, resolution, margin, end_limit):
+    """
+    If the top or bottom of the stripe is outside the visualised range, crop the stripe.
+    If the top and bottom or the left or right side is outside the visualised range, remove the stripe.
+    """
     if array[0] < margin / resolution or array[1] < margin / resolution:
         return None
     if array[0] > end_limit / resolution or array[1] > end_limit / resolution:
@@ -102,6 +109,9 @@ def _truncate_values(array, resolution, margin, end_limit):
 
 def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chromosome):
     if is_whole_chromosome:
+        """
+        The elements in x values and y values that share an index form the coordinates for a single marker together. Every doublette of lists draw five points, where the first and the last are the same. The resulting scatter plot will be a rectangle based on the geographical descriptors of a stripe.
+        """
         return go.Scatter(
             x=cols,
             y=rows,
@@ -137,6 +147,9 @@ def add_stripes_visualisation_change(
     layer_x,
     layer_y,
 ):
+    """
+    Draw stripes based on an already existing list.
+    """
     chrom_name, _, spans = chromosome_name.partition(":")
     if spans:
         pre_span_in_chromosome, _, end_limit = spans.partition("-")
@@ -174,6 +187,9 @@ def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_m
 def add_stripes_rel_change_filter(
     fig, stripe_list, resolution, color_map, relative_change_threshold, traces, margin, end_limit
 ):
+    """
+    Draw stripes based on an existing list, with margin and end_limit already calculated.
+    """
     for stripe in stripe_list:
         seed, top_pers, left_bound, right_bound, top_bound, bottom_bound, rel_change = stripe
         if rel_change < relative_change_threshold:

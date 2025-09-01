@@ -31,6 +31,21 @@ from stripepy.io import ProcessSafeLogger, open_matrix_file_checked
 
 
 def open_file_dialog_callback(base_directory):
+    """
+    Runs the tkinter function askopenfilename(). Opens file selection window.
+
+    Parameters
+    ----------
+    str: Path
+        The last directory from which a path was picked
+
+    Returns
+    -------
+    str
+        Path to the selected file
+    HTML: Div
+        Update to warning banner
+    """
     if base_directory == "":
         go_to_directory = "."
     else:
@@ -48,6 +63,35 @@ def open_file_dialog_callback(base_directory):
 
 
 def look_for_file_callback(file_path):
+    """
+    Accesses the picked file and gains info about available resolutions, available chromosomes, and length of available chromosomes.
+
+    Parameters
+    ----------
+    str: Path
+        Path to file
+
+    Returns
+    -------
+    List
+        List of all available resolutions
+    int
+        From available resolutions, the one being the closest to 25kb
+    HTML: Div
+        A list of name and length of all available chromosomes
+    str: Path
+        The path to the directory of the picked file, updating which file path was used last
+    Bool: False
+        Showing and un-disabling different fields in the code, making them readable and intereactable. Includes:
+        - Resolution options drop-down menu
+        - Chromosome region text field
+        - Color mapping options drop-down menu
+        - Normalization options drop-down menu
+        - Info icons with pop-up boxes for these fields
+        - Plot matrix button
+    HTML: Div
+        Reset the warning banner
+    """
     file_path = Path(file_path)
 
     f, resolutions, resolution_value = _pick_resolution_and_array(file_path)
@@ -107,6 +151,33 @@ def _pick_closest(array, target_res):
 
 
 def pick_saved_callback(saved_string, update_plot_n_clicks):
+    """
+    Parses the string of an earlier plotting run, re-creating it. Populates every field with the correct values and clicks the "update_plot" button. Note that the resolution return value will quickly be overwritten by a call on look_for_file_callback()
+
+    Parameters
+    ----------
+    str
+        String-type information about an earlier run
+    int
+        Number of times the "Plot matrix" button has been pressed.
+
+    Returns
+    -------
+    str: Path
+        Path to the file to be used in the plot
+    int:
+        The resolution to be used in the plot
+    str:
+        Whether the matrix was plotted with linear or logarithmic scale
+    str:
+        The string populating the chromosome name field
+    str:
+        The value to be inserted in the normalization field
+    int:
+        Number of times the "Plot matrix" button has been pressed. Will simulate a press of the button, triggering a plotting
+    HTML: Div
+        Update the warning banner, either to an empty field or the appropriate warning
+    """
     if saved_string is None:
         return no_update, no_update, no_update, no_update, no_update, no_update, warning_pick_save_file()
     filepath, resolution, scale_type, chrom_name, normalization = saved_string.split(";")
@@ -114,6 +185,25 @@ def pick_saved_callback(saved_string, update_plot_n_clicks):
 
 
 def look_for_normalizations_under_current_resolution_callback(resolution, path, current_normalization):
+    """
+    Finds all available normalization options whenever the resolution is changed
+
+    Parameters
+    ----------
+    int:
+        The picked resolution
+    str: Path
+        The current file path
+    str:
+        The current normalization option
+
+    Returns
+    -------
+    List:
+        The available normalizations
+    str: Optional
+        The initial value of the dropdown-menu. If the last picked option exists in the new list, no update is made. If it does not, the option "No normalization" is picked as initial value.
+    """
     f = open_matrix_file_checked(path, resolution)
     avail_normalizations = f.avail_normalizations()
     avail_normalizations.append("No normalization")
@@ -141,6 +231,47 @@ def update_plot_callback(
     existing_ut_stripes,
     existing_lt_stripes,
 ):
+    """
+    Plots a Hi-C matrix based on the current and previous options. The matrix is plotted with different axis information based on whether the user wants to plot a gneome, a chromosome or a chromosome region. Note that the information given in the chromosome region version is the most relevant for running StripePy.
+
+    Parameters
+    ----------
+    str:
+        The picked chromosome region
+    str:
+        The picked color mapping
+    str:
+        The picked normalization
+    str: Path
+        Path to the picked file
+    int:
+        The picked resolution
+    str:
+        The picked scale type, either linear or logarithmic
+    List[Dict[str:str]]:
+        The list over earlier plotted matrices, with options. "label" is shown to the user, "value" is more parser friendly.
+    int:
+        A filtering parameter in StripePy. If the filtering level is changed, more or fewer stripes will need to be plotted
+    str:
+        The parameters named last_used_* are compared to their current counterparts in the business logic.
+    go.Figure
+        The Figure is initially empty, but is populated with the matrix itself as go.Heatmap and proposed stripes as go.Scatter
+    str:
+        Parser friendly information of all stripes currently stored for the chromosome. If the plotted region of the chromosome, the scale type, color mapping or relative change are changed, this list is consulted to draw new stripes.
+
+    Returns
+    -------
+    go.Figure
+        The updated figure
+    List[Dict[str:str]]
+        The updated list of plotted matrices
+    Bool: False
+        Updates the "hidden" attribute of the container of the Figure. Makes the figure visible after the first run.
+    str:
+        The containers named last_used_* are update with the values picked for this run.
+    HTML: Div
+        Update the warning banner, either to an empty field or the appropriate warning
+    """
     KEEP_STRIPES = False
     DRAW_STRIPES = False
     filepath = Path(filepath)
@@ -403,6 +534,9 @@ def call_stripes_callback(
     end_limit,
     restriction_scope,
 ):
+    """
+    Runs StripePy on the chosen matrix
+    """
     min_chrom_size = 1
     f = open_matrix_file_checked(path, resolution)
     chroms = f.chromosomes(include_ALL=False)
@@ -596,6 +730,9 @@ def _where_to_start_calling_sequence(from_where_to_call):
 
 
 def _compose_result(result_package, starting_point):
+    """
+    Compose a Result object from an earlier run. The scope of included data is decided what StripePy step receives the Result file.
+    """
     attributes_list = [
         "pseudodistribution",
         "all_minimum_points",
@@ -645,6 +782,9 @@ def _compose_result(result_package, starting_point):
 
 
 def _unpack_result(result):
+    """
+    Preprocess the Result file for storage as string.
+    """
     chrom_name, chrom_size = result.chrom
     up_pse = result.get("pseudodistribution", "upper")
     lt_pse = result.get("pseudodistribution", "lower")
@@ -714,6 +854,9 @@ def _make_stripes_into_string(array):
 
 
 def filter_stripes_callback(fig, resolution, colorMap, rel_change, traces, margin, end_limit, ut_stripes, lt_stripes):
+    """
+    Add a different set of stripes, based on the new relative change threshold.
+    """
     fig = add_stripes_rel_change_filter(fig, ut_stripes, resolution, colorMap, rel_change, traces, margin, end_limit)
     fig = add_stripes_rel_change_filter(fig, lt_stripes, resolution, colorMap, rel_change, traces, margin, end_limit)
     return (*[no_update] * 12, rel_change, fig, warning_null(), *[no_update] * 23)
