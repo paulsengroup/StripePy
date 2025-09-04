@@ -286,15 +286,7 @@ def update_plot_callback(
             and last_used_color_map == colorMap
         ):  # Give warning that nothing changed
             return (
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
+                *[no_update] * 9,
                 warning_stale_component(
                     (
                         "file path",
