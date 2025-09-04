@@ -14,7 +14,7 @@ from callbacks import (
     pick_saved_callback,
     update_plot_callback,
 )
-from components.dbc_warnings import warning_stale_component
+from components.dbc_warnings import warning_gen_wide, warning_stale_component
 from components.layout import layout
 from dash import Dash, Input, Output, State, no_update
 
@@ -360,6 +360,8 @@ def call_stripes(
     raw_plot = [trace for trace in fig["data"] if type(trace) == go.Heatmap]
     fig["data"] = tuple(raw_plot)
 
+    if region == "":
+        return _not_implemented_gen_wide()
     chromosome_name, _, frame = region.partition(":")
     margin, _, end_limit = frame.partition("-")
     margin = _string_to_int(margin)
@@ -591,6 +593,14 @@ def _stale_fields():
                 "relative signal change",
             )
         ),
+        *[no_update] * 23,
+    )
+
+
+def _not_implemented_gen_wide():
+    return (
+        *[no_update] * 14,
+        warning_gen_wide(),
         *[no_update] * 23,
     )
 

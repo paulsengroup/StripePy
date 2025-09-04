@@ -49,3 +49,15 @@ def warning_cancel():
         ],
         id="alert-message",
     )
+
+
+def warning_gen_wide():
+    return html.Div(
+        [
+            Alert(
+                "This user interface has not implemented a genome wide version of StripePy. Please plot a chromosome or a restricted chromosome region to run stripe calling.",
+                color="info",
+            ),
+        ],
+        id="alert-message",
+    )
