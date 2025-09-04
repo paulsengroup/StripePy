@@ -52,14 +52,14 @@ def contrast(colorMap, location):
     label = {
         "fruit_punch": "teal",
         "fall": "teal",
-        "blues": "darkorange",
+        "blues": "teal",
         "acidblues": "teal",
         "nmeth": "purple",
     }
     stripe = {
         "fruit_punch": "cornflowerblue",
         "fall": "deepskyblue",
-        "blues": "green",
+        "blues": "magenta",
         "acidblues": "coral",
         "nmeth": "coral",
     }
