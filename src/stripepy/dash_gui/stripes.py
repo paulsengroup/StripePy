@@ -110,14 +110,27 @@ def _truncate_values(array, resolution, margin, end_limit):
     array[2] = max(array[2], margin / resolution)
     array[1] = min(array[1], end_limit / resolution)
     array[3] = min(array[3], end_limit / resolution)
+    array = np.array(list(map(int, array)))
     return array
 
 
 def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chromosome):
+    """
+    The elements in x values and y values that share an index form the coordinates for a single marker together. Every doublette of lists draw five points, where the first and the last are the same. The resulting scatter plot will be a rectangle based on the geographical descriptors of a stripe.
+    """
+    cols_res_corrected = cols
+    rows_res_corrected = rows
+    to_string_vector = np.vectorize(str)
+    cols_in_string = to_string_vector(cols_res_corrected)
+    rows_in_string = to_string_vector(rows_res_corrected)
+    customdata_ = list(
+        map(
+            lambda x, y: "x: " + str(int(float(x) * resolution)) + "<br>y: " + str(int(float(y) * resolution)),
+            cols_in_string,
+            rows_in_string,
+        )
+    )
     if is_whole_chromosome:
-        """
-        The elements in x values and y values that share an index form the coordinates for a single marker together. Every doublette of lists draw five points, where the first and the last are the same. The resulting scatter plot will be a rectangle based on the geographical descriptors of a stripe.
-        """
         return go.Scatter(
             x=cols,
             y=rows,
@@ -125,6 +138,8 @@ def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chro
             yaxis=layer[1],
             fillcolor=contrast(color_map, "stripe"),
             marker_color=contrast(color_map, "stripe"),
+            customdata=customdata_,
+            hovertemplate="%{customdata}<extra></extra>",
             hoverlabel={
                 "bgcolor": contrast(color_map, "stripe"),
             },
@@ -137,6 +152,8 @@ def _draw_stripe(cols, rows, resolution, margin, layer, color_map, is_whole_chro
             yaxis=layer[1],
             fillcolor=contrast(color_map, "stripe"),
             marker_color=contrast(color_map, "stripe"),
+            customdata=customdata_,
+            hovertemplate="%{customdata}<extra></extra>",
             hoverlabel={
                 "bgcolor": contrast(color_map, "stripe"),
             },
@@ -160,6 +177,8 @@ def add_stripes_visualisation_change(
     if spans:
         pre_span_in_chromosome, _, end_limit = spans.partition("-")
         margin = int(pre_span_in_chromosome.replace(",", ""))
+        if margin == None:
+            margin = 0
         end_limit = int(end_limit.replace(",", ""))
     for stripe in stripe_list:
         seed, top_pers, left_bound, right_bound, top_bound, bottom_bound, rel_change = stripe
@@ -177,6 +196,18 @@ def add_stripes_visualisation_change(
 
 
 def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_map):
+    cols_res_corrected = cols
+    rows_res_corrected = rows
+    to_string_vector = np.vectorize(str)
+    cols_in_string = to_string_vector(cols_res_corrected)
+    rows_in_string = to_string_vector(rows_res_corrected)
+    customdata_ = list(
+        map(
+            lambda x, y: "x: " + str(int(float(x) * resolution)) + "<br>y: " + str(int(float(y) * resolution)),
+            cols_in_string,
+            rows_in_string,
+        )
+    )
     return go.Scatter(
         x=cols - (margin / resolution),
         y=rows - (margin / resolution),
@@ -184,6 +215,8 @@ def _add_stripe_chrom_restriction(cols, rows, resolution, margin, layer, color_m
         yaxis=layer[1],
         fillcolor=contrast(color_map, "stripe"),
         marker_color=contrast(color_map, "stripe"),
+        customdata=customdata_,
+        hovertemplate="%{customdata}<extra></extra>",
         hoverlabel={
             "bgcolor": contrast(color_map, "stripe"),
         },
