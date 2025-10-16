@@ -93,16 +93,10 @@ def look_for_normalizations_under_current_resolution(resolution, path, current_n
 
 
 def _disable_radio_elements(become_disabled):
-    if become_disabled:
-        return [
-            {"label": "log scale", "value": "log scale", "disabled": True},
-            {"label": "linear scale", "value": "linear scale", "disabled": True},
-        ]
-    else:
-        return [
-            {"label": "log scale", "value": "log scale", "disabled": False},
-            {"label": "linear scale", "value": "linear scale", "disabled": False},
-        ]
+    return [
+        {"label": "log scale", "value": "log scale", "disabled": become_disabled},
+        {"label": "linear scale", "value": "linear scale", "disabled": become_disabled},
+    ]
 
 
 @app.callback(
