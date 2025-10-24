@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 from callbacks import (
     call_stripes_callback,
     filter_stripes_callback,
-    look_for_file_callback,
     look_for_normalizations_under_current_resolution_callback,
     open_file_dialog_callback,
     pick_saved_callback,
@@ -26,19 +25,6 @@ app.layout = layout()
 
 @app.callback(
     Output("file-path", "value", allow_duplicate=True),
-    Output("warning-window", "children", allow_duplicate=True),
-    Input("filepath-dialog", "n_clicks"),
-    State("last-used-file-directory", "children"),
-    prevent_initial_call=True,
-    running=[
-        (Output("resolution", "disabled"), True, False),
-    ],
-)
-def open_file_dialog(n_clicks, base_directory):
-    return open_file_dialog_callback(base_directory)
-
-
-@app.callback(
     Output("resolution", "options"),
     Output("resolution", "value", allow_duplicate=True),
     Output("chromosomes", "children"),
@@ -53,11 +39,15 @@ def open_file_dialog(n_clicks, base_directory):
     Output("normalization", "disabled"),
     Output("data", "hidden"),
     Output("warning-window", "children", allow_duplicate=True),
-    Input("file-path", "value"),
+    Input("filepath-dialog", "n_clicks"),
+    State("last-used-file-directory", "children"),
     prevent_initial_call=True,
+    running=[
+        (Output("resolution", "disabled"), True, False),
+    ],
 )
-def look_for_file(file_path):
-    return look_for_file_callback(file_path)
+def open_file_dialog(n_clicks, base_directory):
+    return open_file_dialog_callback(base_directory)
 
 
 @app.callback(

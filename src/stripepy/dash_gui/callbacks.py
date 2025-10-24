@@ -45,34 +45,6 @@ def open_file_dialog_callback(base_directory):
         Path to the selected file
     HTML: Div
         Update to warning banner
-    """
-    if base_directory == "":
-        go_to_directory = "."
-    else:
-        go_to_directory = base_directory
-    root = Tk()
-    root.filename = filedialog.askopenfilename(
-        initialdir=go_to_directory,
-        title="Select file",
-        filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*")),
-    )
-    root.destroy()
-    if root.filename == "":
-        return no_update, warning_cancel()
-    return root.filename, warning_null()
-
-
-def look_for_file_callback(file_path):
-    """
-    Accesses the picked file and gains info about available resolutions, available chromosomes, and length of available chromosomes.
-
-    Parameters
-    ----------
-    str: Path
-        Path to file
-
-    Returns
-    -------
     List
         List of all available resolutions
     int
@@ -89,9 +61,24 @@ def look_for_file_callback(file_path):
         - Normalization options drop-down menu
         - Info icons with pop-up boxes for these fields
         - Plot matrix button
-    HTML: Div
-        Reset the warning banner
     """
+    if base_directory == "":
+        go_to_directory = "."
+    else:
+        go_to_directory = base_directory
+    root = Tk()
+    root.filename = filedialog.askopenfilename(
+        initialdir=go_to_directory,
+        title="Select file",
+        filetypes=(("Hi-C files", "*.hic *.cool *.mcool"), ("all files", "*.*")),
+    )
+    root.destroy()
+    if root.filename == "":
+        return no_update, *[no_update] * 13, warning_cancel()
+    return root.filename, *_look_for_file(root.filename), *[False] * 9, warning_null()
+
+
+def _look_for_file(file_path):
     file_path = Path(file_path)
 
     f, resolutions, resolution_value = _pick_resolution_and_array(file_path)
@@ -106,8 +93,6 @@ def look_for_file_callback(file_path):
         resolution_value,
         metaInfo,
         str(file_path.parent),
-        *[False] * 9,
-        warning_null(),
     )
 
 
