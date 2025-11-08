@@ -724,13 +724,13 @@ def _compose_result(result_package, starting_point):
         result.set(attribute, np.array(result_package.pop(0)), "upper")
         result.set(attribute, np.array(result_package.pop(0)), "lower")
     if starting_point == call._run_step_3:  # Propagate the data collected in step 2
-        upper_stripes_list = result_package.pop(0)[:2]
-        lower_stripes_list = result_package.pop(0)[:2]
+        upper_stripes_list = result_package.pop(0)
+        lower_stripes_list = result_package.pop(0)
         upper_stripes = [Stripe(seed, top_pers=pers, where="upper_triangular") for seed, pers in upper_stripes_list]
         lower_stripes = [Stripe(seed, top_pers=pers, where="lower_triangular") for seed, pers in lower_stripes_list]
     elif starting_point == call._run_step_4:  # Propagate the data collected in step 3
-        upper_stripes_list = result_package.pop(0)[:6]
-        lower_stripes_list = result_package.pop(0)[:6]
+        upper_stripes_list = result_package.pop(0)
+        lower_stripes_list = result_package.pop(0)
         upper_stripes = []
         for stripe_string in upper_stripes_list:
             seed, pers, lb, rb, tb, bb = stripe_string
