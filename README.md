@@ -4,7 +4,42 @@ Copyright (C) 2024 Roberto Rossini <roberros@uio.no>
 SPDX-License-Identifier: MIT
 -->
 
-# StripePy
+# Independent application
+
+---
+
+This repository documents a GUI extension to StripePy. It is the product of an MSc at IFI, UiO.
+
+## How to Use
+
+---
+
+1. Clone the repo locally
+2. Navigate to the local repo in terminal
+3. `git checkout devel` to switch to the correct branch
+4. `pip install .[all]` to install the software
+5. `python .\src\stripepy\dash_gui\interface.py` to initialize the application
+6. In web browser, navigate to the URL that pops up in the CLI.
+
+---
+
+## Tips and Tricks
+
+---
+
+If matrix rendering takes more than 1 minute, the inputted matrix is too big. To abort the call, press `Ctrl + C` in the
+terminal window running the application, and refresh the browser window.
+
+Remember to plot a matrix before attempting to call stripes on it. This is done by pressing "Submit".
+
+If the buttons are non-responsive, the application is running. This is to prevent several calls to start in tandem. If you
+find a way to trigger several calls at once, do so at your own risk!
+
+Refreshing the browser window wipes the memory of the instance.
+
+---
+
+## StripePy
 
 ---
 
