@@ -70,7 +70,7 @@ jobs:
 
   cache-test-datasets:
     name: Cache test datasets
-    uses: paulsengroup/StripePy/.github/workflows/cache-test-datasets.yml@4e4be1d87bb87cf069400149abf46aa319829b2b
+    uses: paulsengroup/StripePy/.github/workflows/cache-test-datasets.yml@1448c890d623eff54fc9d02142305967ad410464
 
   ci:
     name: CI
@@ -81,7 +81,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
