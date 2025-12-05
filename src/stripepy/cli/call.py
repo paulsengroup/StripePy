@@ -8,10 +8,12 @@ import json
 import pathlib
 import shutil
 import time
+import warnings
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import structlog
+from packaging.version import Version
 
 from stripepy.algorithms import step2, step3, step4, step5
 from stripepy.data_structures import (
@@ -39,6 +41,7 @@ def run(
     resolution: int,
     output_file: pathlib.Path,
     genomic_belt: int,
+    low_memory: bool,
     max_width: int,
     glob_pers_min: float,
     constrain_heights: bool,
@@ -73,6 +76,7 @@ def run(
         contact_map=contact_map,
         resolution=resolution,
         genomic_belt=genomic_belt,
+        low_memory=low_memory,
         max_width=max_width,
         glob_pers_min=glob_pers_min,
         constrain_heights=constrain_heights,
@@ -99,6 +103,14 @@ def run(
 
     if force:
         _remove_existing_output_files(output_file, plot_dir, chroms)
+
+    if low_memory:
+        import hictkpy
+
+        if Version(hictkpy.__version__) < Version("1.4.0"):
+            warnings.warn("--low-memory option has no effect with hictkpy versions older than v1.4.0")
+            low_memory = False
+            args["low_memory"] = False
 
     with contextlib.ExitStack() as ctx:
         # Set up the manager in charge of orchestrating IO operations
@@ -204,6 +216,7 @@ def run(
                 tasks,
                 pool,
                 chroms,
+                low_memory,
                 logger,
             )
 
@@ -335,6 +348,7 @@ def _configure_telemetry(
     contact_map: pathlib.Path,
     resolution: int,
     genomic_belt: int,
+    low_memory: bool,
     max_width: int,
     glob_pers_min: float,
     constrain_heights: bool,
@@ -357,6 +371,7 @@ def _configure_telemetry(
                 "params.contact_map_resolution": resolution,
                 "params.contact_map_raw_interactions": normalization is None,
                 "params.genomic_belt": genomic_belt,
+                "params.low_memory": low_memory,
                 "params.max_width": max_width,
                 "params.glob_pers_min": glob_pers_min,
                 "params.constrain_heights": constrain_heights,
@@ -757,12 +772,13 @@ def _fetch_interactions(
     tasks: Sequence[Tuple[str, int, bool]],
     pool: ProcessPoolWrapper,
     chroms: Dict[str, int],
+    low_memory: bool,
     logger,
 ) -> Tuple[SparseMatrix, Optional[SparseMatrix], Optional[SparseMatrix]]:
     chrom_name, chrom_size, _ = tasks[i]
 
-    ut_matrix, matrix_roi_raw, matrix_roi_proc = io_manager.fetch_interaction_matrix(chrom_name, chrom_size)
-    io_manager.fetch_next_interaction_matrix_async(tasks[i + 1 :])
+    ut_matrix, matrix_roi_raw, matrix_roi_proc = io_manager.fetch_interaction_matrix(chrom_name, chrom_size, low_memory)
+    io_manager.fetch_next_interaction_matrix_async(tasks[i + 1 :], low_memory)
     if i == 0:
         max_nnz = _estimate_max_nnz(chrom_name, ut_matrix, chroms)
         pool.rebind_shared_matrices(chrom_name, ut_matrix, logger, max_nnz)

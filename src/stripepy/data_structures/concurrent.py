@@ -366,6 +366,7 @@ class IOManager(object):
         self,
         chrom_name: str,
         chrom_size: int,
+        low_memory: bool,
     ) -> Tuple[SparseMatrix, Optional[SparseMatrix], Optional[SparseMatrix]]:
         """
         Fetch interactions for the given chromosome.
@@ -376,6 +377,8 @@ class IOManager(object):
             name of the chromosome whose interactions should be fetched
         chrom_size: int
             size of the chromosome whose interactions should be fetched
+        low_memory: bool
+            attempt to fetch interactions while minimizing memory usage
 
         Returns
         -------
@@ -399,6 +402,7 @@ class IOManager(object):
             self._resolution,
             self._normalization,
             self._genomic_belt,
+            low_memory,
             chrom_name,
             roi,
         )
@@ -407,6 +411,7 @@ class IOManager(object):
         self,
         chrom_name: str,
         chrom_size: int,
+        low_memory: bool,
     ):
         """
         Same as fetch_interaction_matrix, but asynchronous when nproc>1.
@@ -423,6 +428,7 @@ class IOManager(object):
             self._resolution,
             self._normalization,
             self._genomic_belt,
+            low_memory,
             chrom_name,
             roi,
         )
@@ -430,6 +436,7 @@ class IOManager(object):
     def fetch_next_interaction_matrix_async(
         self,
         tasks: Sequence[Tuple[str, int, bool]],
+        low_memory: bool,
     ):
         """
         Loops over the given tasks and attempts to asynchronously fetch interaction for the first task where skip=False.
@@ -444,6 +451,8 @@ class IOManager(object):
             1) is the chromosome name
             2) is the chromosome size
             3) is a boolean indicating whether the task should be skipped
+        low_memory: bool
+            attempt to fetch interactions while minimizing memory usage
         """
         if not self._pool.ready:
             return
@@ -453,7 +462,7 @@ class IOManager(object):
 
         for chrom, size, skip in tasks:
             if not skip:
-                self.fetch_interaction_matrix_async(chrom, size)
+                self.fetch_interaction_matrix_async(chrom, size, low_memory)
                 return
 
     def write_results(self, result: Result):
@@ -474,6 +483,7 @@ class IOManager(object):
         resolution: int,
         normalization: str,
         genomic_belt: int,
+        low_memory: bool,
         chrom_name: str,
         roi: Optional[Dict],
     ):
@@ -484,7 +494,12 @@ class IOManager(object):
         f = hictkpy.File(path, resolution=resolution)
         chrom_size = f.chromosomes()[chrom_name]
         diagonal_band_width = (genomic_belt // resolution) + 1 if genomic_belt < chrom_size else None
-        matrix = f.fetch(chrom_name, normalization=normalization, diagonal_band_width=diagonal_band_width).to_csr()
+
+        sel = f.fetch(chrom_name, normalization=normalization, diagonal_band_width=diagonal_band_width)
+        if low_memory:
+            matrix = sel.to_csr(low_memory=True)
+        else:
+            matrix = sel.to_csr()
 
         logger.info("fetched %d pixels in %s", matrix.count_nonzero(), pretty_format_elapsed_time(t0))
 

@@ -8,6 +8,7 @@ from typing import Optional
 
 import hictkpy
 import pytest
+from packaging.version import Version
 
 from stripepy.data_structures import ResultFile
 
@@ -39,7 +40,13 @@ class TestStripePyCall:
                 )
 
     @staticmethod
-    def _run_stripepy_call(tmpdir, nproc: int = 1, min_chrom_size: Optional[int] = None, with_roi: bool = False):
+    def _run_stripepy_call(
+        tmpdir,
+        nproc: int = 1,
+        min_chrom_size: Optional[int] = None,
+        with_roi: bool = False,
+        low_memory: bool = False,
+    ):
         assert nproc > 0
         tmpdir = pathlib.Path(tmpdir)
         testfile = testdir / "data" / "4DNFI9GMP2J8.mcool"
@@ -77,16 +84,16 @@ class TestStripePyCall:
         if with_roi:
             args.extend(("--roi", "middle", "--plot-dir", str(plot_dir)))
 
+        if low_memory:
+            args.append("--low-memory")
+
         if with_roi:
             if not matplotlib_avail():
                 with pytest.raises(ImportError):
                     stripepy_main(args)
                 pytest.skip("matplotlib not available")
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=UserWarning)
-                stripepy_main(args)
-        else:
-            stripepy_main(args)
+
+        stripepy_main(args)
 
         assert output_file.is_file()
         assert log_file.is_file()
@@ -143,6 +150,16 @@ class TestStripePyCall:
             min_chrom_size=int(200e6),
             nproc=1,
             with_roi=False,
+        )
+
+    @staticmethod
+    def test_stripepy_call_low_memory(tmpdir):
+        TestStripePyCall._run_stripepy_call(
+            tmpdir,
+            min_chrom_size=int(200e6),
+            nproc=1,
+            with_roi=False,
+            low_memory=True,
         )
 
     @staticmethod

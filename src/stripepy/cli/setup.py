@@ -288,6 +288,13 @@ def _make_stripepy_call_subcommand(main_parser) -> argparse.ArgumentParser:
     )
 
     sc.add_argument(
+        "--low-memory",
+        action="store_true",
+        default=False,
+        help="Minimize memory usage when fetching interactions from files (default: %(default)s).",
+    )
+
+    sc.add_argument(
         "--min-chrom-size",
         type=int,
         default=2_000_000,

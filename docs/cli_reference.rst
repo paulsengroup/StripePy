@@ -50,7 +50,8 @@ stripepy call
                        [-k K] [--loc-pers-min LOC_PERS_MIN]
                        [--loc-trend-min LOC_TREND_MIN] [-f]
                        [--verbosity {debug,info,warning,error,critical}]
-                       [-p NPROC] [--min-chrom-size MIN_CHROM_SIZE]
+                       [-p NPROC] [--low-memory]
+                       [--min-chrom-size MIN_CHROM_SIZE]
                        contact-map resolution
   positional arguments:
     contact-map           Path to a .cool, .mcool, or .hic file for input.
@@ -83,6 +84,7 @@ stripepy call
     --verbosity {debug,info,warning,error,critical}
                           Set verbosity of output to the console (default: info).
     -p, --nproc NPROC     Maximum number of parallel processes to use (default: 1).
+    --low-memory          Minimize memory usage when fetching interactions from files (default: False).
     --min-chrom-size MIN_CHROM_SIZE
                           Minimum size, in bp, for a chromosome to be analysed (default: 2000000).
 
