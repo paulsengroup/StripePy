@@ -80,7 +80,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Restore test dataset
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: ${{ needs.cache-test-datasets.outputs.cache-key }}
           path: test/data/
