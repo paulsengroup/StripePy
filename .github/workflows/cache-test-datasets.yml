@@ -69,7 +69,7 @@ jobs:
 
       - name: Restore cache
         id: cache-dset
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: ${{ steps.generate-cache-key.outputs.key }}
           path: test/data/
@@ -93,7 +93,7 @@ jobs:
         run: md5sum -c checksums.md5
 
       - name: Save cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: steps.cache-dset.outputs.cache-hit != 'true'
         with:
           key: ${{ steps.generate-cache-key.outputs.key }}
