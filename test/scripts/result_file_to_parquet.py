@@ -159,8 +159,7 @@ def write_readme(result_file: pathlib.Path, output_prefix: pathlib.Path, chroms:
             chrom2 = "abc"
 
         f.write(
-            textwrap.dedent(
-                f"""
+            textwrap.dedent(f"""
         # README.md
 
         This folder contains the tables and metadata extracted from file \"{result_file.name}\".
@@ -207,8 +206,7 @@ def write_readme(result_file: pathlib.Path, output_prefix: pathlib.Path, chroms:
            - `attributes.json`: JSON file with the attributes for the current chromosome.
            - `xxx_where.parquet`: PARQUET file with the data from table "xxx" for location "where" from the current chromosome.
            - `xxx_where.missing`: text file with the exception message raised when trying to access tables without data.
-        """
-            ).lstrip("\n"),
+        """).lstrip("\n"),
         )
 
 
